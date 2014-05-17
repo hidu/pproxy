@@ -1,4 +1,4 @@
-package proxyserve
+package serve
 
 import (
   "net/http"
@@ -12,6 +12,10 @@ type BasicUserInfo struct{
   Psw string
 }
 
+
+func (info *BasicUserInfo)isEqual(name,psw string) bool{
+   return info.Name==name && info.Psw==psw
+}
 var proxyAuthorizatonHeader = "Proxy-Authorization"
 
 func getAuthorInfo(req *http.Request) *BasicUserInfo{

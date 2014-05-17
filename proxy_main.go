@@ -1,9 +1,12 @@
 package main
 import (
- "github.com/hidu/sproxy/proxyserve"
+ "github.com/hidu/pproxy/serve"
+ "flag"
 )
+var port=flag.Int("port",8080,"main proxy port")
 func main(){
-  ser:=proxyserve.NewProxySer()
-  ser.Port=8080
+  flag.Parse()
+  ser:=serve.NewProxyServe()
+  ser.Port=*port
   ser.Start()
 }
