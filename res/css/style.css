@@ -27,3 +27,20 @@ nav ul li {
 }
 a{text-decoration: none;}
 #body{margin-top: 50px}
+
+ table {border-collapse: collapse;border-spacing: 0;}
+ .tb_1{border:1px solid #cccccc;table-layout:fixed;word-break:break-all;width: 100%;background:#ffffff;margin-bottom:5px}
+ .tb_1 caption{text-align: center;background: #F0F4F6;font-weight: bold;padding-top: 5px;height: 25px;border:1px solid #cccccc;border-bottom:none}
+ .tb_1 a{margin:0 3px 0 3px}
+ .tb_1 tr th,.tb_1 tr td{padding: 3px;border:1px solid #cccccc;line-height:20px}
+ .tb_1 thead tr th{font-weight:bold;text-align: center;background:#e3eaee}
+ .tb_1 tbody tr th{text-align: right;background:#f0f4f6;padding-right:5px}
+ .tb_1 tfoot{color:#cccccc}
+ .td_c td{text-align: center}
+ .td_r td{text-align: right}
+ .t_c{text-align: center !important;}
+ .t_r{text-align: right !important;}
+ .t_l{text-align: left !important;}
+ 
+ #tb_network{font-size: 11px}
+ #tb_network td{overflow: scroll;}

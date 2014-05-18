@@ -2,19 +2,14 @@ package serve
 import (
 	"github.com/elazarl/goproxy"
 	"github.com/elazarl/goproxy/ext/auth"
-	"github.com/HouzuoGuo/tiedot/db"
 	"fmt"
 	"net/http"
-//	"net/http/httputil"
 	"log"
 	"time"
-//	"encoding/gob"
-//	"bytes"
 	"net"
 	"strconv"
-//	"io/ioutil"
 	"reflect"
-	  "github.com/googollee/go-socket.io"
+	"github.com/googollee/go-socket.io"
 )
 
 type ProxyServe struct{
@@ -31,10 +26,7 @@ type wsClient struct{
   user string
 }
 
-type TieDb struct{
-    RequestTable *db.Col
-    ResponseTable *db.Col
-}
+
 type kvType map[string]interface{}
 
 func (ser *ProxyServe) ServeHTTP(w http.ResponseWriter, req *http.Request) {
@@ -89,7 +81,8 @@ func (ser *ProxyServe)Start(){
 
 
 func (ser *ProxyServe)logRequest(req *http.Request,ctx *goproxy.ProxyCtx){
-  log.Println(ctx.Session,req.URL.String())
+  
+   req_uid:=uint64(time.Now().Unix()+ctx.Session)
    data:=kvType{}
    data["session_id"]=ctx.Session
    data["req_start"]=time.Now().UnixNano()
@@ -98,13 +91,14 @@ func (ser *ProxyServe)logRequest(req *http.Request,ctx *goproxy.ProxyCtx){
    data["url"]=req.URL.String()
    data["cookie"]=req.Cookies()
    data["user"]=ctx.UserData.(string)
-  id,err:= ser.mydb.RequestTable.Insert(data)
-  if(err!=nil){
-    log.Println(err)
-    return
-  }
-  ser.Broadcast_Req(ctx.Session,req)
-  ctx.UserData=id
+   err:= ser.mydb.RequestTable.InsertRecovery(req_uid,data)
+   log.Println(ctx.Session,req.URL.String(),"req_docid=",req_uid,err)
+   if(err!=nil){
+     log.Println(err)
+     return
+   }
+  ser.Broadcast_Req(ctx.Session,req,req_uid)
+  ctx.UserData=req_uid
 }
 /**
 *log response if the req has log
@@ -113,23 +107,26 @@ func (ser *ProxyServe)logResponse(res *http.Response, ctx *goproxy.ProxyCtx){
    if(reflect.TypeOf(ctx.UserData).Kind()!=reflect.Uint64){
      return
    }
-   req_doc_id:=ctx.UserData.(uint64)
+   req_uid:=ctx.UserData.(uint64)
    data:=kvType{}
-   data["req_doc_id"]=req_doc_id
    data["session_id"]=ctx.Session
    data["res_start"]=time.Now().UnixNano()
    data["header"]=res.Header
-   id,err:= ser.mydb.ResponseTable.Insert(data)
+   
+   buf:=forgetRead(&res.Body)
+   data["body"]=buf.String()
+   err:= ser.mydb.ResponseTable.InsertRecovery(req_uid,data)
+   log.Println("save response [",req_uid,"]",err)
    if(err!=nil){
 	    log.Println(err)
 	    return
   }
-  var req_data kvType
-  ser.mydb.RequestTable.Read(req_doc_id,&req_data)
-  if(req_data!=nil){
-   req_data["res_doc_id"]=id
-  }
-  ser.mydb.RequestTable.Update(req_doc_id,req_data)
+  ser.GetResponseByReqDocid(req_uid)
+}
+
+func (ser *ProxyServe)GetResponseByReqDocid(docid uint64) (res_data kvType){
+  ser.mydb.ResponseTable.Read(docid,&res_data)
+ return res_data
 }
 
 func NewProxyServe()*ProxyServe{
@@ -138,27 +135,15 @@ func NewProxyServe()*ProxyServe{
   return proxy
 }
 
-func NewTieDb(dir string) *TieDb{
-   mydb, err := db.OpenDB(dir)
-	if err != nil {
-		panic(err)
-	}
-	if err :=mydb.Create("req", 1); err != nil {
-	 log.Println(err)
-	}
-	if err := mydb.Create("res", 1); err != nil {
-		log.Println(err)
-	}
-	mydb.Scrub("req")
-	mydb.Scrub("res")
-	req := mydb.Use("req")
-	res := mydb.Use("res")
-	tdb:=&TieDb{RequestTable:req,ResponseTable:res}
-	return tdb
-}
 
-func (ser *ProxyServe)Broadcast_Req(id int64,req *http.Request){
+func (ser *ProxyServe)Broadcast_Req(id int64,req *http.Request,docid uint64){
+  data:=make(map[string]interface{})
+  data["docid"]=docid
+  data["sid"]=id
+  data["host"]=req.Host
+  data["path"]=req.URL.Path
+  data["method"]=req.Method
   for _,client:=range ser.wsClients{
-     send_req(client.ns,id,req.Host,req.URL.Path)
+     send_req(client,data)
   }
 }

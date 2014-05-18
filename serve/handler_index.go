@@ -11,13 +11,13 @@ import (
 /**
 *https://github.com/googollee/go-socket.io
 */
-func new_req(ns *socketio.NameSpace, req_path string,host string) {
-//  var name string
-//  name = ns.Session.Values["name"].(string)
-//  fmt.Printf("%s said in %s, title: %s, body: %s, article number: %i", name, ns.Endpoint(), title, body, article_num)
+func (ser *ProxyServe)client_get_response(ns *socketio.NameSpace, docid uint64) {
+	log.Println("get doc",docid)
+	data:=ser.GetResponseByReqDocid(docid)
+	ns.Emit("res",data)
 }
-func send_req(ns *socketio.NameSpace,sid int64,host string,req_path string) {
-  ns.Emit("req",sid,host,req_path)
+func send_req(client *wsClient,data map[string]interface{}) {
+  client.ns.Emit("req",data)
 }
 
 func (ser *ProxyServe)initWs(){
@@ -34,6 +34,7 @@ func (ser *ProxyServe)initWs(){
 	    delete(ser.wsClients,ns.Id())
 	  }
 	})
+	ser.ws.On("get_response", ser.client_get_response)
 //	ser.ws.On("req", new_req)
 }
 

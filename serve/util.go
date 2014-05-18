@@ -3,6 +3,9 @@ package serve
 import (
 	"encoding/binary"
 	"net"
+	"io"
+	"bytes"
+	"io/ioutil"
 )
 
  func Int64ToBytes(i int64) []byte {
@@ -31,4 +34,11 @@ func IsLocalIp(host string)bool{
         }  
     }
    return  false;
+ }
+ 
+ func forgetRead(reader *io.ReadCloser) *bytes.Buffer{
+    buf := bytes.NewBuffer([]byte{})
+	 io.Copy(buf, *reader)
+    *reader = ioutil.NopCloser(buf).(io.ReadCloser)
+    return buf
  }
