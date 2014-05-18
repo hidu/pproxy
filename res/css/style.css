@@ -1,0 +1,29 @@
+@CHARSET "UTF-8";
+.clear {
+  clear: both;
+}
+nav {
+  filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=90);
+  opacity: 0.9;
+  background: #FFF;
+  padding: 0px;
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  right: 0px;
+  z-index: 100;
+  background: #F4F4F4
+}
+nav ul {
+  margin: 0px auto;
+  padding: 0px;
+  list-style-type: none;
+}
+nav ul li {
+  float: left;
+  margin-bottom: -3px;
+  padding: 10px 15px;
+  font-size: 14px;
+}
+a{text-decoration: none;}
+#body{margin-top: 50px}

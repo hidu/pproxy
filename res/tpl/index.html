@@ -5,8 +5,36 @@
 <meta name="author" content="duwei">
 <meta name="src" content="https://github.com/hidu/pproxy">
 <title>{{.title}}pproxy {{.version}}</title>
+<script src="/res/js/socket.io.js"></script>
+<script src="/res/js/jquery.js"></script>
+<script src="/res/js/pproxy.js"></script>
+<link rel="stylesheet" href="/res/css/style.css">
+<link rel="stylesheet" href="/res/css/grids-min.css">
+<link rel="stylesheet" href="/res/css/button.css">
 </head>
 <body>
-
+<nav>
+       <ul class="clearfix">
+           <li><a id="connect_status">status<a></a></li>
+           <li><a href="#network">netwok</a></li>
+           <li><a href="#config">config</a></li>
+       </ul>
+       <div class="clear"></div>
+</nav>
+<div id="body">
+<div class="yui3-g">
+	<div class="yui3-u-2-5">
+	 <table id='tb_network'>
+	  <thead>
+	     <tr><th>#</th><th>status</th><th>host</th><th>url</th><th>body</th><th>content-type</th></tr>
+	  </thead>
+	  <tbody>
+	  </tbody>
+	 </table>
+	
+	</div>
+	<div class="yui3-u-3-5">d</div>
+</div>
+</div>
 </body>
 </html>

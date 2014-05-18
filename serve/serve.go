@@ -14,6 +14,7 @@ import (
 	"strconv"
 //	"io/ioutil"
 	"reflect"
+	  "github.com/googollee/go-socket.io"
 )
 
 type ProxyServe struct{
@@ -22,6 +23,12 @@ type ProxyServe struct{
    AdminName string
    AdminPsw string
    mydb *TieDb
+   ws *socketio.SocketIOServer
+   wsClients map[string]*wsClient
+}
+type wsClient struct{
+  ns *socketio.NameSpace
+  user string
 }
 
 type TieDb struct{
@@ -38,9 +45,9 @@ func (ser *ProxyServe) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		  isLocalReq=IsLocalIp(host)
 		}
 		if(isLocalReq){
-		    handleLocalReq(w,req)
+		    ser.handleLocalReq(w,req)
 		}else{
-		 ser.Goproxy.ServeHTTP(w,req)
+		    ser.Goproxy.ServeHTTP(w,req)
 	}
 }
 
@@ -75,7 +82,7 @@ func (ser *ProxyServe)Start(){
 	
 	addr:=fmt.Sprintf("%s:%d","",ser.Port)
 	log.Println("proxy listen at ",addr)
-	
+	ser.initWs()
 	err:=http.ListenAndServe(addr,ser)
 	log.Println(err)
 }
@@ -96,6 +103,7 @@ func (ser *ProxyServe)logRequest(req *http.Request,ctx *goproxy.ProxyCtx){
     log.Println(err)
     return
   }
+  ser.Broadcast_Req(ctx.Session,req)
   ctx.UserData=id
 }
 /**
@@ -147,4 +155,10 @@ func NewTieDb(dir string) *TieDb{
 	res := mydb.Use("res")
 	tdb:=&TieDb{RequestTable:req,ResponseTable:res}
 	return tdb
+}
+
+func (ser *ProxyServe)Broadcast_Req(id int64,req *http.Request){
+  for _,client:=range ser.wsClients{
+     send_req(client.ns,id,req.Host,req.URL.Path)
+  }
 }
