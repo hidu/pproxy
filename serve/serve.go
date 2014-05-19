@@ -96,7 +96,7 @@ func (ser *ProxyServe)logRequest(req *http.Request,ctx *goproxy.ProxyCtx){
    req_uid:=NextUid()
    data:=kvType{}
    data["session_id"]=ctx.Session
-   data["req_start"]=time.Now().UnixNano()
+   data["now"]=time.Now().UnixNano()
    data["host"]=req.Host
    data["header"]=req.Header
    data["url"]=req.URL.String()
@@ -125,7 +125,7 @@ func (ser *ProxyServe)logResponse(res *http.Response, ctx *goproxy.ProxyCtx){
    req_uid:=ctx.UserData.(uint64)
    data:=kvType{}
    data["session_id"]=ctx.Session
-   data["res_start"]=time.Now().UnixNano()
+   data["now"]=time.Now().UnixNano()
    data["header"]=res.Header
    data["status"]=res.StatusCode
    data["content_length"]=res.ContentLength
@@ -163,7 +163,7 @@ func NewProxyServe()*ProxyServe{
 func (ser *ProxyServe)Broadcast_Req(id int64,req *http.Request,docid uint64){
   data:=make(map[string]interface{})
   data["docid"]=fmt.Sprintf("%d",docid)
-  data["sid"]=id%100
+  data["sid"]=id%1000
   data["host"]=req.Host
   data["path"]=req.URL.Path
   data["method"]=req.Method

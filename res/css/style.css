@@ -43,6 +43,6 @@ a{text-decoration: none;}
  .t_l{text-align: left !important;}
  
  #tb_network{font-size: 11px}
- #tb_network td{overflow: scroll;}
+ #tb_network td{overflow: scroll;cursor: pointer;}
  #content table th,#content table td{font-size:11px}
- #network_list_div {overflow: scroll;max-height: 650px}
+ #network_list_div {overflow: scroll;max-height: 650px;min-height:500px}

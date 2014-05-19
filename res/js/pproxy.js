@@ -7,7 +7,7 @@ socket.on("req", function(data) {
 			"<tr onclick=\"get_response('" + data['docid'] + "')\">" + "<td>"
 					+ data["sid"] + "</td>" + "<td></td>" + "<td>"
 					+ data["host"] + "</td>" + "<td>" + data["path"] + "</td>"
-					+ "<td></td>" + "<td></td>" + "</tr>")
+				   + "</tr>")
 })
 socket.on("res", function(data) {
 	console.log(data)

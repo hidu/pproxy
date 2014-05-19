@@ -2,7 +2,6 @@ package main
 import(
     "./serve"
     "fmt"
-
 )
 func main(){
    mydb:=serve.NewTieDb("./data/")
