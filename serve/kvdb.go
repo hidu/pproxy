@@ -2,6 +2,7 @@ package serve
 
 import (
 	"github.com/HouzuoGuo/tiedot/db"
+	"github.com/HouzuoGuo/tiedot/uid"
 	"log"
 )
 
@@ -32,4 +33,8 @@ func NewTieDb(dir string) *TieDb{
 
 func (t *TieDb)Flush(){
   t.tdb.Flush()
+}
+
+func NextUid() uint64{
+   return uid.NextUID()
 }

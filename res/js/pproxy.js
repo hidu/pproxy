@@ -3,7 +3,7 @@ socket.on('connect', function() {
 	$("#connect_status").html("<font color=green>online</font>")
 });
 socket.on("req", function(data) {
-	$("#tb_network tbody").prepend("<tr onclick='get_response("+data['docid']+")'>" +
+	$("#tb_network tbody").prepend("<tr onclick=\"get_response('"+data['docid']+"')\">" +
 											"<td>"+data["sid"]+"</td>" +
 											"<td></td>" +
 											"<td>"+data["host"]+"</td>" +
@@ -13,13 +13,26 @@ socket.on("req", function(data) {
 										   "</tr>")
 })
 socket.on("res", function(data) {
-	$("#content").text(data["body"])
+	console.log(data)
+	var req=data["req"];
+	var res=data["res"];
+	var html="<div><table class='tb_1'><caption>Request</caption>";
+	html+="<tr><th width='100px'>url:</th><td>"+req["url"]+"</td>"
+	html+="<tr><th>client:</th><td>:"+req["client_ip"]+"</td>";
+	html+="<tr><th>user:</th><td>"+req["user"]+"</td>";
+	for(var k in req["header"]){
+		html+="<tr><th>"+k+":</th><td>"+req["header"][k].join("&nbsp;")+"</td>";
+	}
+	html+="</table></div>";
+	
+	$("#content").html(html)
 })
 socket.on("disconnect", function() {
 	$("#connect_status").html("<font color=red>offline</font>")
 })
 
 function get_response(docid){
+	console.log("get_response docid=",docid)
 	socket.emit("get_response",docid)
 }
 

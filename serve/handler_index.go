@@ -7,13 +7,18 @@ import (
   "github.com/googollee/go-socket.io"
   "log"
 //  "fmt"
+	"strconv"
 )
 /**
 *https://github.com/googollee/go-socket.io
 */
-func (ser *ProxyServe)client_get_response(ns *socketio.NameSpace, docid uint64) {
-	log.Println("get doc",docid)
-	data:=ser.GetResponseByReqDocid(docid)
+func (ser *ProxyServe)client_get_response(ns *socketio.NameSpace, docid_str string) {
+   docid,_:=strconv.ParseUint(docid_str,10,64)
+	res:=ser.GetResponseByDocid(docid)
+	req:=ser.GetRequestByDocid(docid)
+	data:=make(map[string]interface{})
+	data["req"]=req
+	data["res"]=res
 	ns.Emit("res",data)
 }
 func send_req(client *wsClient,data map[string]interface{}) {

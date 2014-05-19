@@ -20,6 +20,7 @@ type ProxyServe struct{
    mydb *TieDb
    ws *socketio.SocketIOServer
    wsClients map[string]*wsClient
+   startTime time.Time
 }
 type wsClient struct{
   ns *socketio.NameSpace
@@ -82,17 +83,20 @@ func (ser *ProxyServe)Start(){
 
 func (ser *ProxyServe)logRequest(req *http.Request,ctx *goproxy.ProxyCtx){
   
-   req_uid:=uint64(time.Now().Unix()+ctx.Session)
+   req_uid:=NextUid()
    data:=kvType{}
    data["session_id"]=ctx.Session
    data["req_start"]=time.Now().UnixNano()
    data["host"]=req.Host
    data["header"]=req.Header
    data["url"]=req.URL.String()
-   data["cookie"]=req.Cookies()
+   data["cookies"]=req.Cookies()
    data["user"]=ctx.UserData.(string)
+   data["client_ip"]=req.RemoteAddr
    err:= ser.mydb.RequestTable.InsertRecovery(req_uid,data)
-   log.Println(ctx.Session,req.URL.String(),"req_docid=",req_uid,err)
+   
+   log.Println("save_req",ctx.Session,req.URL.String(),"req_docid=",req_uid,err)
+   
    if(err!=nil){
      log.Println(err)
      return
@@ -112,34 +116,43 @@ func (ser *ProxyServe)logResponse(res *http.Response, ctx *goproxy.ProxyCtx){
    data["session_id"]=ctx.Session
    data["res_start"]=time.Now().UnixNano()
    data["header"]=res.Header
+   data["status"]=res.StatusCode
+   data["content_length"]=res.ContentLength
+//   data["cookies"]=res.Cookies()
    
    buf:=forgetRead(&res.Body)
    data["body"]=buf.String()
+   
    err:= ser.mydb.ResponseTable.InsertRecovery(req_uid,data)
-   log.Println("save response [",req_uid,"]",err)
+   log.Println("save_res [",req_uid,"]",err)
    if(err!=nil){
 	    log.Println(err)
 	    return
   }
-  ser.GetResponseByReqDocid(req_uid)
 }
 
-func (ser *ProxyServe)GetResponseByReqDocid(docid uint64) (res_data kvType){
+func (ser *ProxyServe)GetResponseByDocid(docid uint64) (res_data kvType){
   ser.mydb.ResponseTable.Read(docid,&res_data)
- return res_data
+  fmt.Println(docid,res_data)
+  return res_data
+}
+func (ser *ProxyServe)GetRequestByDocid(docid uint64) (req_data kvType){
+  ser.mydb.RequestTable.Read(docid,&req_data)
+ return req_data
 }
 
 func NewProxyServe()*ProxyServe{
    proxy:= new(ProxyServe)
    proxy.mydb=NewTieDb("./data/")
+   proxy.startTime=time.Now()
   return proxy
 }
 
 
 func (ser *ProxyServe)Broadcast_Req(id int64,req *http.Request,docid uint64){
   data:=make(map[string]interface{})
-  data["docid"]=docid
-  data["sid"]=id
+  data["docid"]=fmt.Sprintf("%d",docid)
+  data["sid"]=id%100
   data["host"]=req.Host
   data["path"]=req.URL.Path
   data["method"]=req.Method
