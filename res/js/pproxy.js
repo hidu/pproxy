@@ -17,14 +17,17 @@ socket.on("res", function(data) {
 	var req=data["req"];
 	var res=data["res"];
 	var html="<div><table class='tb_1'><caption>Request</caption>";
-	html+="<tr><th width='100px'>url:</th><td>"+req["url"]+"</td>"
-	html+="<tr><th>client:</th><td>:"+req["client_ip"]+"</td>";
-	html+="<tr><th>user:</th><td>"+req["user"]+"</td>";
+	html+="<tr><th width='100px'>url:</th><td>"+req["url"]+"</td></tr>"
+	html+="<tr><th>client:</th><td>"+req["client_ip"]+"</td></tr>";
+	html+="<tr><th>user:</th><td>"+req["user"]+"</td></tr>";
 	for(var k in req["header"]){
-		html+="<tr><th>"+k+":</th><td>"+req["header"][k].join("&nbsp;")+"</td>";
+		html+="<tr><th>"+k+":</th><td>"+req["header"][k].join("&nbsp;")+"</td></tr>";
 	}
 	html+="</table></div>";
-	
+	html+="<div><table class='tb_1'><caption>Response</caption>"
+	html+="<tr><th width='100px'>content-length:</th><td></td></tr>"
+	html+="<tr><th>body:</th><td>"+res["body"]+"</td></tr>";
+	html+="</table></div>";
 	$("#content").html(html)
 })
 socket.on("disconnect", function() {

@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"reflect"
 	"github.com/googollee/go-socket.io"
+	"strings"
 )
 
 type ProxyServe struct{
@@ -62,6 +63,15 @@ func (ser *ProxyServe)Start(){
 		}
 		
 		ser.logRequest(r,ctx)
+		
+		if(strings.HasPrefix(r.URL.Path,"/napi")){
+		  r.URL.Host="beta.zhidao.baidu.com:80"
+		  r.URL.Path="/rds"+r.URL.Path
+		}
+		if(strings.HasPrefix(r.URL.Path,"/qas")){
+		  r.URL.Host="beta.zhidao.baidu.com:80"
+		  r.URL.Path="/rds"+r.URL.Path[4:]
+		}
 		return r,nil
 	})
 	
@@ -93,6 +103,7 @@ func (ser *ProxyServe)logRequest(req *http.Request,ctx *goproxy.ProxyCtx){
    data["cookies"]=req.Cookies()
    data["user"]=ctx.UserData.(string)
    data["client_ip"]=req.RemoteAddr
+   data["form"]=req.Form
    err:= ser.mydb.RequestTable.InsertRecovery(req_uid,data)
    
    log.Println("save_req",ctx.Session,req.URL.String(),"req_docid=",req_uid,err)
