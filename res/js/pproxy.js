@@ -28,6 +28,7 @@ socket.on("res", function(data) {
 		
 	html += "</table></div>";
 	html += "<div><table class='tb_1'><caption>Response</caption>"
+ if(res){
 	html += "<tr><th width='100px'>content-length:</th><td>"+res["content_length"]+"</td></tr>"
 	html += "<tr><th>status:</th><td>" + res["status"] + "</td></tr>";
 	html += "<tr><th>body:</th><td>" + res["body"] + "</td></tr>";
@@ -41,6 +42,7 @@ socket.on("res", function(data) {
    for ( var k in res["header"]) {
 		html += "<tr><th>" + k + ":</th><td>" + res["header"][k].join("<br/>")+ "</td></tr>";
 	}
+ }
    
 	html += "</table></div>";
 	$("#content").html(html)
