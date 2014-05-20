@@ -101,11 +101,11 @@ func getReqLogData(req *http.Request) kvType{
    req.ParseForm()
    data:=kvType{}
    data["host"]=req.Host
-   data["header"]=req.Header
+   data["header"]=map[string][]string(req.Header)
    data["url"]=req.URL.String()
    data["cookies"]=req.Cookies()
    data["client_ip"]=req.RemoteAddr
-   data["form"]=req.Form
+   data["form"]=map[string][]string(req.Form)
    return data
 }
 
@@ -125,19 +125,19 @@ func (ser *ProxyServe)logRequest(req *http.Request,ctx *goproxy.ProxyCtx,req_new
    
    data_rewrite_change:=kvType{}
    for k,v:=range data_rewrite{
-      v_e:=encode(v)
-      v_e_last:=encode(data_origin[k])
-      if(string(v_e)!=string(v_e_last)){
+      v_e:=gob_encode(v)
+      v_e_last:=gob_encode(data_origin[k])
+      if(v_e!=v_e_last){
         data_rewrite_change[k]=v
       }
    }
    
-   data["origin"]=data_origin
-   data["rewrite"]=data_rewrite
+   data["origin"]=gob_encode(data_origin)
+   data["rewrite"]=gob_encode(data_rewrite_change)
 //   fmt.Println(data)
    err:= ser.mydb.RequestTable.InsertRecovery(req_uid,data)
    
-   log.Println("save_req",ctx.Session,req.URL.String(),"req_docid=",req_uid,err,data_rewrite_change)
+   log.Println("save_req",ctx.Session,req.URL.String(),"req_docid=",req_uid,err)
    
    if(err!=nil){
      log.Println(err)
@@ -183,6 +183,12 @@ func (ser *ProxyServe)GetResponseByDocid(docid uint64) (res_data kvType){
 }
 func (ser *ProxyServe)GetRequestByDocid(docid uint64) (req_data kvType){
   ser.mydb.RequestTable.Read(docid,&req_data)
+//  var t kvType
+//  gob_decode(req_data["origin"].(string),&t)
+//  req_data["origin"]=t
+//  gob_decode(req_data["rewrite"].(string),&t)
+//  req_data["rewrite"]=t
+//  fmt.Println(req_data)
  return req_data
 }
 
@@ -191,6 +197,9 @@ func NewProxyServe()*ProxyServe{
    proxy.mydb=NewTieDb("./data/")
    proxy.startTime=time.Now()
    proxy.MaxResSaveLength=2*1024*1024
+   
+//  data:= proxy.GetRequestByDocid(14251672015029932961)
+//  fmt.Println(data)
   return proxy
 }
 

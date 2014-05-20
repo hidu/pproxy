@@ -6,7 +6,10 @@ import (
 	"io"
 	"bytes"
 	"io/ioutil"
-	"encoding/gob"
+	"log"
+//	"github.com/vmihailenco/msgpack"
+	"encoding/json"
+	"encoding/base64"
 )
 
  func Int64ToBytes(i int64) []byte {
@@ -44,12 +47,30 @@ func IsLocalIp(host string)bool{
     return buf
  }
  
- func encode(data interface{}) []byte{
-    var bf bytes.Buffer
-	enc := gob.NewEncoder(&bf)
-	err := enc.Encode(data)
+ func gob_encode(data interface{}) string{
+//   var bf bytes.Buffer
+//	enc := gob.NewEncoder(&bf)
+//	err := enc.Encode(data)
+//	 bf, err := msgpack.Marshal(data)
+	 bf, err := json.Marshal(data)
 	if err != nil {
-	  return []byte{}
+	  log.Println("gob encode err",err)
+	  return ""
 	}
-	return bf.Bytes()
+	return base64.StdEncoding.EncodeToString(bf)
+}
+
+func gob_decode(data_input string,out interface{}){
+//	dec := gob.NewDecoder(bytes.NewBufferString(data_input))
+//	err:= dec.Decode(&out)
+    str_64,err:=base64.StdEncoding.DecodeString(data_input)
+    if(err!=nil){
+      log.Println("decode64 err:", err)
+      return
+    }
+    dec:= json.NewDecoder(bytes.NewBuffer(str_64))
+    err=dec.Decode(&out)
+	 if err != nil {
+		log.Println("msgpack decode:", err)
+	}
 }

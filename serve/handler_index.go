@@ -20,7 +20,10 @@ func (ser *ProxyServe)client_get_response(ns *socketio.NameSpace, docid_str stri
 	data:=make(map[string]interface{})
 	data["req"]=req
 	data["res"]=res
-	ns.Emit("res",data)
+	err:=ns.Emit("res",data)
+	if(err!=nil){
+	log.Println("ns error:",err)
+	}
 }
 func send_req(client *wsClient,data map[string]interface{}) {
   client.ns.Emit("req",data)

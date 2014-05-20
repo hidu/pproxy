@@ -11,10 +11,10 @@ socket.on("req", function(data) {
 })
 socket.on("res", function(data) {
 	console.log(data)
-	var req = data["req"]["origin"];
+	var req = JSON.parse(Base64.decode(data["req"]["origin"]));
 	var res = data["res"];
 	var html = "<div><table class='tb_1'><caption>Request</caption>";
-	html += "<tr><th width='100px'>url:</th><td>" + req["url"] + "</td></tr>"
+	html += "<tr><th width='100px'>url:</th><td>" + h(req["url"]) + "</td></tr>"
 	html += "<tr><th>client:</th><td>" + req["client_ip"] + "</td></tr>";
 	html += "<tr><th>user:</th><td>" + req["user"] + "</td></tr>";
 	for ( var k in req["header"]) {
@@ -31,7 +31,7 @@ socket.on("res", function(data) {
  if(res){
 	html += "<tr><th width='100px'>content-length:</th><td>"+res["content_length"]+"</td></tr>"
 	html += "<tr><th>status:</th><td>" + res["status"] + "</td></tr>";
-	html += "<tr><th>body:</th><td>" + res["body"] + "</td></tr>";
+	html += "<tr><th>body:</th><td>" + h(res["body"]) + "</td></tr>";
 	try{
 		var bd_json=JSON.parse(res["body"]);
 		if(bd_json){
@@ -62,4 +62,14 @@ function bytesToString(bytes) {
 		result += String.fromCharCode(parseInt(bytes[i], 2));
 	}
 	return result;
+}
+
+function h(str){
+	  str = str.replace(/&/g, '&amp;');
+	  str = str.replace(/</g, '&lt;');
+	  str = str.replace(/>/g, '&gt;');
+	  str = str.replace(/'/g, '&acute;');
+	  str = str.replace(/"/g, '&quot;');
+	  str = str.replace(/\|/g, '&brvbar;');
+	  return str;
 }
