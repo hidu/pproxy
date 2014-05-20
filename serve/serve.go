@@ -22,6 +22,9 @@ type ProxyServe struct{
    ws *socketio.SocketIOServer
    wsClients map[string]*wsClient
    startTime time.Time
+   
+   MaxResSaveLength int64
+   
 }
 type wsClient struct{
   ns *socketio.NameSpace
@@ -61,18 +64,10 @@ func (ser *ProxyServe)Start(){
 		if(ser.AdminName!="" && (authInfo==nil|| (authInfo!=nil && !authInfo.isEqual(ser.AdminName,ser.AdminPsw)))){
 			return nil,auth.BasicUnauthorized(r,"auth need")
 		}
+		req_new:=ser.changeRequest(r,ctx)
 		
-		ser.logRequest(r,ctx)
-		
-		if(strings.HasPrefix(r.URL.Path,"/napi")){
-		  r.URL.Host="beta.zhidao.baidu.com:80"
-		  r.URL.Path="/rds"+r.URL.Path
-		}
-		if(strings.HasPrefix(r.URL.Path,"/qas")){
-		  r.URL.Host="beta.zhidao.baidu.com:80"
-		  r.URL.Path="/rds"+r.URL.Path[4:]
-		}
-		return r,nil
+		ser.logRequest(r,ctx,req_new)
+		return req_new,nil
 	})
 	
 	ser.Goproxy.OnResponse().DoFunc(func(resp *http.Response, ctx *goproxy.ProxyCtx) *http.Response {
@@ -90,23 +85,59 @@ func (ser *ProxyServe)Start(){
 	log.Println(err)
 }
 
+func (ser *ProxyServe)changeRequest(req *http.Request,ctx *goproxy.ProxyCtx )*http.Request{
+    if(strings.HasPrefix(req.URL.Path,"/napi")){
+	  req.URL.Host="beta.zhidao.baidu.com:80"
+	  req.URL.Path="/rds"+req.URL.Path
+	}
+	if(strings.HasPrefix(req.URL.Path,"/qas")){
+	  req.URL.Host="beta.zhidao.baidu.com:80"
+	  req.URL.Path="/rds"+req.URL.Path[4:]
+	}
+	return req
+}
 
-func (ser *ProxyServe)logRequest(req *http.Request,ctx *goproxy.ProxyCtx){
-  
-   req_uid:=NextUid()
+func getReqLogData(req *http.Request) kvType{
+   req.ParseForm()
    data:=kvType{}
-   data["session_id"]=ctx.Session
-   data["now"]=time.Now().UnixNano()
    data["host"]=req.Host
    data["header"]=req.Header
    data["url"]=req.URL.String()
    data["cookies"]=req.Cookies()
-   data["user"]=ctx.UserData.(string)
    data["client_ip"]=req.RemoteAddr
    data["form"]=req.Form
+   return data
+}
+
+func (ser *ProxyServe)logRequest(req *http.Request,ctx *goproxy.ProxyCtx,req_new *http.Request){
+   req_uid:=NextUid()
+  
+   data_origin:=getReqLogData(req)
+//   fmt.Println(data)
+   data_rewrite:=getReqLogData(req_new)
+   
+   data:=kvType{}
+   
+   data["now"]=time.Now().UnixNano()
+   data["session_id"]=ctx.Session
+   data["user"]=ctx.UserData.(string)
+   
+   
+   data_rewrite_change:=kvType{}
+   for k,v:=range data_rewrite{
+      v_e:=encode(v)
+      v_e_last:=encode(data_origin[k])
+      if(string(v_e)!=string(v_e_last)){
+        data_rewrite_change[k]=v
+      }
+   }
+   
+   data["origin"]=data_origin
+   data["rewrite"]=data_rewrite
+//   fmt.Println(data)
    err:= ser.mydb.RequestTable.InsertRecovery(req_uid,data)
    
-   log.Println("save_req",ctx.Session,req.URL.String(),"req_docid=",req_uid,err)
+   log.Println("save_req",ctx.Session,req.URL.String(),"req_docid=",req_uid,err,data_rewrite_change)
    
    if(err!=nil){
      log.Println(err)
@@ -130,9 +161,12 @@ func (ser *ProxyServe)logResponse(res *http.Response, ctx *goproxy.ProxyCtx){
    data["status"]=res.StatusCode
    data["content_length"]=res.ContentLength
 //   data["cookies"]=res.Cookies()
-   
-   buf:=forgetRead(&res.Body)
-   data["body"]=buf.String()
+   if(res.ContentLength<=ser.MaxResSaveLength){
+	   buf:=forgetRead(&res.Body)
+	   data["body"]=buf.String()
+   }else{
+	   data["body"]="pproxy skip"
+   }
    
    err:= ser.mydb.ResponseTable.InsertRecovery(req_uid,data)
    log.Println("save_res [",req_uid,"]",err)
@@ -144,7 +178,7 @@ func (ser *ProxyServe)logResponse(res *http.Response, ctx *goproxy.ProxyCtx){
 
 func (ser *ProxyServe)GetResponseByDocid(docid uint64) (res_data kvType){
   ser.mydb.ResponseTable.Read(docid,&res_data)
-  fmt.Println(docid,res_data)
+//  fmt.Println(docid,res_data)
   return res_data
 }
 func (ser *ProxyServe)GetRequestByDocid(docid uint64) (req_data kvType){
@@ -156,6 +190,7 @@ func NewProxyServe()*ProxyServe{
    proxy:= new(ProxyServe)
    proxy.mydb=NewTieDb("./data/")
    proxy.startTime=time.Now()
+   proxy.MaxResSaveLength=2*1024*1024
   return proxy
 }
 

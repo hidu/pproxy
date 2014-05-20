@@ -6,7 +6,7 @@ import (
   "strings"
   "github.com/googollee/go-socket.io"
   "log"
-//  "fmt"
+  "fmt"
 	"strconv"
 )
 /**
@@ -16,6 +16,7 @@ func (ser *ProxyServe)client_get_response(ns *socketio.NameSpace, docid_str stri
    docid,_:=strconv.ParseUint(docid_str,10,64)
 	res:=ser.GetResponseByDocid(docid)
 	req:=ser.GetRequestByDocid(docid)
+	fmt.Println(req)
 	data:=make(map[string]interface{})
 	data["req"]=req
 	data["res"]=res

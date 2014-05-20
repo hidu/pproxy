@@ -6,6 +6,7 @@ import (
 	"io"
 	"bytes"
 	"io/ioutil"
+	"encoding/gob"
 )
 
  func Int64ToBytes(i int64) []byte {
@@ -42,3 +43,13 @@ func IsLocalIp(host string)bool{
     *reader = ioutil.NopCloser(buf).(io.ReadCloser)
     return buf
  }
+ 
+ func encode(data interface{}) []byte{
+    var bf bytes.Buffer
+	enc := gob.NewEncoder(&bf)
+	err := enc.Encode(data)
+	if err != nil {
+	  return []byte{}
+	}
+	return bf.Bytes()
+}
