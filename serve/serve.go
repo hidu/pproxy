@@ -14,7 +14,13 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"io/ioutil"
+	 "math/rand"
+	 "github.com/robertkrimen/otto"
 )
+
+var js *otto.Otto
+var jsFn otto.Value
 
 type ProxyServe struct {
 	Port      int
@@ -27,6 +33,7 @@ type ProxyServe struct {
 	startTime time.Time
 
 	MaxResSaveLength int64
+	FilterJsPath string
 }
 type wsClient struct {
 	ns   *socketio.NameSpace
@@ -51,29 +58,66 @@ func (ser *ProxyServe) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 func (ser *ProxyServe) Start() {
 	ser.Goproxy = goproxy.NewProxyHttpServer()
-	ser.Goproxy.OnRequest().DoFunc(func(r *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
-		authInfo := getAuthorInfo(r)
-		ctx.UserData = "guest"
+	ser.Goproxy.OnRequest().DoFunc(func(req *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
+		authInfo := getAuthorInfo(req)
+		uname:= "guest"
 		if authInfo != nil {
-			ctx.UserData = authInfo.Name
+			uname = authInfo.Name
 		}
-		for k, _ := range r.Header {
+		for k, _ := range req.Header {
 			if len(k) > 5 && k[:6] == "Proxy-" {
-				r.Header.Del(k)
+				req.Header.Del(k)
 			}
 		}
 		if ser.AdminName != "" && (authInfo == nil || (authInfo != nil && !authInfo.isEqual(ser.AdminName, ser.AdminPsw))) {
-			return nil, auth.BasicUnauthorized(r, "auth need")
+			return nil, auth.BasicUnauthorized(req, "auth need")
 		}
-		//		form_err:=r.ParseForm()
-		//		if(form_err!=nil){
-		//		  log.Println("parse form err",form_err)
-		//		}
-		req_new := ser.changeRequest(r, ctx)
-		ctx.Req = req_new
-		//
-		ser.logRequest(r, ctx, req_new)
-		return req_new, nil
+		
+		logdata := kvType{}
+		logdata["host"] = req.Host
+		logdata["header"] = map[string][]string(req.Header)
+		logdata["url"] = req.URL.String()
+		logdata["path"] = req.URL.Path
+		logdata["cookies"] = req.Cookies()
+		logdata["form"] = map[string][]string(req.Form)
+		logdata["now"] = time.Now().UnixNano()
+		logdata["session_id"] = ctx.Session
+		logdata["user"] = uname
+		logdata["client_ip"] = req.RemoteAddr
+		
+		req_dump, err_dump := httputil.DumpRequest(req, true)
+		
+		if err_dump != nil {
+			log.Println("dump request failed")
+			req_dump = []byte("dump failed")
+		}
+		logdata["dump"] = base64.StdEncoding.EncodeToString(req_dump)
+		req_uid := NextUid()+uint64(ctx.Session)
+		
+		ctx.UserData = req_uid
+		
+		ser.changeRequest(req)
+		
+		rewrite:=make(map[string]string)
+		url_new:=req.URL.String()
+		
+		if(url_new!=logdata["url"]){
+		   rewrite["url"]=url_new
+		}
+		
+		logdata["rewrite"]=rewrite
+		
+		err := ser.mydb.RequestTable.InsertRecovery(req_uid, logdata)
+		log.Println("save_req", ctx.Session, req.URL.String(), "req_docid=", req_uid, err)
+	
+		if err != nil {
+			log.Println(err)
+			return req,nil
+		}
+		
+		ser.Broadcast_Req(ctx.Session, req, req_uid)
+		
+		return req, nil
 	})
 
 	ser.Goproxy.OnResponse().DoFunc(func(resp *http.Response, ctx *goproxy.ProxyCtx) *http.Response {
@@ -91,56 +135,40 @@ func (ser *ProxyServe) Start() {
 	log.Println(err)
 }
 
-func (ser *ProxyServe) changeRequest(req *http.Request, ctx *goproxy.ProxyCtx) *http.Request {
-	if strings.HasPrefix(req.URL.Path, "/napi") {
-		req.URL.Host = "beta.zhidao.baidu.com:80"
-		req.URL.Path = "/rds" + req.URL.Path
-	}
+func (ser *ProxyServe) changeRequest(req *http.Request) {
 	if strings.HasPrefix(req.URL.Path, "/qas") {
-		req.URL.Host = "beta.zhidao.baidu.com:80"
-		req.URL.Path = "/rds" + req.URL.Path[4:]
+		url_new:=req.URL.Scheme+"://beta.zhidao.baidu.com"+"/rds" + req.URL.Path[4:]
+		req.URL,_=req.URL.Parse(url_new)
 	}
-	return req
-}
-
-func getReqLogData(req *http.Request) kvType {
-	data := kvType{}
-	data["host"] = req.Host
-	data["header"] = map[string][]string(req.Header)
-	data["url"] = req.URL.String()
-	data["cookies"] = req.Cookies()
-	data["form"] = map[string][]string(req.Form)
-	return data
-}
-
-func (ser *ProxyServe) logRequest(req *http.Request, ctx *goproxy.ProxyCtx, req_new *http.Request) {
-	req_uid := NextUid()
-	data := getReqLogData(req)
-	//   fmt.Println(data)
-	//   data_rewrite:=getReqLogData(req_new)
-
-	data["now"] = time.Now().UnixNano()
-	data["session_id"] = ctx.Session
-	data["user"] = ctx.UserData.(string)
-	data["client_ip"] = req.RemoteAddr
-
-	req_dump, err_dump := httputil.DumpRequest(req, true)
-	if err_dump != nil {
-		log.Println("dump request failed")
-		req_dump = []byte("dump failed")
-	}
-	data["dump"] = base64.StdEncoding.EncodeToString(req_dump)
-
-	err := ser.mydb.RequestTable.InsertRecovery(req_uid, data)
-
-	log.Println("save_req", ctx.Session, req.URL.String(), "req_docid=", req_uid, err)
-
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	ser.Broadcast_Req(ctx.Session, req, req_uid)
-	ctx.UserData = req_uid
+   if(js!=nil){
+      urlObj, _ := js.Object(`ul={}`)
+      urlObj.Set("url",req.URL.String())
+      urlObj.Set("schema",req.URL.Scheme)
+      urlObj.Set("host",req.URL.Host)
+      urlObj.Set("path",req.URL.Path)
+      urlObj.Set("rawquery",req.URL.RawQuery)
+      urlObj.Set("fragment",req.URL.Fragment)
+      urlObj.Set("opaque",req.URL.Opaque)
+      username:=""
+      psw:=""
+      if(req.URL.User!=nil){
+	      username=req.URL.User.Username()
+	      psw,_=req.URL.User.Password()
+      }
+      urlObj.Set("username",username)
+      urlObj.Set("password",psw)
+      js_ret,err_js:=jsFn.Call(jsFn,urlObj)
+      if(err_js==nil){
+        var url_err error
+        req.URL,url_err=req.URL.Parse(js_ret.String())
+        if(url_err!=nil){
+          log.Println("js filter err:",js_ret,url_err)
+	       }
+      }else{
+          log.Println("js filter err:",err_js,js_ret)
+        }
+      
+   }
 }
 
 /**
@@ -198,14 +226,21 @@ func (ser *ProxyServe) GetRequestByDocid(docid uint64) (req_data kvType) {
 	return req_data
 }
 
-func NewProxyServe() *ProxyServe {
+func NewProxyServe(jsPath string) *ProxyServe {
 	proxy := new(ProxyServe)
 	proxy.mydb = NewTieDb("./data/")
 	proxy.startTime = time.Now()
 	proxy.MaxResSaveLength = 2 * 1024 * 1024
-
-	//  data:= proxy.GetRequestByDocid(14251672015029932961)
-	//  fmt.Println(data)
+	proxy.FilterJsPath=jsPath
+	
+	script, err:= ioutil.ReadFile(jsPath)
+	if(err==nil){
+		js= otto.New()
+	   js.Run(string(script))
+	   jsFn,_=js.Get("filter")
+	   log.Println("create jsFn:",jsFn)
+	}
+   rand.Seed(time.Now().UnixNano())
 	return proxy
 }
 

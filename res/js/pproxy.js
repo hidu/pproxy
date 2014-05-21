@@ -17,6 +17,9 @@ socket.on("res", function(data) {
 	var res = data["res"];
 	var html = "<div><table class='tb_1'><caption>Request</caption>";
 	html += "<tr><th width='80px'>url:</th><td>" + h(req["url"]) + "</td></tr>"
+	if(req["rewrite"] && req["rewrite"]["url"]){
+		html += "<tr><th>rewrite:</th><td>" + req["rewrite"]["url"]+"</td></tr>";
+	}
 	html += "<tr><th>client:</th><td>" + req["client_ip"]+"&nbsp;&nbsp;docid:"+req["@id"]+ "</td></tr>";
 	html += "<tr><th>user:</th><td>" + req["user"] + "</td></tr>";
 
@@ -67,17 +70,17 @@ socket.on("res", function(data) {
 					+ res["header"]["Content-Type"][0] + ";base64,"
 					+ res["body"] + "'/></td></tr>";
 		}
-		for ( var k in res["header"]) {
-			html += "<tr><th>" + k + ":</th><td>"
-					+ res["header"][k].join("<br/>") + "</td></tr>";
-		}
+//		for ( var k in res["header"]) {
+//			html += "<tr><th>" + k + ":</th><td>"
+//					+ res["header"][k].join("<br/>") + "</td></tr>";
+//		}
 		if(res["dump"]){
 			html += "<tr><th>res_dump:</th><td><pre>"+ h(Base64.decode(res["dump"])) + "</pre></td></tr>";
 		}
 	}
 
 	html += "</table></div>";
-	$("#content").empty().html(html)
+	$("#content").empty().html(html).hide().slideDown("fast")
 })
 socket.on("disconnect", function() {
 	$("#connect_status").html("<font color=red>offline</font>")

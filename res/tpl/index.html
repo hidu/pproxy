@@ -21,15 +21,20 @@
            <li><a href="#network">netwok</a></li>
            <li><a href="#config">config</a></li>
        </ul>
+       	<div style="float:right">show res<input type="text" id='f_docid'>
+	       <input type='button' onclick="return get_response($('#f_docid').val());" value="show doc">
+	    </div>
        <div class="clear"></div>
 </nav>
 <div id="body">
 <div class="yui3-g">
 	<div class="yui3-u-2-5">
-	<div>show res<input type="text" id='f_docid'>
-	    <input type='button' onclick="return get_response($('#f_docid').val());" value="show doc">
-	 </div>
 	<div id="network_list_div">
+	<div style='margin:3px'>
+	   filter:<select id='network_filter_select'><option value='default'>default</option><option value='null'>null</option></select>
+	  <a class='button button-primary' onclick="$('#tb_network tbody').empty()" href="javascript:;">clean</a>
+	</div>
+	 
 	 <table id='tb_network' class="tb_1">
 	  <thead>
 	     <tr><th width="30px">#</th>
