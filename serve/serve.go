@@ -11,6 +11,8 @@ import (
 	"reflect"
 	"github.com/googollee/go-socket.io"
 	"strings"
+	"encoding/base64"
+	"net/http/httputil"
 )
 
 type ProxyServe struct{
@@ -104,7 +106,6 @@ func getReqLogData(req *http.Request) kvType{
    data["header"]=map[string][]string(req.Header)
    data["url"]=req.URL.String()
    data["cookies"]=req.Cookies()
-   data["client_ip"]=req.RemoteAddr
    data["form"]=map[string][]string(req.Form)
    return data
 }
@@ -112,29 +113,22 @@ func getReqLogData(req *http.Request) kvType{
 func (ser *ProxyServe)logRequest(req *http.Request,ctx *goproxy.ProxyCtx,req_new *http.Request){
    req_uid:=NextUid()
   
-   data_origin:=getReqLogData(req)
+   data:=getReqLogData(req)
 //   fmt.Println(data)
-   data_rewrite:=getReqLogData(req_new)
-   
-   data:=kvType{}
+//   data_rewrite:=getReqLogData(req_new)
    
    data["now"]=time.Now().UnixNano()
    data["session_id"]=ctx.Session
    data["user"]=ctx.UserData.(string)
+   data["client_ip"]=req.RemoteAddr
    
+   req_dump,err_dump:=httputil.DumpRequest(req,false)
+   if(err_dump!=nil){
+     log.Println("dump request failed")
+     req_dump=[]byte("dump failed")
+    }
+   data["dump"]=base64.StdEncoding.EncodeToString(req_dump)
    
-   data_rewrite_change:=kvType{}
-   for k,v:=range data_rewrite{
-      v_e:=gob_encode(v)
-      v_e_last:=gob_encode(data_origin[k])
-      if(v_e!=v_e_last){
-        data_rewrite_change[k]=v
-      }
-   }
-   
-   data["origin"]=gob_encode(data_origin)
-   data["rewrite"]=gob_encode(data_rewrite_change)
-//   fmt.Println(data)
    err:= ser.mydb.RequestTable.InsertRecovery(req_uid,data)
    
    log.Println("save_req",ctx.Session,req.URL.String(),"req_docid=",req_uid,err)
@@ -157,16 +151,24 @@ func (ser *ProxyServe)logResponse(res *http.Response, ctx *goproxy.ProxyCtx){
    data:=kvType{}
    data["session_id"]=ctx.Session
    data["now"]=time.Now().UnixNano()
-   data["header"]=res.Header
+   data["header"]=map[string][]string(res.Header)
    data["status"]=res.StatusCode
    data["content_length"]=res.ContentLength
+   
+   res_dump,dump_err:=httputil.DumpResponse(res,false)
+   if(dump_err!=nil){
+    log.Println("dump res err",dump_err)
+    res_dump=[]byte("dump res failed")
+   }
+   data["dump"]=base64.StdEncoding.EncodeToString(res_dump)
 //   data["cookies"]=res.Cookies()
+
+	body:=[]byte("pproxy skip")
    if(res.ContentLength<=ser.MaxResSaveLength){
 	   buf:=forgetRead(&res.Body)
-	   data["body"]=buf.String()
-   }else{
-	   data["body"]="pproxy skip"
+	   body=buf.Bytes()
    }
+   data["body"]=base64.StdEncoding.EncodeToString(body)
    
    err:= ser.mydb.ResponseTable.InsertRecovery(req_uid,data)
    log.Println("save_res [",req_uid,"]",err)
