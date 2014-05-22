@@ -48,3 +48,4 @@ a{text-decoration: none;}
  #content{margin-left: 2px}
  #content table th,#content table td{font-size:11px}
  #network_list_div {overflow:auto;max-height: 650px;min-height:500px}
+ tr.selected{background: #ccffee;}

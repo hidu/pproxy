@@ -4,7 +4,7 @@ import (
  "flag"
 )
 var port=flag.Int("port",8080,"main proxy port")
-var filterPath=flag.String("js","","filter js path")
+var filterPath=flag.String("js","rewrite.js","filter js path")
 func main(){
   flag.Parse()
   ser:=serve.NewProxyServe(*filterPath)

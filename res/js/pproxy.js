@@ -4,7 +4,7 @@ socket.on('connect', function() {
 });
 socket.on("req", function(data) {
 	$("#tb_network tbody").prepend(
-			"<tr onclick=\"get_response('" + data['docid'] + "')\">" + "<td>"
+			"<tr onclick=\"get_response(this,'" + data['docid'] + "')\">" + "<td>"
 					+ data["sid"] + "</td>" + "<td></td>" + "<td>"
 					+ data["host"] + "</td>" + "<td>" + data["path"] + "</td>"
 					+ "</tr>")
@@ -20,8 +20,7 @@ socket.on("res", function(data) {
 	if(req["rewrite"] && req["rewrite"]["url"]){
 		html += "<tr><th>rewrite:</th><td>" + req["rewrite"]["url"]+"</td></tr>";
 	}
-	html += "<tr><th>client:</th><td>" + req["client_ip"]+"&nbsp;&nbsp;docid:"+req["@id"]+ "</td></tr>";
-	html += "<tr><th>user:</th><td>" + req["user"] + "</td></tr>";
+	html += "<tr><th>proxy_urer:</th><td><b>ip:</b>" + req["client_ip"]+"&nbsp;&nbsp;<b>docid:</b>"+req["@id"]+ "&nbsp;<b>uname:</b>"+req["user"]+"</td></tr>";
 
 	// for ( var k in req["header"]) {
 	// html += "<tr><th>" + k + ":</th><td>" +
@@ -86,9 +85,11 @@ socket.on("disconnect", function() {
 	$("#connect_status").html("<font color=red>offline</font>")
 })
 
-function get_response(docid) {
+function get_response(tr,docid) {
 	console.log("get_response docid=", docid)
 	socket.emit("get_response", docid)
+	$(tr).parent("tbody").find("tr").removeClass("selected")
+	$(tr).addClass("selected")
 }
 
 function bytesToString(bytes) {

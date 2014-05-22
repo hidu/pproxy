@@ -158,12 +158,14 @@ func (ser *ProxyServe) changeRequest(req *http.Request) {
       urlObj.Set("username",username)
       urlObj.Set("password",psw)
       js_ret,err_js:=jsFn.Call(jsFn,urlObj)
-      if(err_js==nil){
-        var url_err error
-        req.URL,url_err=req.URL.Parse(js_ret.String())
-        if(url_err!=nil){
-          log.Println("js filter err:",js_ret,url_err)
-	       }
+      if(err_js==nil ){
+	      if(js_ret.IsString() && len(js_ret.String())>10){
+	        var url_err error
+	        req.URL,url_err=req.URL.Parse(js_ret.String())
+	        if(url_err!=nil){
+	          log.Println("js filter err:",js_ret,url_err)
+		       }
+	        }
       }else{
           log.Println("js filter err:",err_js,js_ret)
         }
