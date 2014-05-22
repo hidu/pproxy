@@ -11,7 +11,6 @@ socket.on("req", function(data) {
 })
 socket.on("res", function(data) {
 	console.log(data)
-	$("#content").empty().html("loading...")
 	// var req = JSON.parse(Base64.decode(data["req"]["origin"]));
 	var req = data["req"];
 	var res = data["res"];
@@ -87,6 +86,7 @@ socket.on("disconnect", function() {
 
 function get_response(tr,docid) {
 	console.log("get_response docid=", docid)
+	$("#content").empty().html("<center style='margin:200px 0 auto'>loading...docid="+docid+"</center>")
 	socket.emit("get_response", docid)
 	$(tr).parent("tbody").find("tr").removeClass("selected")
 	$(tr).addClass("selected")

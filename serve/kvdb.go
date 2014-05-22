@@ -4,6 +4,8 @@ import (
 	"github.com/HouzuoGuo/tiedot/db"
 	"github.com/HouzuoGuo/tiedot/uid"
 	"log"
+	  "github.com/hidu/goutils"
+	  "time"
 )
 
 type TieDb struct {
@@ -33,6 +35,29 @@ func NewTieDb(dir string) *TieDb {
 
 func (t *TieDb) Flush() {
 	t.tdb.Flush()
+}
+
+func (t *TieDb)Clean(max_time_unix int64){
+   t.RequestTable.ForAll(func(id uint64, doc map[string]interface{}) bool{
+       if(doc["now"].(int64)<max_time_unix){
+         t.RequestTable.Delete(id)
+         log.Println("delete expire req,",id)
+         }
+       return true;
+   })
+   t.ResponseTable.ForAll(func(id uint64, doc map[string]interface{}) bool{
+       if(doc["now"].(int64)<max_time_unix){
+         t.RequestTable.Delete(id)
+         log.Println("delete expire res,",id)
+         }
+       return true;
+   })
+}
+
+func (t *TieDb)StartGcTimer(sec int64,max_life int64){
+  goutils.SetInterval(func(){
+     t.Clean(time.Now().Unix()-max_life)
+  },sec)
 }
 
 func NextUid() uint64 {

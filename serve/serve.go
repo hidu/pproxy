@@ -80,7 +80,7 @@ func (ser *ProxyServe) Start() {
 		logdata["path"] = req.URL.Path
 		logdata["cookies"] = req.Cookies()
 		logdata["form"] = map[string][]string(req.Form)
-		logdata["now"] = time.Now().UnixNano()
+		logdata["now"] = time.Now().Unix()
 		logdata["session_id"] = ctx.Session
 		logdata["user"] = uname
 		logdata["client_ip"] = req.RemoteAddr
@@ -184,7 +184,7 @@ func (ser *ProxyServe) logResponse(res *http.Response, ctx *goproxy.ProxyCtx) {
 	req_uid := ctx.UserData.(uint64)
 	data := kvType{}
 	data["session_id"] = ctx.Session
-	data["now"] = time.Now().UnixNano()
+	data["now"] = time.Now().Unix()
 	data["header"] = map[string][]string(res.Header)
 	data["status"] = res.StatusCode
 	data["content_length"] = res.ContentLength
@@ -228,7 +228,7 @@ func (ser *ProxyServe) GetRequestByDocid(docid uint64) (req_data kvType) {
 	return req_data
 }
 
-func NewProxyServe(jsPath string) *ProxyServe {
+func NewProxyServe(jsPath string,store_time int64) *ProxyServe {
 	proxy := new(ProxyServe)
 	proxy.mydb = NewTieDb("./data/")
 	proxy.startTime = time.Now()
@@ -243,6 +243,8 @@ func NewProxyServe(jsPath string) *ProxyServe {
 	   log.Println("create jsFn:",jsFn)
 	}
    rand.Seed(time.Now().UnixNano())
+   
+   proxy.mydb.StartGcTimer(60,store_time)
 	return proxy
 }
 
