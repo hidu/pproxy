@@ -39,14 +39,14 @@ func (t *TieDb) Flush() {
 
 func (t *TieDb)Clean(max_time_unix int64){
    t.RequestTable.ForAll(func(id uint64, doc map[string]interface{}) bool{
-       if(doc["now"].(int64)<max_time_unix){
+       if(int64(doc["now"].(float64))<max_time_unix){
          t.RequestTable.Delete(id)
          log.Println("delete expire req,",id)
          }
        return true;
    })
    t.ResponseTable.ForAll(func(id uint64, doc map[string]interface{}) bool{
-       if(doc["now"].(int64)<max_time_unix){
+       if(int64(doc["now"].(float64))<max_time_unix){
          t.RequestTable.Delete(id)
          log.Println("delete expire res,",id)
          }

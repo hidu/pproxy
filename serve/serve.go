@@ -12,7 +12,7 @@ import (
 	"net/http/httputil"
 	"reflect"
 	"strconv"
-	"strings"
+//	"strings"
 	"time"
 	"io/ioutil"
 	 "math/rand"
@@ -108,7 +108,7 @@ func (ser *ProxyServe) Start() {
 		logdata["rewrite"]=rewrite
 		
 		err := ser.mydb.RequestTable.InsertRecovery(req_uid, logdata)
-		log.Println("save_req", ctx.Session, req.URL.String(), "req_docid=", req_uid, err)
+		log.Println("save_req", ctx.Session, req.URL.String(), "req_docid=", req_uid, err,rewrite)
 	
 		if err != nil {
 			log.Println(err)
@@ -136,10 +136,6 @@ func (ser *ProxyServe) Start() {
 }
 
 func (ser *ProxyServe) changeRequest(req *http.Request) {
-	if strings.HasPrefix(req.URL.Path, "/qas") {
-		url_new:=req.URL.Scheme+"://beta.zhidao.baidu.com"+"/rds" + req.URL.Path[4:]
-		req.URL,_=req.URL.Parse(url_new)
-	}
    if(js!=nil){
       urlObj, _ := js.Object(`ul={}`)
       urlObj.Set("url",req.URL.String())
@@ -157,14 +153,33 @@ func (ser *ProxyServe) changeRequest(req *http.Request) {
       }
       urlObj.Set("username",username)
       urlObj.Set("password",psw)
+      
       js_ret,err_js:=jsFn.Call(jsFn,urlObj)
+      
       if(err_js==nil ){
-	      if(js_ret.IsString() && len(js_ret.String())>10){
-	        var url_err error
-	        req.URL,url_err=req.URL.Parse(js_ret.String())
-	        if(url_err!=nil){
-	          log.Println("js filter err:",js_ret,url_err)
-		       }
+	      if(js_ret.IsObject()){
+          	obj,export_err:=js_ret.Export()
+          	if(export_err==nil){
+             	url_obj:=obj.(map[string]interface{})
+             	url_new:=fmt.Sprintf("%s",url_obj["schema"])+"://";
+             	username:=fmt.Sprintf("%s",url_obj["username"])
+             	if(username!=""){
+                	url_new+=fmt.Sprintf("%s:%s@",username,url_obj["password"])
+             	}
+             	url_new+=fmt.Sprintf("%s%s",url_obj["host"],url_obj["path"])
+             	
+             	if(url_new==req.URL.String()){
+             	   return
+             	}
+             	
+			    var url_err error
+		        req.URL,url_err=req.URL.Parse(url_new)
+		        if(url_err!=nil){
+		           log.Println("js filter err:",js_ret,url_err)
+			    }
+          	}else{
+          	   log.Println("js filter result wrong",js_ret.String())
+          	}
 	        }
       }else{
           log.Println("js filter err:",err_js,js_ret)
@@ -244,7 +259,7 @@ func NewProxyServe(jsPath string,store_time int64) *ProxyServe {
 	}
    rand.Seed(time.Now().UnixNano())
    
-   proxy.mydb.StartGcTimer(60,store_time)
+//   proxy.mydb.StartGcTimer(60,store_time)
 	return proxy
 }
 
