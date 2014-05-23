@@ -15,7 +15,6 @@ socket.on("req", function(data) {
 })
 socket.on("res", function(data) {
 	console.log(data)
-	// var req = JSON.parse(Base64.decode(data["req"]["origin"]));
 	var req = data["req"];
 	var res = data["res"];
 	var html = "<div><table class='tb_1'><caption>Request</caption>";
@@ -24,19 +23,8 @@ socket.on("res", function(data) {
 		html += "<tr><th>rewrite:</th><td>" + req["rewrite"]["url"]+"</td></tr>";
 	}
 	html += "<tr><th>proxy_urer:</th><td><b>ip:</b>" + req["client_ip"]+"&nbsp;&nbsp;<b>docid:</b>"+req["@id"]+ "&nbsp;<b>uname:</b>"+req["user"]+"</td></tr>";
-
-	// for ( var k in req["header"]) {
-	// html += "<tr><th>" + k + ":</th><td>" +
-	// req["header"][k].join("<br/>")+"</td></tr>";
-	// }
-	if (req["form"]) {
-		html += "<tr><th>form:</th><td><table class='tb_1'>"
-		for ( var k in req["form"]) {
-			html += "<tr><th width='80px'>" + k + ":</th><td>"
-					+ req["form"][k].join("<br/>") + "</td></tr>";
-		}
-		html += "</table></td></tr>"
-	}
+   html+=pproxy_tr_sub_table(req["form_get"],"get_params");
+   html+=pproxy_tr_sub_table(req["form_post"],"post_params");
 	if(req["dump"]){
 		html += "<tr><th>req_dump:</th><td><pre>" + h(Base64.decode(req["dump"]))+ "</pre></td></tr>";
 	}
@@ -72,10 +60,6 @@ socket.on("res", function(data) {
 					+ res["header"]["Content-Type"][0] + ";base64,"
 					+ res["body"] + "'/></td></tr>";
 		}
-//		for ( var k in res["header"]) {
-//			html += "<tr><th>" + k + ":</th><td>"
-//					+ res["header"][k].join("<br/>") + "</td></tr>";
-//		}
 		if(res["dump"]){
 			html += "<tr><th>res_dump:</th><td><pre>"+ h(Base64.decode(res["dump"])) + "</pre></td></tr>";
 		}
@@ -87,6 +71,23 @@ socket.on("res", function(data) {
 socket.on("disconnect", function() {
 	$("#connect_status").html("<font color=red>offline</font>")
 })
+
+function pproxy_tr_sub_table(obj,name){
+	if(!obj){
+		return "";
+	}
+	var html= "<tr><th>"+name+":</th><td><table class='tb_1'>";
+	var i=0;
+	for ( var k in obj) {
+		html += "<tr><th width='80px'>" + k + ":</th><td>"+ h(obj[k].join("\n")) + "</td></tr>";
+		i++
+	}
+	if(i<1){
+		return "";
+	}
+	html += "</table></td></tr>"
+	return html
+}
 
 function get_response(tr,docid) {
 	console.log("get_response docid=", docid)

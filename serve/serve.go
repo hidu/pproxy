@@ -17,6 +17,7 @@ import (
 	"io/ioutil"
 	 "math/rand"
 	 "github.com/robertkrimen/otto"
+	 "net/url"
 )
 
 var js *otto.Otto
@@ -72,18 +73,26 @@ func (ser *ProxyServe) Start() {
 		if ser.AdminName != "" && (authInfo == nil || (authInfo != nil && !authInfo.isEqual(ser.AdminName, ser.AdminPsw))) {
 			return nil, auth.BasicUnauthorized(req, "auth need")
 		}
-		
 		logdata := kvType{}
 		logdata["host"] = req.Host
 		logdata["header"] = map[string][]string(req.Header)
 		logdata["url"] = req.URL.String()
 		logdata["path"] = req.URL.Path
 		logdata["cookies"] = req.Cookies()
-		logdata["form"] = map[string][]string(req.Form)
 		logdata["now"] = time.Now().Unix()
 		logdata["session_id"] = ctx.Session
 		logdata["user"] = uname
 		logdata["client_ip"] = req.RemoteAddr
+		logdata["form_get"]=req.URL.Query()
+		
+		if(req.Header.Get("Content-Type")=="application/x-www-form-urlencoded"){
+			buf:=forgetRead(&req.Body)
+			post_vs,post_e:=url.ParseQuery(buf.String())
+			if(post_e!=nil){
+				log.Println("parse post err",post_e)
+			}
+			logdata["form_post"]=post_vs;
+		}
 		
 		req_dump, err_dump := httputil.DumpRequest(req, true)
 		
