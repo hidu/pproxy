@@ -3,6 +3,10 @@ socket.on('connect', function() {
 	$("#connect_status").html("<font color=green>online</font>")
 });
 socket.on("req", function(data) {
+	var client_ip=$("#client_ip").val();
+	if(client_ip!="" && data["client_ip"].indexOf(client_ip)<0){
+		return;
+	}
 	$("#tb_network tbody").prepend(
 			"<tr onclick=\"get_response(this,'" + data['docid'] + "')\">" + "<td>"
 					+ data["sid"] + "</td>" + "<td></td>" + "<td>"

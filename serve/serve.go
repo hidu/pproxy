@@ -243,9 +243,10 @@ func (ser *ProxyServe) GetRequestByDocid(docid uint64) (req_data kvType) {
 	return req_data
 }
 
-func NewProxyServe(jsPath string,store_time int64) *ProxyServe {
+func NewProxyServe(data_dir string,jsPath string,port int) *ProxyServe {
 	proxy := new(ProxyServe)
-	proxy.mydb = NewTieDb("./data/")
+	proxy.Port=port
+	proxy.mydb = NewTieDb(fmt.Sprintf("%s/%d/",data_dir,port))
 	proxy.startTime = time.Now()
 	proxy.MaxResSaveLength = 2 * 1024 * 1024
 	proxy.FilterJsPath=jsPath
@@ -268,6 +269,7 @@ func (ser *ProxyServe) Broadcast_Req(id int64, req *http.Request, docid uint64) 
 	data["docid"] = fmt.Sprintf("%d", docid)
 	data["sid"] = id % 1000
 	data["host"] = req.Host
+	data["client_ip"] = req.RemoteAddr
 	data["path"] = req.URL.Path
 	data["method"] = req.Method
 	for _, client := range ser.wsClients {
