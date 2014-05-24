@@ -31,9 +31,21 @@
 	<div class="yui3-u-2-5">
 	<div id="network_list_div">
 	<div style='margin:3px'>
-	  client IP:<input type="text" id='client_ip' placeholder="which ip use this proxy">
-	  <div class='right'><a class='button button-primary' onclick="$('#tb_network tbody').empty()" href="javascript:;">clean</a></div>
-	  <div class="c"></div>
+	<form id="network_filter_form">
+    	<table width="100%">
+		  <tr><th width="100px">client:</th><td><input type="text" id='client_ip' name="client_ip" placeholder="which ip use this proxy"></td></tr>
+		  <tr><th>hide:</th>
+		  <td>
+		  <label><input type="checkbox" name="hide" value='image'>image</label>
+		  <label><input type="checkbox" name="hide" value='js'>js</label>
+		  <label><input type="checkbox" name="hide" value='css'>css</label>
+		  </td>
+		  </tr>
+		  <tr><th>url match:</th><td><input type="text" name="url_match">
+	     <div class='right'><a class='button button-primary' onclick="$('#tb_network tbody').empty()" href="javascript:;">clean</a></div>
+		  </td></tr>
+	  </table>
+	</form>
 	</div>
 	 
 	 <table id='tb_network' class="tb_1">

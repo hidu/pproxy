@@ -18,6 +18,7 @@ import (
 	 "math/rand"
 	 "github.com/robertkrimen/otto"
 	 "net/url"
+	 "sync"
 )
 
 var js *otto.Otto
@@ -35,10 +36,14 @@ type ProxyServe struct {
 
 	MaxResSaveLength int64
 	FilterJsPath string
+	mu sync.RWMutex
 }
 type wsClient struct {
 	ns   *socketio.NameSpace
 	user string
+	filter_client_ip string
+	filter_hide []string
+	filter_url []string
 }
 
 type kvType map[string]interface{}
@@ -143,7 +148,6 @@ func (ser *ProxyServe) Start() {
 	err := http.ListenAndServe(addr, ser)
 	log.Println(err)
 }
-
 func (ser *ProxyServe) changeRequest(req *http.Request) {
    if(js!=nil){
       urlObj, _ := js.Object(`ul={}`)
@@ -273,15 +277,3 @@ func NewProxyServe(data_dir string,jsPath string,port int) *ProxyServe {
 	return proxy
 }
 
-func (ser *ProxyServe) Broadcast_Req(id int64, req *http.Request, docid uint64) {
-	data := make(map[string]interface{})
-	data["docid"] = fmt.Sprintf("%d", docid)
-	data["sid"] = id % 1000
-	data["host"] = req.Host
-	data["client_ip"] = req.RemoteAddr
-	data["path"] = req.URL.Path
-	data["method"] = req.Method
-	for _, client := range ser.wsClients {
-		send_req(client, data)
-	}
-}

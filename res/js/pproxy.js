@@ -1,12 +1,10 @@
 var socket = io.connect();
 socket.on('connect', function() {
 	$("#connect_status").html("<font color=green>online</font>")
+	$("#network_filter_form").change();
 });
 socket.on("req", function(data) {
-	var client_ip=$("#client_ip").val();
-	if(client_ip!="" && data["client_ip"].indexOf(client_ip)<0){
-		return;
-	}
+	console && console.log("req",data)
 	$("#tb_network tbody").prepend(
 			"<tr onclick=\"get_response(this,'" + data['docid'] + "')\">" + "<td>"
 					+ data["sid"] + "</td>" + "<td></td>" + "<td>"
@@ -14,7 +12,7 @@ socket.on("req", function(data) {
 					+ "</tr>")
 })
 socket.on("res", function(data) {
-	console.log(data)
+	console && console.log("res",data)
 	var req = data["req"];
 	var res = data["res"];
 	var html = "<div><table class='tb_1'><caption>Request</caption>";
@@ -90,7 +88,7 @@ function pproxy_tr_sub_table(obj,name){
 }
 
 function get_response(tr,docid) {
-	console.log("get_response docid=", docid)
+	console && console.log("get_response docid=", docid)
 	$("#content").empty().html("<center style='margin:200px 0 auto'>loading...docid="+docid+"</center>")
 	socket.emit("get_response", docid)
 	$(tr).parent("tbody").find("tr").removeClass("selected")
@@ -114,3 +112,11 @@ function h(str) {
 	str = str.replace(/\|/g, '&brvbar;');
 	return str;
 }
+
+$().ready(function(){
+		$("#network_filter_form").change(function(){
+			var form_data=$(this).serialize();
+			socket.emit("client_filter", form_data)
+		}).change();
+		
+});
