@@ -35,7 +35,7 @@ type ProxyServe struct {
 	startTime time.Time
 
 	MaxResSaveLength int64
-	FilterJsPath string
+	RewriteJs string
 	mu sync.RWMutex
 }
 type wsClient struct {
@@ -262,12 +262,12 @@ func NewProxyServe(data_dir string,jsPath string,port int) *ProxyServe {
 	proxy.mydb = NewTieDb(fmt.Sprintf("%s/%d/",data_dir,port))
 	proxy.startTime = time.Now()
 	proxy.MaxResSaveLength = 2 * 1024 * 1024
-	proxy.FilterJsPath=jsPath
 	
 	script, err:= ioutil.ReadFile(jsPath)
 	if(err==nil){
+	   proxy.RewriteJs=string(script)
 		js= otto.New()
-	   js.Run(string(script))
+	   js.Run(proxy.RewriteJs)
 	   jsFn,_=js.Get("filter")
 	   log.Println("create jsFn:",jsFn)
 	}

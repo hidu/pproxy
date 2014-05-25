@@ -29,9 +29,6 @@ var extTypes map[string][]string=map[string][]string{
 "css":[]string{"css"},
 "image":[]string{"jpg","jpeg","png","gif","bmp","tiff","jpe","tif","webp","ico"},
 }
-//extTypes["js"]=[]string{"js"}
-//extTypes["css"]=[]string{"css"}
-//extTypes["image"]=[]string{"jpg","jpeg","png","gif","bmp","tiff","jpe","tif","webp"}
 
 func checkFilter(req *http.Request,client *wsClient) bool{
    if(client.filter_client_ip!="" && !strings.Contains(req.RemoteAddr,client.filter_client_ip)){
