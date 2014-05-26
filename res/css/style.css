@@ -45,7 +45,7 @@ table {border-collapse: collapse;border-spacing: 0;}
 
  #tb_network{font-size: 11px}
  #tb_network td{overflow: auto;cursor: pointer;}
- #content{margin-left: 2px}
+ #right_content{margin-left: 2px}
  #content table th,#content table td{font-size:11px}
  #network_list_div {overflow:auto;max-height: 650px;min-height:500px}
  tr.selected{background: #ccffee;}

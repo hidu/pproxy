@@ -94,6 +94,7 @@ func (ser *ProxyServe) handleLocalReq(w http.ResponseWriter, req *http.Request) 
 			values["host"] = req.Host
 			values["title"] = ""
 			values["version"] = "0.1"
+			values["rewriteJs"] = ser.RewriteJs
 			tpl.Execute(w, values)
 		}
 	}

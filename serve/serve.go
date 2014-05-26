@@ -99,8 +99,9 @@ func (ser *ProxyServe) Start() {
 			logdata["form_post"]=post_vs;
 		}
 		
-		req_dump, err_dump := httputil.DumpRequest(req, true)
+		ser.changeRequest(req)
 		
+		req_dump, err_dump := httputil.DumpRequest(req, true)
 		if err_dump != nil {
 			log.Println("dump request failed")
 			req_dump = []byte("dump failed")
@@ -110,7 +111,6 @@ func (ser *ProxyServe) Start() {
 		
 		ctx.UserData = req_uid
 		
-		ser.changeRequest(req)
 		
 		rewrite:=make(map[string]string)
 		url_new:=req.URL.String()
@@ -183,13 +183,13 @@ func (ser *ProxyServe) changeRequest(req *http.Request) {
              	
              	if(url_new==req.URL.String()){
              	   return
-             	}
+             	    }
              	
 			    var url_err error
 		        req.URL,url_err=req.URL.Parse(url_new)
 		        if(url_err!=nil){
 		           log.Println("js filter err:",js_ret,url_err)
-			    }
+			       }
           	}else{
           	   log.Println("js filter result wrong",js_ret.String())
           	}
@@ -265,10 +265,10 @@ func NewProxyServe(data_dir string,jsPath string,port int) *ProxyServe {
 	
 	script, err:= ioutil.ReadFile(jsPath)
 	if(err==nil){
-	   proxy.RewriteJs=string(script)
+	   proxy.RewriteJs="function pproxy_rewrite(req){\n"+string(script)+"\nreturn req;\n}"
 		js= otto.New()
 	   js.Run(proxy.RewriteJs)
-	   jsFn,_=js.Get("filter")
+	   jsFn,_=js.Get("pproxy_rewrite")
 	   log.Println("create jsFn:",jsFn)
 	}
    rand.Seed(time.Now().UnixNano())
