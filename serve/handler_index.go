@@ -44,6 +44,11 @@ func (ser *ProxyServe) client_filter(ns *socketio.NameSpace, form_data string) {
  	 nsClient.filter_client_ip=strings.TrimSpace(m.Get("client_ip"))
  	 nsClient.filter_hide=m["hide"]
  	 nsClient.filter_url=strings.Split(strings.Replace(m.Get("url_match")," ","",-1),"|")
+ 	 user:=strings.TrimSpace(m.Get("user"))
+ 	 nsClient.user=user
+ 	 if(user==""){
+ 	 	nsClient.user="guest"
+ 	 }
 }
 func send_req(client *wsClient, data map[string]interface{}) {
 	err:=client.ns.Emit("req", data)

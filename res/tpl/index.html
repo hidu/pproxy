@@ -17,7 +17,7 @@
 <body>
 <nav>
        <ul class="clearfix">
-           <li><a id="connect_status">status<a></a></li>
+           <li><a id="connect_status">status</a></li>
            <li><a href="#network">netwok</a></li>
            <li><a href="#config">config</a></li>
        </ul>
@@ -33,7 +33,12 @@
 	<div style='margin:3px'>
 	<form id="network_filter_form">
     	<table width="100%">
-		  <tr><th width="100px">client:</th><td><input type="text" id='client_ip' name="client_ip" placeholder="which ip use this proxy"></td></tr>
+		  <tr>
+		  <th width="90px">client:</th>
+		  <td><input type="text" id='client_ip' name="client_ip" placeholder="which ip use this proxy">
+		  user:<input type="text" name="user">
+		  </td>
+		  </tr>
 		  <tr><th>hide:</th>
 		  <td>
 		  <label><input type="checkbox" name="hide" value='image'>image</label>

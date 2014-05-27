@@ -7,7 +7,7 @@ import (
 	"fmt"
 )
 
-func (ser *ProxyServe) Broadcast_Req(id int64, req *http.Request, docid uint64) {
+func (ser *ProxyServe) Broadcast_Req( req *http.Request, id int64,docid uint64,user string) {
 	data := make(map[string]interface{})
 	data["docid"] = fmt.Sprintf("%d", docid)
 	data["sid"] = id % 1000
@@ -19,7 +19,7 @@ func (ser *ProxyServe) Broadcast_Req(id int64, req *http.Request, docid uint64) 
 	defer ser.mu.RUnlock()
 	fmt.Println("now broadcast")
 	for _, client := range ser.wsClients {
-		if(checkFilter(req,client)){
+		if(client.user==user && checkFilter(req,client)){
 			send_req(client, data)
 		}
 	}

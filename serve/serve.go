@@ -55,6 +55,7 @@ func (ser *ProxyServe) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	if isLocalReq {
 		isLocalReq = IsLocalIp(host)
 	}
+	fmt.Println(req)
 	if isLocalReq {
 		ser.handleLocalReq(w, req)
 	} else {
@@ -67,17 +68,22 @@ func (ser *ProxyServe) Start() {
 	ser.Goproxy.OnRequest().DoFunc(func(req *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
 		authInfo := getAuthorInfo(req)
 		uname:= "guest"
+//		fmt.Println("authInfo",authInfo)
 		if authInfo != nil {
 			uname = authInfo.Name
 		}
+//		fmt.Println("uname",uname)
 		for k, _ := range req.Header {
 			if len(k) > 5 && k[:6] == "Proxy-" {
 				req.Header.Del(k)
 			}
 		}
-		if ser.AdminName != "" && (authInfo == nil || (authInfo != nil && !authInfo.isEqual(ser.AdminName, ser.AdminPsw))) {
+		if(authInfo == nil ){
 			return nil, auth.BasicUnauthorized(req, "auth need")
 		}
+//		if ser.AdminName != "" && (authInfo == nil || (authInfo != nil && !authInfo.isEqual(ser.AdminName, ser.AdminPsw))) {
+//			return nil, auth.BasicUnauthorized(req, "auth need")
+//		}
 		logdata := kvType{}
 		logdata["host"] = req.Host
 		logdata["header"] = map[string][]string(req.Header)
@@ -129,7 +135,7 @@ func (ser *ProxyServe) Start() {
 			return req,nil
 		}
 		
-		ser.Broadcast_Req(ctx.Session, req, req_uid)
+		ser.Broadcast_Req(req,ctx.Session, req_uid,uname)
 		
 		return req, nil
 	})
@@ -205,7 +211,7 @@ func (ser *ProxyServe) changeRequest(req *http.Request) {
 *log response if the req has log
  */
 func (ser *ProxyServe) logResponse(res *http.Response, ctx *goproxy.ProxyCtx) {
-	if reflect.TypeOf(ctx.UserData).Kind() != reflect.Uint64 {
+	if ctx.UserData==nil || reflect.TypeOf(ctx.UserData).Kind() != reflect.Uint64 {
 		log.Println("err,userdata not reqid,log res skip")
 		return
 	}
