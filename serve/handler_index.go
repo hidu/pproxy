@@ -134,7 +134,7 @@ func render_html(fileName string,values map[string]interface{},layout bool) stri
 	if(layout){
 	   values["body"]=body
 	   values["title"] = ""
-	   values["version"] = "0.1"
+	   values["version"] = "0.2"
 	   return render_html("layout.html",values,false)
 	}
 	return body

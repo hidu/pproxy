@@ -74,6 +74,8 @@ func (ser *ProxyServe) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 func (ser *ProxyServe) Start() {
 	ser.Goproxy = goproxy.NewProxyHttpServer()
+	
+	
 	ser.Goproxy.OnRequest().DoFunc(func(req *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
 		authInfo := getAuthorInfo(req)
 		uname:= "guest"
@@ -87,7 +89,8 @@ func (ser *ProxyServe) Start() {
 				req.Header.Del(k)
 			}
 		}
-		if(ser.AuthType>0 && ((ser.AuthType==2 && authInfo==nil)||!ser.CheckUserLogin(authInfo)) ){
+		if(ser.AuthType>0 && ((ser.AuthType==2 && authInfo==nil)||(ser.AuthType==1 && !ser.CheckUserLogin(authInfo))) ){
+			log.Println("login required",req.RemoteAddr,authInfo)
 			return nil, auth.BasicUnauthorized(req, "auth need")
 		}
 		logdata := kvType{}
@@ -147,9 +150,13 @@ func (ser *ProxyServe) Start() {
 	})
 
 	ser.Goproxy.OnResponse().DoFunc(func(resp *http.Response, ctx *goproxy.ProxyCtx) *http.Response {
+		if(resp!=nil){
+			resp.Header.Set("Connection","close")
+		}
 		if resp == nil || resp.Request == nil {
 			return resp
 		}
+//		fmt.Println("resp.Header:",resp.Header)
 		ser.logResponse(resp, ctx)
 		return resp
 	})
