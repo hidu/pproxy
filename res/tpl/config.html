@@ -1,0 +1,20 @@
+<form id="config_rewrite_js_form" method="post" action="/config" autocomplete="off">
+<table width="100%">
+<tr>
+<td width="50%">
+req rewrite with js:<font color=gray>[{{.rewriteJsPath}}]</font>
+<textarea style="width:90%;height:300px" name="js">{{.rewriteJs}}</textarea>
+<input type="submit" class="button button-primary" value="save">
+</td>
+<td valign="top">
+<pre>
+//the req object has attribute：url,schema,host,path,rawquery,fragment,opaque
+//demo code:
+if(req.host=="www.baidu.com"){
+   req.host="www.163.com"
+}
+</pre>
+</td>
+</tr>
+</table>
+</form>

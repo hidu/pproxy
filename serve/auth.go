@@ -32,3 +32,15 @@ func getAuthorInfo(req *http.Request) *BasicUserInfo {
 	}
 	return &BasicUserInfo{Name: userpass[0], Psw: userpass[1]}
 }
+
+func (ser *ProxyServe)CheckUserLogin(userInfo *BasicUserInfo) bool{
+    if (userInfo==nil){
+      return false
+    }
+    for name,psw:=range ser.Users{
+       if(userInfo.isEqual(name,psw)){
+          return true
+       }
+    }
+    return false;
+}

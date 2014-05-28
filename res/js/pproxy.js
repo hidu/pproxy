@@ -103,6 +103,7 @@ function bytesToString(bytes) {
 	return result;
 }
 
+
 function h(str) {
 	str = str.replace(/&/g, '&amp;');
 	str = str.replace(/</g, '&lt;');

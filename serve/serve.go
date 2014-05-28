@@ -19,25 +19,33 @@ import (
 	 "github.com/robertkrimen/otto"
 	 "net/url"
 	 "sync"
+	 "github.com/hidu/goutils"
+	 "os"
 )
 
 var js *otto.Otto
-var jsFn otto.Value
 
 type ProxyServe struct {
 	Port      int
 	Goproxy   *goproxy.ProxyHttpServer
-	AdminName string
-	AdminPsw  string
+	
+	AuthType  int
+	
 	mydb      *TieDb
 	ws        *socketio.SocketIOServer
 	wsClients map[string]*wsClient
 	startTime time.Time
-
+	
 	MaxResSaveLength int64
 	RewriteJs string
+	RewriteJsPath string
+	RewriteJsFn otto.Value
 	mu sync.RWMutex
+	
+	Users map[string]string
 }
+
+
 type wsClient struct {
 	ns   *socketio.NameSpace
 	user string
@@ -55,13 +63,14 @@ func (ser *ProxyServe) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	if isLocalReq {
 		isLocalReq = IsLocalIp(host)
 	}
-	fmt.Println(req)
+	
 	if isLocalReq {
 		ser.handleLocalReq(w, req)
 	} else {
 		ser.Goproxy.ServeHTTP(w, req)
 	}
 }
+
 
 func (ser *ProxyServe) Start() {
 	ser.Goproxy = goproxy.NewProxyHttpServer()
@@ -78,12 +87,9 @@ func (ser *ProxyServe) Start() {
 				req.Header.Del(k)
 			}
 		}
-		if(authInfo == nil ){
+		if(ser.AuthType>0 && ((ser.AuthType==2 && authInfo==nil)||!ser.CheckUserLogin(authInfo)) ){
 			return nil, auth.BasicUnauthorized(req, "auth need")
 		}
-//		if ser.AdminName != "" && (authInfo == nil || (authInfo != nil && !authInfo.isEqual(ser.AdminName, ser.AdminPsw))) {
-//			return nil, auth.BasicUnauthorized(req, "auth need")
-//		}
 		logdata := kvType{}
 		logdata["host"] = req.Host
 		logdata["header"] = map[string][]string(req.Header)
@@ -105,7 +111,7 @@ func (ser *ProxyServe) Start() {
 			logdata["form_post"]=post_vs;
 		}
 		
-		ser.changeRequest(req)
+		ser.reqRewrite(req)
 		
 		req_dump, err_dump := httputil.DumpRequest(req, true)
 		if err_dump != nil {
@@ -154,58 +160,7 @@ func (ser *ProxyServe) Start() {
 	err := http.ListenAndServe(addr, ser)
 	log.Println(err)
 }
-func (ser *ProxyServe) changeRequest(req *http.Request) {
-   if(js!=nil){
-      urlObj, _ := js.Object(`ul={}`)
-      urlObj.Set("url",req.URL.String())
-      urlObj.Set("schema",req.URL.Scheme)
-      urlObj.Set("host",req.URL.Host)
-      urlObj.Set("path",req.URL.Path)
-      urlObj.Set("rawquery",req.URL.RawQuery)
-      urlObj.Set("fragment",req.URL.Fragment)
-      urlObj.Set("opaque",req.URL.Opaque)
-      username:=""
-      psw:=""
-      if(req.URL.User!=nil){
-	      username=req.URL.User.Username()
-	      psw,_=req.URL.User.Password()
-      }
-      urlObj.Set("username",username)
-      urlObj.Set("password",psw)
-      
-      js_ret,err_js:=jsFn.Call(jsFn,urlObj)
-      
-      if(err_js==nil ){
-	      if(js_ret.IsObject()){
-          	obj,export_err:=js_ret.Export()
-          	if(export_err==nil){
-             	url_obj:=obj.(map[string]interface{})
-             	url_new:=fmt.Sprintf("%s",url_obj["schema"])+"://";
-             	username:=fmt.Sprintf("%s",url_obj["username"])
-             	if(username!=""){
-                	url_new+=fmt.Sprintf("%s:%s@",username,url_obj["password"])
-             	}
-             	url_new+=fmt.Sprintf("%s%s",url_obj["host"],url_obj["path"])
-             	
-             	if(url_new==req.URL.String()){
-             	   return
-             	    }
-             	
-			    var url_err error
-		        req.URL,url_err=req.URL.Parse(url_new)
-		        if(url_err!=nil){
-		           log.Println("js filter err:",js_ret,url_err)
-			       }
-          	}else{
-          	   log.Println("js filter result wrong",js_ret.String())
-          	}
-	        }
-      }else{
-          log.Println("js filter err:",err_js,js_ret)
-        }
-      
-   }
-}
+
 
 /**
 *log response if the req has log
@@ -262,23 +217,30 @@ func (ser *ProxyServe) GetRequestByDocid(docid uint64) (req_data kvType) {
 	return req_data
 }
 
+
 func NewProxyServe(data_dir string,jsPath string,port int) *ProxyServe {
 	proxy := new(ProxyServe)
 	proxy.Port=port
+	js= otto.New()
+	
+	if(goutils.File_exists(jsPath)){
+		proxy.RewriteJsPath=jsPath
+		script, err:= ioutil.ReadFile(jsPath)
+		if(err==nil){
+		  err=proxy.parseAndSaveRewriteJs(string(script))
+		  if(err!=nil){
+		   fmt.Println("load rewrite js failed:",err)
+		   os.Exit(-1)
+		  }
+		}
+	}
+	
 	proxy.mydb = NewTieDb(fmt.Sprintf("%s/%d/",data_dir,port))
 	proxy.startTime = time.Now()
 	proxy.MaxResSaveLength = 2 * 1024 * 1024
 	
-	script, err:= ioutil.ReadFile(jsPath)
-	if(err==nil){
-	   proxy.RewriteJs="function pproxy_rewrite(req){\n"+string(script)+"\nreturn req;\n}"
-		js= otto.New()
-	   js.Run(proxy.RewriteJs)
-	   jsFn,_=js.Get("pproxy_rewrite")
-	   log.Println("create jsFn:",jsFn)
-	}
-   rand.Seed(time.Now().UnixNano())
-   
+	
+    rand.Seed(time.Now().UnixNano())
 //   proxy.mydb.StartGcTimer(60,store_time)
 	return proxy
 }

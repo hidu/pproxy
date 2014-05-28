@@ -22,9 +22,10 @@ nav ul {
 nav ul li {
   float: left;
   margin-bottom: -3px;
-  padding: 10px 15px;
+  padding: 10px 10px;
   font-size: 14px;
 }
+nav ul li a{display: inline-block;width:50px}
 a{text-decoration: none;}
 #body{margin-top: 50px}
 

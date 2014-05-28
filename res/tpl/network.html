@@ -1,32 +1,3 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<meta name="author" content="duwei">
-<meta name="src" content="https://github.com/hidu/pproxy">
-<title>{{.title}}pproxy {{.version}}</title>
-<script src="/res/js/socket.io.js"></script>
-<script src="/res/js/jquery.js"></script>
-<script src="/res/js/base64.js"></script>
-<!-- <script src="/res/js/msgpack.js"></script> -->
-<script src="/res/js/pproxy.js"></script>
-<link rel="stylesheet" href="/res/css/style.css">
-<link rel="stylesheet" href="/res/css/grids-min.css">
-<link rel="stylesheet" href="/res/css/button.css">
-</head>
-<body>
-<nav>
-       <ul class="clearfix">
-           <li><a id="connect_status">status</a></li>
-           <li><a href="#network">netwok</a></li>
-           <li><a href="#config">config</a></li>
-       </ul>
-       	<div style="float:right">show res<input type="text" id='f_docid'>
-	       <input type='button' onclick="return get_response($('#f_docid').val());" value="show doc">
-	    </div>
-       <div class="clear"></div>
-</nav>
-<div id="body">
 <div class="yui3-g">
 	<div class="yui3-u-2-5">
 	<div id="network_list_div">
@@ -68,12 +39,8 @@
 	
 	</div>
 	<div class="yui3-u-3-5">
-	<div id="right_content">
-		<div id='content'></div>
-		<div><pre>{{.rewriteJs}}</pre></div>
+	    <div id="right_content">
+		    <div id='content'></div>
 		</div>
 	</div>
 </div>
-</div>
-</body>
-</html>
