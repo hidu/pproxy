@@ -91,8 +91,11 @@ func (ser *ProxyServe) Start() {
 		}
 		if(ser.AuthType>0 && ((ser.AuthType==2 && authInfo==nil)||(ser.AuthType==1 && !ser.CheckUserLogin(authInfo))) ){
 			log.Println("login required",req.RemoteAddr,authInfo)
-			return nil, auth.BasicUnauthorized(req, "auth need")
+			return nil, auth.BasicUnauthorized(req, "pproxy auth need")
 		}
+		
+		ser.reqRewrite(req)
+		
 		logdata := kvType{}
 		logdata["host"] = req.Host
 		logdata["header"] = map[string][]string(req.Header)
@@ -114,7 +117,6 @@ func (ser *ProxyServe) Start() {
 			logdata["form_post"]=post_vs;
 		}
 		
-		ser.reqRewrite(req)
 		
 		req_dump, err_dump := httputil.DumpRequest(req, true)
 		if err_dump != nil {

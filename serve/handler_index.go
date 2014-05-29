@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"net/url"
 	"bytes"
+	"html"
 )
 
 /**
@@ -96,7 +97,7 @@ func (ser *ProxyServe) handleLocalReq(w http.ResponseWriter, req *http.Request) 
 	}else if(req.URL.Path=="/config") {
 	  if(req.Method=="GET"){
 		values := make(map[string]interface{})
-		values["rewriteJs"]=ser.RewriteJs
+		values["rewriteJs"]=html.EscapeString(ser.RewriteJs)
 		values["rewriteJsPath"]=ser.RewriteJsPath
 		html:=render_html("config.html",values,true)
 		w.Write([]byte(html))
@@ -137,5 +138,5 @@ func render_html(fileName string,values map[string]interface{},layout bool) stri
 	   values["version"] = "0.2"
 	   return render_html("layout.html",values,false)
 	}
-	return body
+	return goutils.Html_reduceSpace( body)
 }

@@ -7,8 +7,6 @@
 <title>{{.title}}pproxy {{.version}}</title>
 <script src="/res/js/jquery.js"></script>
 <script src="/res/js/base64.js"></script>
-<script src="/res/js/socket.io.js"></script>
-<script src="/res/js/pproxy.js"></script>
 <link rel="stylesheet" href="/res/css/style.css">
 <link rel="stylesheet" href="/res/css/grids-min.css">
 <link rel="stylesheet" href="/res/css/button.css">
@@ -20,9 +18,6 @@
            <li><a href="/">home</a></li>
            <li><a href="/config">config</a></li>
        </ul>
-       	<div style="float:right">show res<input type="text" id='f_docid'>
-	       <input type='button' onclick="return get_response($('#f_docid').val());" value="show doc">
-	    </div>
        <div class="clear"></div>
 </nav>
 <div id="body">
