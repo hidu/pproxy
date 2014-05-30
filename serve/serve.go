@@ -109,7 +109,7 @@ func (ser *ProxyServe) Start() {
 		logdata["client_ip"] = req.RemoteAddr
 		logdata["form_get"]=req.URL.Query()
 		
-		if(strings.HasPrefix(req.Header.Get("Content-Type"),"application/x-www-form-urlencoded")){
+		if(strings.Contains(req.Header.Get("Content-Type"),"x-www-form-urlencoded")){
 			buf:=forgetRead(&req.Body)
 			var body_str string
 			content_enc:=req.Header.Get("Content-Encoding")

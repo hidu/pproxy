@@ -54,3 +54,5 @@ table {border-collapse: collapse;border-spacing: 0;}
  .left{float:left}
  .c{clear: both}
 #network_list_div th{text-align: right;}
+.td_ul{list-style: none inside;padding: 0}
+.td_ul li{list-style: none inside;}

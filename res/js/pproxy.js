@@ -24,7 +24,7 @@ socket.on("res", function(data) {
    html+=pproxy_tr_sub_table(req["form_get"],"get_params");
    html+=pproxy_tr_sub_table(req["form_post"],"post_params");
 	if(req["dump"]){
-		html += "<tr><th>req_dump:</th><td><pre>" + h(Base64.decode(req["dump"]))+ "</pre></td></tr>";
+		html += "<tr><th>req_dump:</th><td>" + h(Base64.decode(req["dump"])).replace(/\n/g,"<br/>")+ "</td></tr>";
 	}
 	html += "</table></div>";
 	html += "<div><table class='tb_1'><caption>Response</caption>"
@@ -40,18 +40,13 @@ socket.on("res", function(data) {
 
 		var isStatusOk = res["status"] == 200
 
+		var bd_json=pproxy_parseAsjson(body_str)
+
 		if (!isImg || res["body"].length < 1000 || !isStatusOk) {
-			html += "<tr><th>body:</th><td><pre>" + h(body_str)
-					+ "</pre></td></tr>";
+			html += "<tr><th>body:</th><td>" + h(body_str).replace(/\n/g,"<br/>")+ "</td></tr>";
 		}
-		try {
-			var bd_json = JSON.parse(body_str);
-			if (bd_json) {
-				var bd_json_str = JSON.stringify(bd_json, null, 4)
-				html += "<tr><th>body_json:</th><td><pre>" + bd_json_str
-						+ "</pre></td></tr>";
-			}
-		} catch (e) {
+		if (bd_json) {
+			html += "<tr><th>body_json:</th><td>" + bd_json+ "</td></tr>";
 		}
 		if (isImg) {
 			html += "<tr><th>body_img:</th><td><img src='data:"
@@ -59,7 +54,7 @@ socket.on("res", function(data) {
 					+ res["body"] + "'/></td></tr>";
 		}
 		if(res["dump"]){
-			html += "<tr><th>res_dump:</th><td><pre>"+ h(Base64.decode(res["dump"])) + "</pre></td></tr>";
+			html += "<tr><th>res_dump:</th><td>"+ h(Base64.decode(res["dump"])).replace(/\n/g,"<br/>") + "</td></tr>";
 		}
 	}
 
@@ -70,6 +65,17 @@ socket.on("disconnect", function() {
 	$("#connect_status").html("<font color=red>offline</font>")
 })
 
+function pproxy_parseAsjson(str){
+	try {
+		var jsonObj = JSON.parse(str);
+		if (jsonObj) {
+			var json_str = JSON.stringify(jsonObj, null, 4)
+			return "<pre>"+json_str+"</pre>";
+		}
+	} catch (e) {}
+	return false;
+}
+
 function pproxy_tr_sub_table(obj,name){
 	if(!obj){
 		return "";
@@ -77,7 +83,18 @@ function pproxy_tr_sub_table(obj,name){
 	var html= "<tr><th>"+name+":</th><td><table class='tb_1'>";
 	var i=0;
 	for ( var k in obj) {
-		html += "<tr><th width='80px'>" + k + ":</th><td>"+ h(obj[k].join("\n")) + "</td></tr>";
+		html += "<tr><th width='80px'>" + k + ":</th><td><ul class='td_ul'>";
+		for(var i in obj[k]){
+			html+="<li>";
+			var json_str=pproxy_parseAsjson(obj[k]);
+			if(json_str){
+				html+=json_str;
+			}else{
+				html+=h(obj[k])	
+			}
+			html+="</li>";
+		}
+		html+="</ul></td></tr>";
 		i++
 	}
 	if(i<1){
