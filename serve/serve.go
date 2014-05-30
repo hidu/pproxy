@@ -12,7 +12,7 @@ import (
 	"net/http/httputil"
 	"reflect"
 	"strconv"
-//	"strings"
+	"strings"
 	"time"
 	"io/ioutil"
 	 "math/rand"
@@ -21,6 +21,7 @@ import (
 	 "sync"
 	 "github.com/hidu/goutils"
 	 "os"
+	 "compress/gzip"
 )
 
 var js *otto.Otto
@@ -108,9 +109,23 @@ func (ser *ProxyServe) Start() {
 		logdata["client_ip"] = req.RemoteAddr
 		logdata["form_get"]=req.URL.Query()
 		
-		if(req.Header.Get("Content-Type")=="application/x-www-form-urlencoded"){
+		if(strings.HasPrefix(req.Header.Get("Content-Type"),"application/x-www-form-urlencoded")){
 			buf:=forgetRead(&req.Body)
-			post_vs,post_e:=url.ParseQuery(buf.String())
+			var body_str string
+			content_enc:=req.Header.Get("Content-Encoding")
+			if(content_enc=="gzip"){
+			     gr,gzip_err:=gzip.NewReader(buf)
+			     defer gr.Close()
+			     if(gzip_err==nil){
+				     bd_bt,_:=ioutil.ReadAll(gr)
+				     body_str=string(bd_bt)
+			     }else{
+			       log.Println("unzip body failed",gzip_err)
+			     }
+			}else{
+				body_str=buf.String()
+			}
+			post_vs,post_e:=url.ParseQuery(body_str)
 			if(post_e!=nil){
 				log.Println("parse post err",post_e)
 			}

@@ -44,7 +44,7 @@ func forgetRead(reader *io.ReadCloser) *bytes.Buffer {
 	buf := bytes.NewBuffer([]byte{})
 	io.Copy(buf, *reader)
 	*reader = ioutil.NopCloser(buf).(io.ReadCloser)
-	return buf
+	return bytes.NewBuffer(buf.Bytes())
 }
 
 func gob_encode(data interface{}) string {
