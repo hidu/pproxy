@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"bytes"
 	"html"
+	"encoding/base64"
 )
 
 /**
@@ -104,9 +105,39 @@ func (ser *ProxyServe) handleLocalReq(w http.ResponseWriter, req *http.Request) 
 	  }else if(req.Method=="POST"){
 	     ser.handleConfig(w,req)
 	  }
+	}else if(req.URL.Path=="/response") {
+	  ser.showResponseById(w,req)
 	}else{
 	  http.NotFound(w,req)
 	}
+}
+
+func (ser *ProxyServe)showResponseById(w http.ResponseWriter,req *http.Request){
+ 	  id:=req.FormValue("id")
+	  docid,uint_parse_err:=strconv.ParseUint(id,10,64)
+	  if(uint_parse_err==nil){
+		  responseData:=ser.GetResponseByDocid(docid)
+		  if(responseData==nil){
+		  	w.Write([]byte("response not found"))
+		  }else{
+		    walker:=goutils.NewInterfaceWalker(map[string]interface{}(responseData))
+		    if type_header,has:=walker.GetStringSlice("/header/Content-Type");has{
+		  	  w.Header().Set("Content-Type",strings.Join(type_header,";"))
+		    }
+		    if body_str,has:=walker.GetString("/body");has{
+		        body_byte,err:=base64.StdEncoding.DecodeString(body_str)
+		        if(err==nil){
+		          w.Write(body_byte)
+		        }else{
+		         log.Println("decode body failed",err)
+		        }
+		    }else{
+		       w.Write([]byte("response body not found"))
+		    }
+		  }
+	  }else{
+	  	w.Write([]byte("param err"))
+	  }
 }
 
 func (ser *ProxyServe)handleConfig(w http.ResponseWriter,req *http.Request){

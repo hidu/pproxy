@@ -44,6 +44,7 @@ type ProxyServe struct {
 	mu sync.RWMutex
 	
 	Users map[string]string
+	Debug bool
 }
 
 
@@ -78,6 +79,10 @@ func (ser *ProxyServe) Start() {
 	
 	
 	ser.Goproxy.OnRequest().DoFunc(func(req *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
+		if(ser.Debug){
+		 req_dump_debug,_ := httputil.DumpRequest(req,false)
+		 log.Println("DEBUG req:",string(req_dump_debug))
+		}
 		authInfo := getAuthorInfo(req)
 		uname:= "guest"
 //		fmt.Println("authInfo",authInfo)

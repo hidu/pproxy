@@ -1,6 +1,6 @@
 var socket = io.connect();
 socket.on('connect', function() {
-	$("#connect_status").html("<font color=green>online</font>")
+	$("#connect_status").html("<font>online</font>")
 	$("#network_filter_form").change();
 });
 socket.on("req", function(data) {
@@ -27,7 +27,11 @@ socket.on("res", function(data) {
 		html += "<tr><th>req_dump:</th><td>" + h(Base64.decode(req["dump"])).replace(/\n/g,"<br/>")+ "</td></tr>";
 	}
 	html += "</table></div>";
-	html += "<div><table class='tb_1'><caption>Response</caption>"
+	var res_link="";
+	if (res) {
+	   res_link="<a href='/response?id="+res["@id"]+"' target='_blank'>view</a>";
+	}
+	html += "<div><table class='tb_1'><caption>Response&nbsp;"+res_link+"</caption>"
 
 	if (res) {
 		html += "<tr><th width='80px'>content-length:</th><td>"

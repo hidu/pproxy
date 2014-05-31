@@ -12,7 +12,7 @@ nav {
   left: 0px;
   right: 0px;
   z-index: 100;
-  background: #F4F4F4
+  background: #3C8DBC;
 }
 nav ul {
   margin: 0px auto;
@@ -25,7 +25,7 @@ nav ul li {
   padding: 10px 10px;
   font-size: 14px;
 }
-nav ul li a{display: inline-block;width:50px}
+nav ul li a{display: inline-block;width:50px; color:white;}
 a{text-decoration: none;}
 #body{margin-top: 50px}
 
