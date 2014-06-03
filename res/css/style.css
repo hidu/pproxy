@@ -47,12 +47,15 @@ table {border-collapse: collapse;border-spacing: 0;}
  #tb_network{font-size: 11px}
  #tb_network td{overflow: auto;cursor: pointer;}
  #right_content{margin-left: 2px}
- #content table th,#content table td{font-size:11px}
+ #content table th,#content table td{font-size:11px;vertical-align: top}
  #network_list_div {overflow:auto;max-height: 650px;min-height:500px}
  tr.selected{background: #ccffee;}
  .right{float: right}
  .left{float:left}
  .c{clear: both}
 #network_list_div th{text-align: right;}
-.td_ul{list-style: none inside;padding: 0}
+.td_ul{list-style: none inside;padding: 0;margin: 0}
 .td_ul li{list-style: none inside;}
+
+td.td_has_sub{padding: 0 !important;}
+td.td_has_sub .tb_1{margin: 0;border: 0;}

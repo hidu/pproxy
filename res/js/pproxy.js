@@ -35,8 +35,10 @@ socket.on("res",
             html += "<div><table class='tb_1'><caption>Response&nbsp;" + res_link + "</caption>"
 
             if (res) {
-                html += "<tr><th width='80px'>status:</th><td>" + res["status"] + "</td></tr>";
-
+                if (res["dump"]) {
+                    html += "<tr><th width='80px'>res_dump:</th><td>" + h(Base64.decode(res["dump"])).replace(/\n/g, "<br/>")
+                    + "</td></tr>";
+                }
                 var body_str = Base64.decode(res["body"])
                 var isImg = res["header"]["Content-Type"] != undefined
                         && res["header"]["Content-Type"][0].indexOf("image") > -1;
@@ -46,18 +48,14 @@ socket.on("res",
                 var bd_json = pproxy_parseAsjson(body_str)
 
                 if (!isImg || res["body"].length < 1000 || !isStatusOk) {
-                    html += "<tr><th>body:</th><td>" + h(body_str).replace(/\n/g, "<br/>") + "</td></tr>";
+                    html += "<tr><th width='80px'>body:</th><td>" + h(body_str).replace(/\n/g, "<br/>") + "</td></tr>";
                 }
                 if (bd_json) {
-                    html += "<tr><th>body_json:</th><td>" + bd_json + "</td></tr>";
+                    html += "<tr><th width='80px'>body_json:</th><td>" + bd_json + "</td></tr>";
                 }
                 if (isImg) {
                     html += "<tr><th>body_img:</th><td><img src='data:" + res["header"]["Content-Type"][0] + ";base64,"
                             + res["body"] + "'/></td></tr>";
-                }
-                if (res["dump"]) {
-                    html += "<tr><th>res_dump:</th><td>" + h(Base64.decode(res["dump"])).replace(/\n/g, "<br/>")
-                            + "</td></tr>";
                 }
             }
 
@@ -84,7 +82,7 @@ function pproxy_tr_sub_table(obj, name) {
     if (!obj) {
         return "";
     }
-    var html = "<tr><th>" + name + ":</th><td><table class='tb_1'>";
+    var html = "<tr><th>" + name + ":</th><td class='td_has_sub'><table class='tb_1'>";
     var i = 0;
     for ( var k in obj) {
         html += "<tr><th width='80px'>" + k + ":</th><td><ul class='td_ul'>";
@@ -114,6 +112,7 @@ function get_response(tr, docid) {
     socket.emit("get_response", docid)
     $(tr).parent("tbody").find("tr").removeClass("selected")
     $(tr).addClass("selected")
+    location.hash="req_"+docid
 }
 
 function bytesToString(bytes) {
@@ -137,7 +136,10 @@ function h(html) {
 $().ready(function() {
     $("#network_filter_form").change(function() {
         var form_data = $(this).serialize();
-        socket.emit("client_filter", form_data)
+        socket.emit("client_filter", form_data);
     }).change();
-
+    if(location.hash.match(/req_\d+/)){
+        var docid=location.hash.substr(5);
+        socket.emit("get_response", docid)
+    }
 });
