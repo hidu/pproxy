@@ -124,14 +124,14 @@ function bytesToString(bytes) {
     return result;
 }
 
-function h(str) {
-    str = str.replace(/&/g, '&amp;');
-    str = str.replace(/</g, '&lt;');
-    str = str.replace(/>/g, '&gt;');
-    str = str.replace(/'/g, '&acute;');
-    str = str.replace(/"/g, '&quot;');
-    str = str.replace(/\|/g, '&brvbar;');
-    return str;
+function h(html) {
+	html = (html+"").replace(/&/g, '&amp;')
+				.replace(/</g, '&lt;')
+				.replace(/>/g, '&gt;')
+			    .replace(/'/g, '&acute;')
+			    .replace(/"/g, '&quot;')
+	            .replace(/\|/g, '&brvbar;');
+    return html;
 }
 
 $().ready(function() {
