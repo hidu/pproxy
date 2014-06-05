@@ -47,15 +47,15 @@ socket.on("res",
 
                 var bd_json = pproxy_parseAsjson(body_str)
 
-                if (!isImg || res["body"].length < 1000 || !isStatusOk) {
-                    html += "<tr><th width='80px'>body:</th><td>" + h(body_str).replace(/\n/g, "<br/>") + "</td></tr>";
-                }
                 if (bd_json) {
                     html += "<tr><th width='80px'>body_json:</th><td>" + bd_json + "</td></tr>";
                 }
                 if (isImg) {
                     html += "<tr><th>body_img:</th><td><img src='data:" + res["header"]["Content-Type"][0] + ";base64,"
                             + res["body"] + "'/></td></tr>";
+                }
+                if (!isImg || res["body"].length < 1000 || !isStatusOk) {
+                	html += "<tr><th width='80px'>body:</th><td>" + h(body_str).replace(/\n/g, "<br/>") + "</td></tr>";
                 }
             }
 
@@ -68,6 +68,10 @@ socket.on("disconnect", function() {
 
 function pproxy_parseAsjson(str) {
     try {
+    	str=str+""
+    	if(str[0]!="{" && str[0]!="["){
+    		return false;
+    	}
         var jsonObj = JSON.parse(str);
         if (jsonObj) {
             var json_str = JSON.stringify(jsonObj, null, 4)
