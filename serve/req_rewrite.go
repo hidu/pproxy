@@ -5,6 +5,7 @@ import (
     "log"
     "net/http"
     "net/url"
+    "strings"
 )
 
 var rewriteJsTpl = "function pproxy_rewrite(req){\n%s\nreturn req;\n}"
@@ -27,11 +28,17 @@ func (ser *ProxyServe) reqRewrite(req *http.Request) {
     urlObj, _ := js.Object(`req={}`)
     urlObj.Set("url", req.URL.String())
     urlObj.Set("schema", req.URL.Scheme)
-    urlObj.Set("host", req.URL.Host)
+    
+    host_info:=strings.Split(req.URL.Host,":")
+    urlObj.Set("host", host_info[0])
+    if(len(host_info)==2){
+	    urlObj.Set("port", host_info[1])
+    }else{
+	    urlObj.Set("port", "")
+    }
+    
     urlObj.Set("path", req.URL.Path)
     urlObj.Set("rawquery", req.URL.RawQuery)
-    urlObj.Set("fragment", req.URL.Fragment)
-    urlObj.Set("opaque", req.URL.Opaque)
     username := ""
     psw := ""
     if req.URL.User != nil {
@@ -48,18 +55,27 @@ func (ser *ProxyServe) reqRewrite(req *http.Request) {
             obj, export_err := js_ret.Export()
             if export_err == nil {
                 url_obj := obj.(map[string]interface{})
-                url_new := fmt.Sprintf("%s", url_obj["schema"]) + "://"
-                username := fmt.Sprintf("%s", url_obj["username"])
+                schema:=getMapValStr(url_obj,"schema")
+                url_new := schema+ "://"
+                username :=getMapValStr(url_obj,"username")
                 if username != "" {
-                    url_new += fmt.Sprintf("%s:%s@", username, url_obj["password"])
+                    url_new += fmt.Sprintf("%s:%s@", username, getMapValStr(url_obj,"password"))
                 }
-                url_new += fmt.Sprintf("%s%s", url_obj["host"], url_obj["path"])
-                if( url_obj["rawquery"]!=""){
-                   url_new+=fmt.Sprintf("?%s",url_obj["rawquery"])
+                host:=getMapValStr(url_obj,"host")
+                port:=getMapValStr(url_obj,"port")
+                if(port!=""){
+                   host+=":"+port
+                }
+                url_new += fmt.Sprintf("%s%s", host, getMapValStr(url_obj,"path"))
+               
+                rawquery:=getMapValStr(url_obj,"rawquery")
+                if( rawquery!=""){
+                   url_new+="?"+rawquery
                 }
                 if url_new == req.URL.String() {
                     return
                 }
+                host_addr:=getMapValStr(url_obj,"host_addr")
 
                 var url_err error
                 req.URL, url_err = url.Parse(url_new)
@@ -70,6 +86,9 @@ func (ser *ProxyServe) reqRewrite(req *http.Request) {
                     log.Println("js filter err:", js_ret, url_err)
                 } else {
                     req.Host = req.URL.Host
+                    if(host_addr!=""){
+                       req.URL.Host=host_addr
+                    }
                 }
             } else {
                 log.Println("js filter result wrong", js_ret.String())
@@ -79,3 +98,4 @@ func (ser *ProxyServe) reqRewrite(req *http.Request) {
         log.Println("js filter err:", err_js, js_ret)
     }
 }
+

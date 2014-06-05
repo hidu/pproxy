@@ -2,7 +2,7 @@ package main
 
 import (
     "flag"
-    "github.com/hidu/pproxy/serve"
+    "./serve"
 )
 
 var port = flag.Int("port", 8080, "main proxy port")

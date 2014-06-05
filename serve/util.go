@@ -10,6 +10,7 @@ import (
     //	"github.com/vmihailenco/msgpack"
     "encoding/base64"
     "encoding/json"
+    "fmt"
 )
 
 func Int64ToBytes(i int64) []byte {
@@ -73,4 +74,11 @@ func gob_decode(data_input string, out interface{}) {
     if err != nil {
         log.Println("msgpack decode:", err)
     }
+}
+
+func getMapValStr(m map[string]interface{},k string)string{
+  if val,has:=m[k];has{
+     return fmt.Sprintf("%s",val)
+  }
+  return ""
 }

@@ -74,7 +74,6 @@ func (ser *ProxyServe) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 func (ser *ProxyServe) Start() {
     ser.Goproxy = goproxy.NewProxyHttpServer()
-
     ser.Goproxy.OnRequest().DoFunc(func(req *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
         if ser.Debug {
             req_dump_debug, _ := httputil.DumpRequest(req, false)

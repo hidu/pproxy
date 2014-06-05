@@ -8,10 +8,20 @@ req rewrite with js:<font color=gray>[{{.rewriteJsPath}}]</font>
 </td>
 <td valign="top">
 <pre>
-//the req object has attribute：url,schema,host,path,rawquery,fragment,opaque
+<b>req demo:</b>
+url : http://wenku.baidu.com/album/list?cid=126
+schema : http
+host : wenku.baidu.com
+port : 
+path : /album/list
+rawquery : cid=126
+username : 
+password : 
+===============================================
 //demo code:
 if(req.host=="www.baidu.com"){
    req.host="www.163.com"
+   req.host_addr="127.0.0.0:81" // send req to 127.0.0.1:81
 }
 </pre>
 </td>
