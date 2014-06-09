@@ -16,21 +16,18 @@ import (
     "net/http"
     "net/http/httputil"
     "net/url"
-    "os"
     "reflect"
     "strconv"
     "strings"
     "sync"
     "time"
+    "path/filepath"
 )
 
 var js *otto.Otto
 
 type ProxyServe struct {
-    Port    int
     Goproxy *goproxy.ProxyHttpServer
-
-    AuthType int
 
     mydb      *TieDb
     ws        *socketio.SocketIOServer
@@ -38,13 +35,17 @@ type ProxyServe struct {
     startTime time.Time
 
     MaxResSaveLength int64
+    
     RewriteJs        string
-    RewriteJsPath    string
+    
     RewriteJsFn      otto.Value
     mu               sync.RWMutex
 
     Users map[string]string
     Debug bool
+    
+    conf *Config
+    configDir string
 }
 
 type wsClient struct {
@@ -60,7 +61,7 @@ type kvType map[string]interface{}
 func (ser *ProxyServe) ServeHTTP(w http.ResponseWriter, req *http.Request) {
     host, port, _ := net.SplitHostPort(req.Host)
     port_int, _ := strconv.Atoi(port)
-    isLocalReq := port_int == ser.Port
+    isLocalReq := port_int == ser.conf.Port
     if isLocalReq {
         isLocalReq = IsLocalIp(host)
     }
@@ -91,7 +92,7 @@ func (ser *ProxyServe) Start() {
                 req.Header.Del(k)
             }
         }
-        if ser.AuthType > 0 && ((ser.AuthType == 2 && authInfo == nil) || (ser.AuthType == 1 && !ser.CheckUserLogin(authInfo))) {
+        if ser.conf.AuthType > 0 && ((ser.conf.AuthType == 2 && authInfo == nil) || (ser.conf.AuthType == 1 && !ser.CheckUserLogin(authInfo))) {
             log.Println("login required", req.RemoteAddr, authInfo)
             return nil, auth.BasicUnauthorized(req, "pproxy auth need")
         }
@@ -182,7 +183,7 @@ func (ser *ProxyServe) Start() {
         return resp
     })
 
-    addr := fmt.Sprintf("%s:%d", "", ser.Port)
+    addr := fmt.Sprintf("%s:%d", "", ser.conf.Port)
     log.Println("proxy listen at ", addr)
     ser.initWs()
     err := http.ListenAndServe(addr, ser)
@@ -244,28 +245,50 @@ func (ser *ProxyServe) GetRequestByDocid(docid uint64) (req_data kvType) {
     return req_data
 }
 
-func NewProxyServe(data_dir string, jsPath string, port int) *ProxyServe {
-    proxy := new(ProxyServe)
-    proxy.Port = port
-    js = otto.New()
+func (ser *ProxyServe)GetRewriteJsPath()string{
+  return fmt.Sprintf("%s/req_rewrite_%d.js",ser.configDir,ser.conf.Port)
+}
 
+func NewProxyServe(confPath string,port int) (*ProxyServe,error) {
+    conf,err:=LoadConfig(confPath)
+    if(err!=nil){
+       log.Println("load config faield",err)
+       return nil,err
+    }
+    if(port>0 && port<65535){
+       conf.Port=port
+    }
+    
+    absPath,err:=filepath.Abs(confPath)
+    if(err!=nil){
+       log.Println("get config path failed",confPath)
+       return nil,err
+    }
+    
+    proxy := new(ProxyServe)
+    proxy.configDir=filepath.Dir(absPath)
+    
+    proxy.conf=conf
+    
+    js = otto.New()
+	jsPath:=proxy.GetRewriteJsPath()
+	
     if goutils.File_exists(jsPath) {
-        proxy.RewriteJsPath = jsPath
         script, err := ioutil.ReadFile(jsPath)
         if err == nil {
             err = proxy.parseAndSaveRewriteJs(string(script))
             if err != nil {
                 fmt.Println("load rewrite js failed:", err)
-                os.Exit(-1)
+                return nil,err
             }
         }
     }
 
-    proxy.mydb = NewTieDb(fmt.Sprintf("%s/%d/", data_dir, port))
+    proxy.mydb = NewTieDb(fmt.Sprintf("%s/%d/", conf.DataDir, conf.Port))
     proxy.startTime = time.Now()
     proxy.MaxResSaveLength = 2 * 1024 * 1024
 
     rand.Seed(time.Now().UnixNano())
     //   proxy.mydb.StartGcTimer(60,store_time)
-    return proxy
+    return proxy,nil
 }

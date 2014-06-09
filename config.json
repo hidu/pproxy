@@ -1,0 +1,7 @@
+{
+   "port":8080,
+   "title":"demo",
+   "notice":"demo",
+   "authType":0,
+   "data_dir":"./data/"
+}

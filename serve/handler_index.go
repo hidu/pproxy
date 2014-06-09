@@ -13,6 +13,7 @@ import (
     "html"
     "net/url"
     "strconv"
+    "path/filepath"
 )
 
 /**
@@ -89,17 +90,22 @@ func (ser *ProxyServe) handleLocalReq(w http.ResponseWriter, req *http.Request) 
         return
     }
 
+    values := make(map[string]interface{})
+    values["title"]=ser.conf.Title
+    values["notice"]=ser.conf.Notice
+    
     if strings.HasPrefix(req.URL.Path, "/res/") {
         goutils.DefaultResource.HandleStatic(w, req, req.URL.Path)
     } else if req.URL.Path == "/" {
-        values := make(map[string]interface{})
         html := render_html("network.html", values, true)
         w.Write([]byte(html))
-    } else if req.URL.Path == "/config" {
+     } else if req.URL.Path == "/about" {
+        html := render_html("about.html", values, true)
+        w.Write([]byte(html))
+    }  else if req.URL.Path == "/config" {
         if req.Method == "GET" {
-            values := make(map[string]interface{})
             values["rewriteJs"] = html.EscapeString(ser.RewriteJs)
-            values["rewriteJsPath"] = ser.RewriteJsPath
+            values["rewriteJsPath"] = filepath.Base(ser.GetRewriteJsPath())
             html := render_html("config.html", values, true)
             w.Write([]byte(html))
         } else if req.Method == "POST" {
@@ -163,10 +169,11 @@ func (ser *ProxyServe) handleConfig(w http.ResponseWriter, req *http.Request) {
     jsStr := req.PostFormValue("js")
     err := ser.parseAndSaveRewriteJs(jsStr)
     if err == nil {
-        if goutils.File_exists(ser.RewriteJsPath) {
-            err = goutils.File_put_contents(ser.RewriteJsPath, []byte(jsStr))
-            log.Println("save rewritejs ", ser.RewriteJsPath, err)
-        }
+        jsPath:=ser.GetRewriteJsPath()
+        err = goutils.File_put_contents(jsPath, []byte(jsStr))
+        
+        log.Println("save rewritejs ", jsPath, err)
+        
         w.Write([]byte("<html>save suc<script>setTimeout(function(){location.href='/config'},1000)</script></html>"))
     } else {
         w.Write([]byte("save failed,js err:" + err.Error()))
@@ -182,7 +189,6 @@ func render_html(fileName string, values map[string]interface{}, layout bool) st
     body := w.String()
     if layout {
         values["body"] = body
-        values["title"] = ""
         values["version"] = "0.2"
         return render_html("layout.html", values, false)
     }
