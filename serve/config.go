@@ -10,9 +10,18 @@ type Config struct{
   Port      int     `json:"port"`
   Title     string  `json:"title"`
   Notice    string  `json:"notice"`
-  AuthType  int     `json:"auth_type"`
-  DataDir   string     `json:"data_dir"`
+  AuthType  int     `json:"authType"`
+  DataDir   string     `json:"dataDir"`
+  ResponseSave  int     `json:"responseSave"` 
 }
+const (
+   AuthType_NO=0
+   AuthType_Basic=1
+   AuthType_BasicWithAny=2
+   
+   ResponseSave_All=0
+   ResponseSave_HasBroad=1  //has show
+)
 //"0:no auth | 1:basic auth | 2:basic auth with any name"
 
 func LoadConfig(confPath string) (*Config, error){

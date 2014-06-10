@@ -60,6 +60,12 @@ type kvType map[string]interface{}
 
 func (ser *ProxyServe) ServeHTTP(w http.ResponseWriter, req *http.Request) {
     host, port, _ := net.SplitHostPort(req.Host)
+    
+    if(req.Host=="p.info"||req.Host=="proxy.info"){
+       ser.handleUserInfo(w,req)
+       return
+    }
+    
     port_int, _ := strconv.Atoi(port)
     isLocalReq := port_int == ser.conf.Port
     if isLocalReq {
@@ -75,7 +81,22 @@ func (ser *ProxyServe) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 func (ser *ProxyServe) Start() {
     ser.Goproxy = goproxy.NewProxyHttpServer()
-    ser.Goproxy.OnRequest().DoFunc(func(req *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
+    ser.Goproxy.OnRequest().HandleConnectFunc(ser.onHttpsConnect)
+    ser.Goproxy.OnRequest().DoFunc(ser.onRequest)
+    ser.Goproxy.OnResponse().DoFunc(ser.onResponse)
+    addr := fmt.Sprintf("%s:%d", "", ser.conf.Port)
+    log.Println("proxy listen at ", addr)
+    ser.initWs()
+    err := http.ListenAndServe(addr, ser)
+    log.Println(err)
+}
+//@todo now not work
+func (ser *ProxyServe)onHttpsConnect(host string,ctx *goproxy.ProxyCtx)(*goproxy.ConnectAction,string){
+		fmt.Println("https:",host)
+		return goproxy.OkConnect, host
+}
+
+func (ser *ProxyServe)onRequest(req *http.Request, ctx *goproxy.ProxyCtx)(*http.Request, *http.Response) {
         if ser.Debug {
             req_dump_debug, _ := httputil.DumpRequest(req, false)
             log.Println("DEBUG req BEFORE:\n", string(req_dump_debug))
@@ -92,86 +113,88 @@ func (ser *ProxyServe) Start() {
                 req.Header.Del(k)
             }
         }
-        if ser.conf.AuthType > 0 && ((ser.conf.AuthType == 2 && authInfo == nil) || (ser.conf.AuthType == 1 && !ser.CheckUserLogin(authInfo))) {
+        
+        if ser.conf.AuthType > AuthType_NO && ((ser.conf.AuthType == AuthType_BasicWithAny && authInfo == nil) || (ser.conf.AuthType == AuthType_Basic && !ser.CheckUserLogin(authInfo))) {
             log.Println("login required", req.RemoteAddr, authInfo)
             return nil, auth.BasicUnauthorized(req, "pproxy auth need")
         }
 
         ser.reqRewrite(req)
-
+        
+        req_uid := NextUid() + uint64(ctx.Session)
+        ctx.UserData = req_uid
+        
         if ser.Debug {
             req_dump_debug, _ := httputil.DumpRequest(req, false)
             log.Println("DEBUG req AFTER:\n", string(req_dump_debug))
         }
-
-        logdata := kvType{}
-        logdata["host"] = req.Host
-        logdata["header"] = map[string][]string(req.Header)
-        logdata["url"] = req.URL.String()
-        logdata["path"] = req.URL.Path
-        logdata["cookies"] = req.Cookies()
-        logdata["now"] = time.Now().Unix()
-        logdata["session_id"] = ctx.Session
-        logdata["user"] = uname
-        logdata["client_ip"] = req.RemoteAddr
-        logdata["form_get"] = req.URL.Query()
-
-        if strings.Contains(req.Header.Get("Content-Type"), "x-www-form-urlencoded") {
-            buf := forgetRead(&req.Body)
-            var body_str string
-            content_enc := req.Header.Get("Content-Encoding")
-            if content_enc == "gzip" {
-                gr, gzip_err := gzip.NewReader(buf)
-                defer gr.Close()
-                if gzip_err == nil {
-                    bd_bt, _ := ioutil.ReadAll(gr)
-                    body_str = string(bd_bt)
-                } else {
-                    log.Println("unzip body failed", gzip_err)
-                }
-            } else {
-                body_str = buf.String()
-            }
-            post_vs, post_e := url.ParseQuery(body_str)
-            if post_e != nil {
-                log.Println("parse post err", post_e)
-            }
-            logdata["form_post"] = post_vs
+        
+        hasSend:=ser.Broadcast_Req(req, ctx.Session, req_uid, uname)
+        
+        if(ser.conf.ResponseSave==ResponseSave_All||(ser.conf.ResponseSave==ResponseSave_HasBroad && hasSend)){
+	        logdata := kvType{}
+	        logdata["host"] = req.Host
+	        logdata["header"] = map[string][]string(req.Header)
+	        logdata["url"] = req.URL.String()
+	        logdata["path"] = req.URL.Path
+	        logdata["cookies"] = req.Cookies()
+	        logdata["now"] = time.Now().Unix()
+	        logdata["session_id"] = ctx.Session
+	        logdata["user"] = uname
+	        logdata["client_ip"] = req.RemoteAddr
+	        logdata["form_get"] = req.URL.Query()
+	
+	        if strings.Contains(req.Header.Get("Content-Type"), "x-www-form-urlencoded") {
+	            buf := forgetRead(&req.Body)
+	            var body_str string
+	            content_enc := req.Header.Get("Content-Encoding")
+	            if content_enc == "gzip" {
+	                gr, gzip_err := gzip.NewReader(buf)
+	                defer gr.Close()
+	                if gzip_err == nil {
+	                    bd_bt, _ := ioutil.ReadAll(gr)
+	                    body_str = string(bd_bt)
+	                } else {
+	                    log.Println("unzip body failed", gzip_err)
+	                }
+	            } else {
+	                body_str = buf.String()
+	            }
+	            post_vs, post_e := url.ParseQuery(body_str)
+	            if post_e != nil {
+	                log.Println("parse post err", post_e)
+	            }
+	            logdata["form_post"] = post_vs
+	        }
+	
+	        req_dump, err_dump := httputil.DumpRequest(req, true)
+	        if err_dump != nil {
+	            log.Println("dump request failed")
+	            req_dump = []byte("dump failed")
+	        }
+	        logdata["dump"] = base64.StdEncoding.EncodeToString(req_dump)
+	        
+	
+	        rewrite := make(map[string]string)
+	        url_new := req.URL.String()
+	
+	        if url_new != logdata["url"] {
+	            rewrite["url"] = url_new
+	        }
+	
+	        logdata["rewrite"] = rewrite
+	
+	        err := ser.mydb.RequestTable.InsertRecovery(req_uid, logdata)
+	        log.Println("save_req", ctx.Session, req.URL.String(), "req_docid=", req_uid, err, rewrite)
+	        if err != nil {
+	            log.Println(err)
+	            return req, nil
+	        }
         }
-
-        req_dump, err_dump := httputil.DumpRequest(req, true)
-        if err_dump != nil {
-            log.Println("dump request failed")
-            req_dump = []byte("dump failed")
-        }
-        logdata["dump"] = base64.StdEncoding.EncodeToString(req_dump)
-        req_uid := NextUid() + uint64(ctx.Session)
-
-        ctx.UserData = req_uid
-
-        rewrite := make(map[string]string)
-        url_new := req.URL.String()
-
-        if url_new != logdata["url"] {
-            rewrite["url"] = url_new
-        }
-
-        logdata["rewrite"] = rewrite
-
-        err := ser.mydb.RequestTable.InsertRecovery(req_uid, logdata)
-        log.Println("save_req", ctx.Session, req.URL.String(), "req_docid=", req_uid, err, rewrite)
-
-        if err != nil {
-            log.Println(err)
-            return req, nil
-        }
-
-        ser.Broadcast_Req(req, ctx.Session, req_uid, uname)
-
         return req, nil
-    })
+    }
 
-    ser.Goproxy.OnResponse().DoFunc(func(resp *http.Response, ctx *goproxy.ProxyCtx) *http.Response {
+func (ser *ProxyServe)onResponse(resp *http.Response, ctx *goproxy.ProxyCtx) *http.Response {
         if resp != nil {
             resp.Header.Set("Connection", "close")
         }
@@ -181,15 +204,7 @@ func (ser *ProxyServe) Start() {
         //		fmt.Println("resp.Header:",resp.Header)
         ser.logResponse(resp, ctx)
         return resp
-    })
-
-    addr := fmt.Sprintf("%s:%d", "", ser.conf.Port)
-    log.Println("proxy listen at ", addr)
-    ser.initWs()
-    err := http.ListenAndServe(addr, ser)
-    log.Println(err)
-}
-
+    }
 /**
 *log response if the req has log
  */
@@ -247,6 +262,10 @@ func (ser *ProxyServe) GetRequestByDocid(docid uint64) (req_data kvType) {
 
 func (ser *ProxyServe)GetRewriteJsPath()string{
   return fmt.Sprintf("%s/req_rewrite_%d.js",ser.configDir,ser.conf.Port)
+}
+
+func (ser *ProxyServe)GetHostsFilePath()string{
+  return fmt.Sprintf("%s/hosts_%d",ser.configDir,ser.conf.Port)
 }
 
 func NewProxyServe(confPath string,port int) (*ProxyServe,error) {

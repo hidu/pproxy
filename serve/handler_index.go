@@ -4,6 +4,7 @@ import (
     "github.com/googollee/go-socket.io"
     "github.com/hidu/goutils"
     "log"
+    "net"
     "net/http"
     "strings"
     "text/template"
@@ -105,7 +106,11 @@ func (ser *ProxyServe) handleLocalReq(w http.ResponseWriter, req *http.Request) 
     }  else if req.URL.Path == "/config" {
         if req.Method == "GET" {
             values["rewriteJs"] = html.EscapeString(ser.RewriteJs)
+            values["hosts"] = ""
+            values["hostsHeight"] = getTextAreaHeightByString("",100)
+            
             values["rewriteJsPath"] = filepath.Base(ser.GetRewriteJsPath())
+            values["jsHeight"] = getTextAreaHeightByString(ser.RewriteJs,100)
             html := render_html("config.html", values, true)
             w.Write([]byte(html))
         } else if req.Method == "POST" {
@@ -116,6 +121,14 @@ func (ser *ProxyServe) handleLocalReq(w http.ResponseWriter, req *http.Request) 
     } else {
         http.NotFound(w, req)
     }
+}
+
+func getTextAreaHeightByString(mystr string,minHeight int) int{
+     height:=(len(strings.Split(mystr,"\n"))+1)*25
+     if(height<minHeight){
+        height=minHeight
+     }
+     return height
 }
 
 func (ser *ProxyServe) showResponseById(w http.ResponseWriter, req *http.Request) {
@@ -166,18 +179,26 @@ func (ser *ProxyServe) showResponseById(w http.ResponseWriter, req *http.Request
 func (ser *ProxyServe) handleConfig(w http.ResponseWriter, req *http.Request) {
     ser.mu.Lock()
     defer ser.mu.Unlock()
-    jsStr := req.PostFormValue("js")
-    err := ser.parseAndSaveRewriteJs(jsStr)
-    if err == nil {
-        jsPath:=ser.GetRewriteJsPath()
-        err = goutils.File_put_contents(jsPath, []byte(jsStr))
-        
-        log.Println("save rewritejs ", jsPath, err)
-        
-        w.Write([]byte("<html>save suc<script>setTimeout(function(){location.href='/config'},1000)</script></html>"))
-    } else {
-        w.Write([]byte("save failed,js err:" + err.Error()))
+    do := req.PostFormValue("type")
+    var err error
+    if(do=="js"){
+	    jsStr := strings.TrimSpace(req.PostFormValue("js"))
+	    err= ser.parseAndSaveRewriteJs(jsStr)
+	    if err == nil {
+	        jsPath:=ser.GetRewriteJsPath()
+	        err = goutils.File_put_contents(jsPath, []byte(jsStr))
+	        log.Println("save rewritejs ", jsPath, err)
+	    } 
+    }else if(do=="hosts"){
+	    hosts := strings.TrimSpace(req.PostFormValue("hosts"))
+	    err = goutils.File_put_contents(ser.GetHostsFilePath(), []byte(hosts))
     }
+    if(err!=nil) {
+	  w.Write([]byte("save failed,err:" + err.Error()))
+	}else{
+   	   w.Write([]byte("<html>save suc<script>setTimeout(function(){location.href='/config'},1000)</script></html>"))
+	}
+    
 }
 
 func render_html(fileName string, values map[string]interface{}, layout bool) string {
@@ -193,4 +214,10 @@ func render_html(fileName string, values map[string]interface{}, layout bool) st
         return render_html("layout.html", values, false)
     }
     return goutils.Html_reduceSpace(body)
+}
+
+func (ser *ProxyServe) handleUserInfo(w http.ResponseWriter, req *http.Request) {
+	host, _, _ := net.SplitHostPort(req.RemoteAddr)
+   data:="client ip:"+host
+	w.Write([]byte(data))
 }

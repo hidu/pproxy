@@ -3,5 +3,6 @@
    "title":"demo",
    "notice":"demo",
    "authType":0,
-   "data_dir":"./data/"
+   "dataDir":"./data/",
+   "responseSave":1
 }

@@ -7,7 +7,7 @@ import (
     "strings"
 )
 
-func (ser *ProxyServe) Broadcast_Req(req *http.Request, id int64, docid uint64, user string) {
+func (ser *ProxyServe) Broadcast_Req(req *http.Request, id int64, docid uint64, user string) bool{
     data := make(map[string]interface{})
     data["docid"] = fmt.Sprintf("%d", docid)
     data["sid"] = id % 1000
@@ -17,12 +17,14 @@ func (ser *ProxyServe) Broadcast_Req(req *http.Request, id int64, docid uint64, 
     data["method"] = req.Method
     ser.mu.RLock()
     defer ser.mu.RUnlock()
-    fmt.Println("now broadcast")
+    hasSend:=false
     for _, client := range ser.wsClients {
         if client.user == user && checkFilter(req, client) {
             send_req(client, data)
+            hasSend=true
         }
     }
+    return hasSend
 }
 
 var extTypes map[string][]string = map[string][]string{
