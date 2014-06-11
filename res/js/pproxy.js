@@ -1,8 +1,13 @@
 var socket = io.connect();
 socket.on('connect', function() {
-    $("#connect_status").html("<font>online</font>")
+    $("#connect_status").html("online")
     $("#network_filter_form").change();
 });
+
+socket.on("disconnect", function() {
+    $("#connect_status").html("offline")
+});
+
 socket.on("req", function(data) {
     console && console.log("req", data)
     $("#tb_network tbody").prepend(
@@ -62,9 +67,7 @@ socket.on("res",
             html += "</table></div>";
             $("#content").empty().html(html).hide().slideDown("fast")
         })
-socket.on("disconnect", function() {
-    $("#connect_status").html("<font color=red>offline</font>")
-})
+
 
 function pproxy_parseAsjson(str) {
     try {

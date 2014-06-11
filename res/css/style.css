@@ -12,8 +12,12 @@ nav {
   left: 0px;
   right: 0px;
   z-index: 100;
-  background: #3C8DBC;
+  background: #446CB3;
+
 }
+#menu{  width: 80%;
+  margin: 0 auto
+ }
 nav ul {
   margin: 0px auto;
   padding: 0px;
@@ -21,13 +25,30 @@ nav ul {
 }
 nav ul li {
   float: left;
-  margin-bottom: -3px;
   padding: 10px 10px;
   font-size: 14px;
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 1px 0 0 rgba(255, 255, 255, 0.11);
+  font-weight: bold;
+  text-align: center;
+}
+.border_first{
+  border-left: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 1px 0 0 rgba(255, 255, 255, 0.11);
+}
+
+nav ul li:HOVER{
+	background: white;
+}
+nav ul li:HOVER a{
+	color:#446CB3
 }
 nav ul li a{display: inline-block;width:50px; color:white;}
+
 a{text-decoration: none;}
 #body{margin-top: 50px}
+
+#connect_status{padding:6px;color: white}
 
 table {border-collapse: collapse;border-spacing: 0;}
 .tb_1{border:1px solid #cccccc;table-layout:fixed;word-break:break-all;width: 100%;background:#ffffff;margin-bottom:5px}

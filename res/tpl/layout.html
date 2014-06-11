@@ -14,13 +14,16 @@
 </head>
 <body>
 <nav>
-       <ul class="clearfix">
-           <li><a id="connect_status" >&nbsp;</a></li>
-           <li><a href="/">home</a></li>
+<div id="menu">
+       <ul>
+           <li class="border_first"><a href="/">home</a></li>
            <li><a href="/config">config</a></li>
            <li><a href="/about">about</a></li>
+           <li><a href="/login">login</a></li>
        </ul>
+       <span class='right' id="connect_status">&nbsp;</span>
        <div class="clear"></div>
+</div>
 </nav>
 <div id="body">
 {{.body}}
