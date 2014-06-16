@@ -76,9 +76,9 @@ func gob_decode(data_input string, out interface{}) {
     }
 }
 
-func getMapValStr(m map[string]interface{},k string)string{
-  if val,has:=m[k];has{
-     return fmt.Sprintf("%s",val)
-  }
-  return ""
+func getMapValStr(m map[string]interface{}, k string) string {
+    if val, has := m[k]; has {
+        return fmt.Sprintf("%s", val)
+    }
+    return ""
 }

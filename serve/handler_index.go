@@ -13,8 +13,8 @@ import (
     "encoding/base64"
     "html"
     "net/url"
-    "strconv"
     "path/filepath"
+    "strconv"
 )
 
 /**
@@ -92,25 +92,27 @@ func (ser *ProxyServe) handleLocalReq(w http.ResponseWriter, req *http.Request) 
     }
 
     values := make(map[string]interface{})
-    values["title"]=ser.conf.Title
-    values["notice"]=ser.conf.Notice
-    
+    values["title"] = ser.conf.Title
+    values["notice"] = ser.conf.Notice
+
     if strings.HasPrefix(req.URL.Path, "/res/") {
         goutils.DefaultResource.HandleStatic(w, req, req.URL.Path)
     } else if req.URL.Path == "/" {
         html := render_html("network.html", values, true)
         w.Write([]byte(html))
-     } else if req.URL.Path == "/about" {
+    } else if req.URL.Path == "/about" {
         html := render_html("about.html", values, true)
         w.Write([]byte(html))
-    }  else if req.URL.Path == "/config" {
+    } else if req.URL.Path == "/config" {
         if req.Method == "GET" {
             values["rewriteJs"] = html.EscapeString(ser.RewriteJs)
-            values["hosts"] = ""
-            values["hostsHeight"] = getTextAreaHeightByString("",100)
-            
+
+            hosts_byte, _ := goutils.File_get_contents(ser.GetHostsFilePath())
+            values["hosts"] = html.EscapeString(string(hosts_byte))
+            values["hostsHeight"] = getTextAreaHeightByString("", 100)
+
             values["rewriteJsPath"] = filepath.Base(ser.GetRewriteJsPath())
-            values["jsHeight"] = getTextAreaHeightByString(ser.RewriteJs,100)
+            values["jsHeight"] = getTextAreaHeightByString(ser.RewriteJs, 100)
             html := render_html("config.html", values, true)
             w.Write([]byte(html))
         } else if req.Method == "POST" {
@@ -123,12 +125,12 @@ func (ser *ProxyServe) handleLocalReq(w http.ResponseWriter, req *http.Request) 
     }
 }
 
-func getTextAreaHeightByString(mystr string,minHeight int) int{
-     height:=(len(strings.Split(mystr,"\n"))+1)*25
-     if(height<minHeight){
-        height=minHeight
-     }
-     return height
+func getTextAreaHeightByString(mystr string, minHeight int) int {
+    height := (len(strings.Split(mystr, "\n")) + 1) * 25
+    if height < minHeight {
+        height = minHeight
+    }
+    return height
 }
 
 func (ser *ProxyServe) showResponseById(w http.ResponseWriter, req *http.Request) {
@@ -181,24 +183,25 @@ func (ser *ProxyServe) handleConfig(w http.ResponseWriter, req *http.Request) {
     defer ser.mu.Unlock()
     do := req.PostFormValue("type")
     var err error
-    if(do=="js"){
-	    jsStr := strings.TrimSpace(req.PostFormValue("js"))
-	    err= ser.parseAndSaveRewriteJs(jsStr)
-	    if err == nil {
-	        jsPath:=ser.GetRewriteJsPath()
-	        err = goutils.File_put_contents(jsPath, []byte(jsStr))
-	        log.Println("save rewritejs ", jsPath, err)
-	    } 
-    }else if(do=="hosts"){
-	    hosts := strings.TrimSpace(req.PostFormValue("hosts"))
-	    err = goutils.File_put_contents(ser.GetHostsFilePath(), []byte(hosts))
+    if do == "js" {
+        jsStr := strings.TrimSpace(req.PostFormValue("js"))
+        err = ser.parseAndSaveRewriteJs(jsStr)
+        if err == nil {
+            jsPath := ser.GetRewriteJsPath()
+            err = goutils.File_put_contents(jsPath, []byte(jsStr))
+            log.Println("save rewritejs ", jsPath, err)
+        }
+    } else if do == "hosts" {
+        hosts := strings.TrimSpace(req.PostFormValue("hosts"))
+        err = goutils.File_put_contents(ser.GetHostsFilePath(), []byte(hosts))
+        ser.loadHosts()
     }
-    if(err!=nil) {
-	  w.Write([]byte("save failed,err:" + err.Error()))
-	}else{
-   	   w.Write([]byte("<html>save suc<script>setTimeout(function(){location.href='/config'},1000)</script></html>"))
-	}
-    
+    if err != nil {
+        w.Write([]byte("save failed,err:" + err.Error()))
+    } else {
+        w.Write([]byte("<html>save suc<script>setTimeout(function(){location.href='/config'},1000)</script></html>"))
+    }
+
 }
 
 func render_html(fileName string, values map[string]interface{}, layout bool) string {
@@ -217,7 +220,7 @@ func render_html(fileName string, values map[string]interface{}, layout bool) st
 }
 
 func (ser *ProxyServe) handleUserInfo(w http.ResponseWriter, req *http.Request) {
-	host, _, _ := net.SplitHostPort(req.RemoteAddr)
-   data:="client ip:"+host
-	w.Write([]byte(data))
+    host, _, _ := net.SplitHostPort(req.RemoteAddr)
+    data := "client ip:" + host
+    w.Write([]byte(data))
 }

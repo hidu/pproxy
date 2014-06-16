@@ -21,22 +21,22 @@ func (ser *ProxyServe) parseAndSaveRewriteJs(jsStr string) error {
     return err
 }
 
-func (ser *ProxyServe) reqRewrite(req *http.Request) {
+func (ser *ProxyServe) reqRewriteByjs(req *http.Request) {
     if ser.RewriteJs == "" {
         return
     }
     urlObj, _ := js.Object(`req={}`)
     urlObj.Set("url", req.URL.String())
     urlObj.Set("schema", req.URL.Scheme)
-    
-    host_info:=strings.Split(req.URL.Host,":")
+
+    host_info := strings.Split(req.URL.Host, ":")
     urlObj.Set("host", host_info[0])
-    if(len(host_info)==2){
-	    urlObj.Set("port", host_info[1])
-    }else{
-	    urlObj.Set("port", "")
+    if len(host_info) == 2 {
+        urlObj.Set("port", host_info[1])
+    } else {
+        urlObj.Set("port", "")
     }
-    
+
     urlObj.Set("path", req.URL.Path)
     urlObj.Set("rawquery", req.URL.RawQuery)
     username := ""
@@ -55,27 +55,27 @@ func (ser *ProxyServe) reqRewrite(req *http.Request) {
             obj, export_err := js_ret.Export()
             if export_err == nil {
                 url_obj := obj.(map[string]interface{})
-                schema:=getMapValStr(url_obj,"schema")
-                url_new := schema+ "://"
-                username :=getMapValStr(url_obj,"username")
+                schema := getMapValStr(url_obj, "schema")
+                url_new := schema + "://"
+                username := getMapValStr(url_obj, "username")
                 if username != "" {
-                    url_new += fmt.Sprintf("%s:%s@", username, getMapValStr(url_obj,"password"))
+                    url_new += fmt.Sprintf("%s:%s@", username, getMapValStr(url_obj, "password"))
                 }
-                host:=getMapValStr(url_obj,"host")
-                port:=getMapValStr(url_obj,"port")
-                if(port!=""){
-                   host+=":"+port
+                host := getMapValStr(url_obj, "host")
+                port := getMapValStr(url_obj, "port")
+                if port != "" {
+                    host += ":" + port
                 }
-                url_new += fmt.Sprintf("%s%s", host, getMapValStr(url_obj,"path"))
-               
-                rawquery:=getMapValStr(url_obj,"rawquery")
-                if( rawquery!=""){
-                   url_new+="?"+rawquery
+                url_new += fmt.Sprintf("%s%s", host, getMapValStr(url_obj, "path"))
+
+                rawquery := getMapValStr(url_obj, "rawquery")
+                if rawquery != "" {
+                    url_new += "?" + rawquery
                 }
                 if url_new == req.URL.String() {
                     return
                 }
-                host_addr:=getMapValStr(url_obj,"host_addr")
+                host_addr := getMapValStr(url_obj, "host_addr")
 
                 var url_err error
                 req.URL, url_err = url.Parse(url_new)
@@ -86,8 +86,8 @@ func (ser *ProxyServe) reqRewrite(req *http.Request) {
                     log.Println("js filter err:", js_ret, url_err)
                 } else {
                     req.Host = req.URL.Host
-                    if(host_addr!=""){
-                       req.URL.Host=host_addr
+                    if host_addr != "" {
+                        req.URL.Host = host_addr
                     }
                 }
             } else {
@@ -99,3 +99,36 @@ func (ser *ProxyServe) reqRewrite(req *http.Request) {
     }
 }
 
+func (ser *ProxyServe) reqRewrite(req *http.Request) {
+    ser.reqRewriteByjs(req)
+    ser.reqRewriteByHosts(req)
+
+}
+
+func (ser *ProxyServe) reqRewriteByHosts(req *http.Request) {
+    if ser.hosts == nil {
+        return
+    }
+    if host, has := ser.hosts[req.Host]; has {
+        log.Println("rewrite host:", req.Host, "==>", host)
+        req.Host = host
+        return
+    }
+    host_info := strings.Split(req.URL.Host, ":")
+    if len(host_info) == 1 {
+        if req.URL.Scheme == "http" {
+            host_info = append(host_info, "80")
+        }
+    }
+    req_host := strings.Join(host_info, ":")
+    if host, has := ser.hosts[req_host]; has {
+        log.Println("rewrite host:", req.Host, "==>", host)
+        req.Host = host
+        return
+    }
+    if host, has := ser.hosts[host_info[0]]; has {
+        log.Println("rewrite host:", req.Host, "==>", host)
+        req.Host = host
+        return
+    }
+}

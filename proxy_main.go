@@ -1,8 +1,8 @@
 package main
 
 import (
-    "flag"
     "./serve"
+    "flag"
     "fmt"
     "os"
 )
@@ -14,10 +14,10 @@ var debug = flag.Bool("debug", false, "debug the request")
 
 func main() {
     flag.Parse()
-    ser,err:= serve.NewProxyServe(*configPath, *port)
-    if(err!=nil){
-      fmt.Println("start pproxy failed",err)
-      os.Exit(2)
+    ser, err := serve.NewProxyServe(*configPath, *port)
+    if err != nil {
+        fmt.Println("start pproxy failed", err)
+        os.Exit(2)
     }
     ser.Debug = *debug
     ser.Start()
