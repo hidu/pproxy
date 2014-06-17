@@ -11,8 +11,9 @@ socket.on("disconnect", function() {
 socket.on("req", function(data) {
     console && console.log("req", data)
     $("#tb_network tbody").prepend(
-            "<tr onclick=\"get_response(this,'" + data['docid'] + "')\">" + "<td>" + data["sid"] + "</td>"
-                    + "<td></td>" + "<td>" + data["host"] + "</td>" + "<td>" + data["path"] + "</td>" + "</tr>")
+      "<tr onclick=\"get_response(this,'" + data['docid'] + "')\">" + "<td>" + data["sid"] + "</td>"
+       //+ "<td></td>" 
+       + "<td>" + data["host"] + "</td>" + "<td>" + data["path"] + "</td>" + "</tr>")
 })
 socket.on("res",
         function(data) {
@@ -115,7 +116,15 @@ function pproxy_tr_sub_table(obj, name) {
 
 function get_response(tr, docid) {
     console && console.log("get_response docid=", docid)
-    $("#content").empty().html("<center style='margin:200px 0 auto'>loading...docid=" + docid + "</center>")
+    var loading_msg="loading...docid=" + docid
+    var isValidId=(docid+"").length>2
+    if(!isValidId){
+    	loading_msg="https request:no data"
+    }
+    $("#content").empty().html("<center style='margin:200px 0 auto'>"+loading_msg+"</center>")
+    if(!isValidId){
+    	return;
+    }
     socket.emit("get_response", docid)
     $(tr).parent("tbody").find("tr").removeClass("selected")
     $(tr).addClass("selected")

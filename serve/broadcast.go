@@ -14,18 +14,22 @@ func (ser *ProxyServe) Broadcast_Req(req *http.Request, id int64, docid uint64, 
     data["host"] = req.Host
     data["client_ip"] = req.RemoteAddr
     data["path"] = req.URL.Path
+    if(req.Method=="CONNECT"){
+       data["path"]="https req,unknow path"
+    }
     data["method"] = req.Method
     ser.mu.RLock()
     defer ser.mu.RUnlock()
     hasSend := false
     for _, client := range ser.wsClients {
-        if client.user == user && checkFilter(req, client) {
+        if (client.user == user||user=="guest") && checkFilter(req, client) {
             send_req(client, data)
             hasSend = true
         }
     }
     return hasSend
 }
+
 
 var extTypes map[string][]string = map[string][]string{
     "js":    []string{"js"},

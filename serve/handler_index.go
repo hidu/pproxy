@@ -8,12 +8,11 @@ import (
     "net/http"
     "strings"
     "text/template"
-    //	  "fmt"
+    "fmt"
     "bytes"
     "encoding/base64"
     "html"
     "net/url"
-    "path/filepath"
     "strconv"
 )
 
@@ -94,6 +93,7 @@ func (ser *ProxyServe) handleLocalReq(w http.ResponseWriter, req *http.Request) 
     values := make(map[string]interface{})
     values["title"] = ser.conf.Title
     values["notice"] = ser.conf.Notice
+    values["port"] = fmt.Sprintf("%d",ser.conf.Port)
 
     if strings.HasPrefix(req.URL.Path, "/res/") {
         goutils.DefaultResource.HandleStatic(w, req, req.URL.Path)
@@ -106,13 +106,12 @@ func (ser *ProxyServe) handleLocalReq(w http.ResponseWriter, req *http.Request) 
     } else if req.URL.Path == "/config" {
         if req.Method == "GET" {
             values["rewriteJs"] = html.EscapeString(ser.RewriteJs)
+            values["jsHeight"] = getTextAreaHeightByString(ser.RewriteJs, 100)
 
             hosts_byte, _ := goutils.File_get_contents(ser.GetHostsFilePath())
             values["hosts"] = html.EscapeString(string(hosts_byte))
             values["hostsHeight"] = getTextAreaHeightByString("", 100)
-
-            values["rewriteJsPath"] = filepath.Base(ser.GetRewriteJsPath())
-            values["jsHeight"] = getTextAreaHeightByString(ser.RewriteJs, 100)
+            
             html := render_html("config.html", values, true)
             w.Write([]byte(html))
         } else if req.Method == "POST" {

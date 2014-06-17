@@ -93,7 +93,8 @@ func (ser *ProxyServe) Start() {
 
 //@todo now not work
 func (ser *ProxyServe) onHttpsConnect(host string, ctx *goproxy.ProxyCtx) (*goproxy.ConnectAction, string) {
-    fmt.Println("https:", host)
+//   log.Println("https:",host,ctx.Req)
+    ser.Broadcast_Req(ctx.Req,ctx.Session,0,"guest")
     return goproxy.OkConnect, host
 }
 

@@ -2,18 +2,14 @@
 .clear {
   clear: both;
 }
+html,body{margin: 0;padding: 0}
 nav {
   filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=90);
   opacity: 0.9;
   background: #FFF;
-  padding: 0px;
-  position: fixed;
-  top: 0px;
-  left: 0px;
-  right: 0px;
-  z-index: 100;
+  padding: 0;
+  margin:0;
   background: #446CB3;
-
 }
 #menu{  width: 80%;
   margin: 0 auto
@@ -46,7 +42,7 @@ nav ul li:HOVER a{
 nav ul li a{display: inline-block;width:50px; color:white;}
 
 a{text-decoration: none;}
-#body{margin-top: 50px}
+#body_content{padding-top:5px;}
 
 #connect_status{padding:6px;color: white}
 
@@ -69,7 +65,7 @@ table {border-collapse: collapse;border-spacing: 0;}
  #tb_network td{overflow: auto;cursor: pointer;}
  #right_content{margin-left: 2px}
  #content table th,#content table td{font-size:11px;vertical-align: top}
- #network_list_div {overflow:auto;max-height: 650px;min-height:500px}
+ #div_tb_network_list {overflow:auto;max-height: 600px;min-height:450px}
  tr.selected{background: #ccffee;}
  .right{float: right}
  .left{float:left}
