@@ -11,6 +11,7 @@ import (
     "encoding/base64"
     "encoding/json"
     "fmt"
+    "compress/gzip"
 )
 
 func Int64ToBytes(i int64) []byte {
@@ -81,4 +82,16 @@ func getMapValStr(m map[string]interface{}, k string) string {
         return fmt.Sprintf("%s", val)
     }
     return ""
+}
+
+func gzipDocode(buf *bytes.Buffer) string{
+    gr, err := gzip.NewReader(buf)
+    defer gr.Close()
+    if err == nil {
+        bd_bt, _ := ioutil.ReadAll(gr)
+       return string(bd_bt)
+    } else {
+        log.Println("unzip body failed", err)
+        return ""
+    }
 }

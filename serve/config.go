@@ -24,6 +24,10 @@ const (
     ResponseSave_HasBroad = 1 //has show
 )
 
+
+const (
+   Content_Encoding ="Content-Encoding"
+)
 //"0:no auth | 1:basic auth | 2:basic auth with any name"
 
 func LoadConfig(confPath string) (*Config, error) {

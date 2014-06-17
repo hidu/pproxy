@@ -1,12 +1,11 @@
 package serve
 
 import (
-    "compress/gzip"
     "encoding/base64"
     "fmt"
-    "github.com/elazarl/goproxy"
-    "github.com/elazarl/goproxy/ext/auth"
     "github.com/googollee/go-socket.io"
+    "github.com/hidu/goproxy"
+    "github.com/hidu/goproxy/ext/auth"
     "github.com/hidu/goutils"
     "github.com/robertkrimen/otto"
     "io/ioutil"
@@ -149,16 +148,8 @@ func (ser *ProxyServe) onRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*htt
         if strings.Contains(req.Header.Get("Content-Type"), "x-www-form-urlencoded") {
             buf := forgetRead(&req.Body)
             var body_str string
-            content_enc := req.Header.Get("Content-Encoding")
-            if content_enc == "gzip" {
-                gr, gzip_err := gzip.NewReader(buf)
-                defer gr.Close()
-                if gzip_err == nil {
-                    bd_bt, _ := ioutil.ReadAll(gr)
-                    body_str = string(bd_bt)
-                } else {
-                    log.Println("unzip body failed", gzip_err)
-                }
+            if req.Header.Get(Content_Encoding) == "gzip" {
+                body_str=gzipDocode(buf)
             } else {
                 body_str = buf.String()
             }
@@ -234,7 +225,11 @@ func (ser *ProxyServe) logResponse(res *http.Response, ctx *goproxy.ProxyCtx) {
     body := []byte("pproxy skip")
     if res.ContentLength <= ser.MaxResSaveLength {
         buf := forgetRead(&res.Body)
-        body = buf.Bytes()
+        if(res.Header.Get(Content_Encoding)=="gzip"){
+           body=[]byte(gzipDocode(buf))
+        }else{
+           body = buf.Bytes()
+        }
     }
     data["body"] = base64.StdEncoding.EncodeToString(body)
 
