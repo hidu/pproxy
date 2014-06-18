@@ -198,9 +198,9 @@ func (ser *ProxyServe) handleConfig(w http.ResponseWriter, req *http.Request) {
         ser.loadHosts()
     }
     if err != nil {
-        w.Write([]byte("save failed,err:" + err.Error()))
+        w.Write([]byte("<script>alert('save failed,err:" + html.EscapeString(err.Error())+")"))
     } else {
-        w.Write([]byte("<html>save suc<script>setTimeout(function(){location.href='/config'},1000)</script></html>"))
+        w.Write([]byte("<script>alert('save success');top.location.href='/config'</script>"))
     }
 
 }
