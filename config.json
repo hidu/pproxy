@@ -4,5 +4,6 @@
    "notice":"notice notice",
    "authType":0,
    "dataDir":"./data/",
-   "responseSave":1
+   "responseSave":0,
+   "sessionView":0
 }

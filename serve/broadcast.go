@@ -22,6 +22,9 @@ func (ser *ProxyServe) Broadcast_Req(req *http.Request, id int64, docid uint64, 
     defer ser.mu.RUnlock()
     hasSend := false
     for _, client := range ser.wsClients {
+        if(ser.conf.SessionView==SessionView_IP_FILTER && client.filter_client_ip==""){
+           continue
+        }
         if (client.user == user||user=="guest") && checkFilter(req, client) {
             send_req(client, data)
             hasSend = true
@@ -38,7 +41,8 @@ var extTypes map[string][]string = map[string][]string{
 }
 
 func checkFilter(req *http.Request, client *wsClient) bool {
-    if client.filter_client_ip != "" && !strings.Contains(req.RemoteAddr, client.filter_client_ip) {
+    addr_info:=strings.Split(req.RemoteAddr,":")
+    if client.filter_client_ip != "" && addr_info[0]!=client.filter_client_ip {
         return false
     }
     if len(client.filter_url) > 0 {

@@ -179,8 +179,8 @@ func (ser *ProxyServe) showResponseById(w http.ResponseWriter, req *http.Request
 }
 
 func (ser *ProxyServe) handleConfig(w http.ResponseWriter, req *http.Request) {
-    ser.mu.Lock()
-    defer ser.mu.Unlock()
+//    ser.mu.Lock()
+//    defer ser.mu.Unlock()
     do := req.PostFormValue("type")
     var err error
     if do == "js" {
@@ -193,6 +193,7 @@ func (ser *ProxyServe) handleConfig(w http.ResponseWriter, req *http.Request) {
         }
     } else if do == "hosts" {
         hosts := strings.TrimSpace(req.PostFormValue("hosts"))
+        log.Println("hosts_update",hosts)
         err = goutils.File_put_contents(ser.GetHostsFilePath(), []byte(hosts))
         ser.loadHosts()
     }

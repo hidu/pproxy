@@ -4,20 +4,13 @@ import (
     "encoding/base64"
     "net/http"
     "strings"
+    "github.com/hidu/goutils"
 )
 
-type BasicUserInfo struct {
-    Name string
-    Psw  string
-}
-
-func (info *BasicUserInfo) isEqual(name, psw string) bool {
-    return info.Name == name && info.Psw == psw
-}
 
 var proxyAuthorizatonHeader = "Proxy-Authorization"
 
-func getAuthorInfo(req *http.Request) *BasicUserInfo {
+func getAuthorInfo(req *http.Request) *User {
     authheader := strings.SplitN(req.Header.Get(proxyAuthorizatonHeader), " ", 2)
     if len(authheader) != 2 || authheader[0] != "Basic" {
         return nil
@@ -30,17 +23,15 @@ func getAuthorInfo(req *http.Request) *BasicUserInfo {
     if len(userpass) != 2 {
         return nil
     }
-    return &BasicUserInfo{Name: userpass[0], Psw: userpass[1]}
+    return &User{Name: userpass[0], Psw: goutils.StrMd5(userpass[1])}
 }
 
-func (ser *ProxyServe) CheckUserLogin(userInfo *BasicUserInfo) bool {
-    if userInfo == nil {
+func (ser *ProxyServe) CheckUserLogin(userInfo *User) bool {
+    if userInfo == nil ||ser.Users==nil{
         return false
     }
-    for name, psw := range ser.Users {
-        if userInfo.isEqual(name, psw) {
-            return true
-        }
+    if user,has:=ser.Users[userInfo.Name];has {
+        return user.Psw==userInfo.Psw
     }
     return false
 }

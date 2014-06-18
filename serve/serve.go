@@ -40,12 +40,13 @@ type ProxyServe struct {
     RewriteJsFn otto.Value
     mu          sync.RWMutex
 
-    Users map[string]string
     Debug bool
 
     conf      *Config
     configDir string
     hosts     configHosts
+    
+    Users map[string]*User
 }
 
 type wsClient struct {
@@ -55,6 +56,8 @@ type wsClient struct {
     filter_hide      []string
     filter_url       []string
 }
+
+
 
 type kvType map[string]interface{}
 
@@ -124,7 +127,7 @@ func (ser *ProxyServe) onRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*htt
     ser.reqRewrite(req)
 
     req_uid := NextUid() + uint64(ctx.Session)
-    ctx.UserData = req_uid
+     ctx.UserData =uint64(0)
 
     if ser.Debug {
         req_dump_debug, _ := httputil.DumpRequest(req, false)
@@ -179,6 +182,9 @@ func (ser *ProxyServe) onRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*htt
 
         err := ser.mydb.RequestTable.InsertRecovery(req_uid, logdata)
         log.Println("save_req", ctx.Session, req.URL.String(), "req_docid=", req_uid, err, rewrite)
+       
+        ctx.UserData = req_uid
+        
         if err != nil {
             log.Println(err)
             return req, nil
@@ -208,6 +214,9 @@ func (ser *ProxyServe) logResponse(res *http.Response, ctx *goproxy.ProxyCtx) {
         return
     }
     req_uid := ctx.UserData.(uint64)
+    if(req_uid<1){
+      return
+    }
     data := kvType{}
     data["session_id"] = ctx.Session
     data["now"] = time.Now().Unix()
@@ -292,6 +301,7 @@ func NewProxyServe(confPath string, port int) (*ProxyServe, error) {
 
     proxy := new(ProxyServe)
     proxy.configDir = filepath.Dir(absPath)
+    proxy.Users,_=loadUsers(proxy.configDir+"/users")
 
     proxy.conf = conf
 

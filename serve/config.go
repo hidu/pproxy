@@ -4,6 +4,7 @@ import (
     "encoding/json"
     "github.com/hidu/goutils"
     "log"
+    "strings"
 )
 
 type Config struct {
@@ -13,6 +14,7 @@ type Config struct {
     AuthType     int    `json:"authType"`
     DataDir      string `json:"dataDir"`
     ResponseSave int    `json:"responseSave"`
+    SessionView int    `json:"sessionView"`
 }
 
 const (
@@ -22,7 +24,16 @@ const (
 
     ResponseSave_All      = 0
     ResponseSave_HasBroad = 1 //has show
+    
+    SessionView_ALL       =0 
+    SessionView_IP_FILTER =1 
 )
+
+type User struct{
+  Name string
+  Psw string  //md5 encode
+  IsAdmin bool
+}
 
 
 const (
@@ -66,4 +77,36 @@ func loadHosts(confPath string) (hosts configHosts, err error) {
         hosts[v[0]] = v[1]
     }
     return
+}
+
+func loadUsers(confPath string)(users map[string]*User,err error){
+    users=make(map[string]*User)
+    if !goutils.File_exists(confPath) {
+        return
+    }
+    userInfo_byte, err := goutils.File_get_contents(confPath)
+    if err != nil {
+        log.Println("load user file failed:", confPath, err)
+        return
+    }
+    lines := goutils.LoadText2Slice(string(userInfo_byte))
+    for _,line:=range lines{
+       if(len(line)<2){
+          log.Println("skip user file,line:",line)
+          continue
+       }
+       isAdmin:=len(line)>2 && line[2]=="admin"
+       psw:=line[1]
+       if(strings.HasSuffix(psw,":md5")){
+         if(len(psw)==36){
+            psw=psw[:32]
+         }else{
+           log.Println("user config wrong",line)
+         }
+       }else{
+          psw=goutils.StrMd5(psw)
+       }
+       users[line[0]]=&User{line[0],psw,isAdmin}
+    }
+   return
 }
