@@ -94,6 +94,7 @@ func (ser *ProxyServe) handleLocalReq(w http.ResponseWriter, req *http.Request) 
     values["title"] = ser.conf.Title
     values["notice"] = ser.conf.Notice
     values["port"] = fmt.Sprintf("%d",ser.conf.Port)
+    values["userOnlineTotal"] = len(ser.wsClients)+1
 
     if strings.HasPrefix(req.URL.Path, "/res/") {
         goutils.DefaultResource.HandleStatic(w, req, req.URL.Path)

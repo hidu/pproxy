@@ -10,6 +10,7 @@ nav {
   padding: 0;
   margin:0;
   background: #446CB3;
+  color:white;
 }
 #menu{  width: 80%;
   margin: 0 auto
@@ -33,10 +34,10 @@ nav ul li {
   box-shadow: 1px 0 0 rgba(255, 255, 255, 0.11);
 }
 
-nav ul li:HOVER{
+nav ul#left_submenu li:HOVER{
 	background: white;
 }
-nav ul li:HOVER a{
+nav ul#left_submenu li:HOVER a{
 	color:#446CB3
 }
 nav ul li a{display: inline-block;width:50px; color:white;}

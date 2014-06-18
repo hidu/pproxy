@@ -1,7 +1,7 @@
 {
    "port":8080,
    "title":"demo",
-   "notice":"demo",
+   "notice":"notice notice",
    "authType":0,
    "dataDir":"./data/",
    "responseSave":1

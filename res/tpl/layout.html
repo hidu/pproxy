@@ -15,13 +15,20 @@
 <body>
 <nav>
 <div id="menu">
-       <ul>
-           <li class="border_first"><a href="/">home</a></li>
+       <ul id="left_submenu">
+           <li class="border_first"><a href="/">session</a></li>
            <li><a href="/config">config</a></li>
            <li><a href="/about">about</a></li>
           <!--  <li><a href="/login">login</a></li> -->
        </ul>
-       <span class='right' id="connect_status">&nbsp;</span>
+       
+       <div class='right'>
+          <ul>
+            <li  class="border_first">{{.notice}}</li>
+            <li><span id="connect_status">&nbsp;</span></li>
+            <li>{{.userOnlineTotal}} user</li>
+         </ul> 
+         </div>
        <div class="clear"></div>
 </div>
 </nav>
