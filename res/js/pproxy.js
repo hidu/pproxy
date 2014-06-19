@@ -66,7 +66,7 @@ socket.on("res",
             }
 
             html += "</table></div>";
-            $("#content").empty().html(html).hide().slideDown("fast")
+            $("#right_content").empty().html(html).hide().slideDown("fast")
         })
 
 
@@ -121,7 +121,7 @@ function get_response(tr, docid) {
     if(!isValidId){
     	loading_msg="https request:no data"
     }
-    $("#content").empty().html("<center style='margin:200px 0 auto'>"+loading_msg+"</center>")
+    $("#right_content").empty().html("<center style='margin:200px 0 auto'>"+loading_msg+"</center>")
     if(!isValidId){
     	return;
     }

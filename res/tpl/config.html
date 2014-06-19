@@ -1,15 +1,15 @@
 <style>
 #configTable form{padding:10px;margin-right: 20px}
 </style>
+<div id="bd0">
 <table width="100%" id="configTable">
-
 <tr>
 <td valign="top">
 <b>req rewrite</b>&nbsp; file is:<font color=gray>[req_rewrite_{{.port}}.js]</font>
 <form  method="post" action="/config" autocomplete="off" target="ifr_form">
 <textarea style="width:100%;height:{{.jsHeight}}px" name="js">{{.rewriteJs}}</textarea>
 <input type="hidden" name="type" value="js">
-<div style="text-align:right"><input type="submit" class="button button-primary" value="save"></div>
+<div style="text-align:right"><input type="submit" class="btn btn-primary" value="save"></div>
 </form>
 </td>
 <td valign="top">
@@ -40,10 +40,11 @@ if(req.host=="www.baidu.com"){
 <form  method="post" action="/config" autocomplete="off" target="ifr_form">
 <textarea style="width:100%;height:100px" name="hosts">{{.hosts}}</textarea>
 <input type="hidden" name="type" value="hosts">
-<div style="text-align:right"><input type="submit" class="button button-primary" value="save"></div>
+<div style="text-align:right"><input type="submit" class="btn btn-primary" value="save"></div>
 </form>
 </td>
 <td valign="top">
+<br/><br/>
 <pre>
 example:
 www.baidu.com 127.0.0.1
@@ -54,3 +55,4 @@ www.baidu.com:81 10.0.2.2:8080
 </table>
 
 <iframe name="ifr_form" style="display:none;"></iframe>  
+</div>

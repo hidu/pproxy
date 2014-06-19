@@ -8,9 +8,8 @@
 <title>{{.title}} | pproxy {{.version}}</title>
 <script src="/res/js/jquery.js"></script>
 <script src="/res/js/base64.js"></script>
+<link rel="stylesheet" href="/res/css/flat.css">
 <link rel="stylesheet" href="/res/css/style.css">
-<link rel="stylesheet" href="/res/css/grids-min.css">
-<link rel="stylesheet" href="/res/css/button.css">
 </head>
 <body>
 <nav>
@@ -19,7 +18,6 @@
            <li class="border_first"><a href="/">session</a></li>
            <li><a href="/config">config</a></li>
            <li><a href="/about">about</a></li>
-          <!--  <li><a href="/login">login</a></li> -->
        </ul>
        
        <div class='right'>
@@ -27,13 +25,13 @@
             <li  class="border_first">{{.notice}}</li>
             <li><span id="connect_status">&nbsp;</span></li>
             <li>{{.userOnlineTotal}} user</li>
+           <li><a href="/login">login</a></li> 
          </ul> 
          </div>
        <div class="clear"></div>
 </div>
 </nav>
-<div id="body_content">
+<div class="clear"></div>
 {{.body}}
-</div>
 </body>
 </html>

@@ -118,6 +118,13 @@ func (ser *ProxyServe) handleLocalReq(w http.ResponseWriter, req *http.Request) 
         } else if req.Method == "POST" {
             ser.handleConfig(w, req)
         }
+    } else if req.URL.Path == "/login" {
+        if req.Method == "GET" {
+         html := render_html("login.html", values, true)
+          w.Write([]byte(html))
+        }else{
+          ser.handleLogin(w,req)
+        }
     } else if req.URL.Path == "/response" {
         ser.showResponseById(w, req)
     } else {
@@ -131,6 +138,27 @@ func getTextAreaHeightByString(mystr string, minHeight int) int {
         height = minHeight
     }
     return height
+}
+
+func (ser *ProxyServe)handleLogin(w http.ResponseWriter, req *http.Request){
+    name:=strings.TrimSpace(req.FormValue("name"))
+    psw:=strings.TrimSpace(req.FormValue("psw"))
+    if(name==""){
+      w.Write([]byte("<script>alert('empty name!')</script>"))
+      return;
+    }
+    if user,has:=ser.Users[name];has{
+       if(user.isPswEq(psw)){
+         log.Println("login suc,name=",name)
+         w.Write([]byte("<script>parent.location.href='/'</script>"))
+       }else{
+         log.Println("login failed psw incorrect,name=",name,"psw=",psw)
+         w.Write([]byte("<script>alert('password incorrect')</script>"))
+       }
+       return
+    }
+     log.Println("login failed not exists,name=",name,"psw=",psw)
+     w.Write([]byte("<script>alert('user not exists')</script>"))
 }
 
 func (ser *ProxyServe) showResponseById(w http.ResponseWriter, req *http.Request) {

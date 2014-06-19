@@ -1,50 +1,51 @@
-<div class="yui3-g">
-	<div class="yui3-u-2-5">
-	<div id="network_list_div">
-	<div style='margin:3px'>
-	<form id="network_filter_form">
-    	<table width="100%">
-		  <tr>
-		  <th width="90px">client:</th>
-		  <td><input type="text" id='client_ip' name="client_ip" placeholder="which ip use this proxy">
-		  user:<input type="text" name="user">
-		  </td>
-		  </tr>
-		  <tr><th>hide:</th>
-		  <td>
-		  <label><input type="checkbox" name="hide" value='image'>image</label>
-		  <label><input type="checkbox" name="hide" value='js'>js</label>
-		  <label><input type="checkbox" name="hide" value='css'>css</label>
-		  </td>
-		  </tr>
-		  <tr><th>url match:</th><td><input type="text" name="url_match">
-	     <div class='right'><a class='button button-primary' onclick="$('#tb_network tbody').empty()" href="javascript:;">clean</a></div>
-		  </td></tr>
-	  </table>
-	</form>
-	</div>
-	 
-	 <div id="div_tb_network_list">
-		 <table id='tb_network' class="tb_1">
-		  <thead>
-		     <tr><th width="30px">#</th>
-		         <!-- <th width="40px">status</th>  -->
-		         <th width="120px">host</th>
-		         <th>path</th>
-		         </tr>
-		  </thead>
-		  <tbody>
-		  </tbody>
-		 </table>
-	 </div>
-	</div>
-	
-	</div>
-	<div class="yui3-u-3-5">
-	    <div id="right_content">
-		    <div id='content'></div>
-		</div>
-	</div>
+<div id="aside">
+<div id="network_list_div">
+<div style='margin:3px'>
+<form id="network_filter_form">
+<fieldset>
+<legend>filter</legend>
+   	<table width="100%">
+	  <tr>
+	  <th width="60px">client:</th>
+	  <td><input type="text" class="form-control w120" id='client_ip' name="client_ip" placeholder="client ip">
+	  user:<input type="text" name="user" class="form-control w120" >
+	  </td>
+	  </tr>
+	  <tr><th>hide:</th>
+	  <td>
+	  <label><input type="checkbox" name="hide" value='image'>image</label>
+	  <label><input type="checkbox" name="hide" value='js'>js</label>
+	  <label><input type="checkbox" name="hide" value='css'>css</label>
+	  </td>
+	  </tr>
+	  <tr>
+	  <th>url:</th><td><input type="text" name="url_match" class="form-control" >
+	  </td></tr>
+  </table>
+  </fieldset>
+</form>
 </div>
+ 
+ <div id="div_tb_network_list">
+	 <table id='tb_network' class="tb_1">
+	  <thead>
+	     <tr><th width="30px">#</th>
+	         <!-- <th width="40px">status</th>  -->
+	         <th width="120px">host</th>
+	         <th>path
+	         <div class='right'><a  onclick="$('#tb_network tbody').empty()" href="javascript:;">clean</a></div>
+	         
+	         </th>
+	         </tr>
+	  </thead>
+	  <tbody>
+	  </tbody>
+	 </table>
+ </div>
+</div>
+
+</div>
+<br/>
+<div id="right_content"></div>
 <script src="/res/js/socket.io.js"></script>
 <script src="/res/js/pproxy.js"></script>

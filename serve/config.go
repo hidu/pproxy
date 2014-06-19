@@ -41,6 +41,11 @@ const (
 )
 //"0:no auth | 1:basic auth | 2:basic auth with any name"
 
+
+func (u *User)isPswEq(psw string) bool{
+  return u.Psw==goutils.StrMd5(psw)
+}
+
 func LoadConfig(confPath string) (*Config, error) {
     data, err := goutils.File_get_contents(confPath)
     if err != nil {
