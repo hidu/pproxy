@@ -21,6 +21,7 @@ import (
     "strings"
     "sync"
     "time"
+    "os"
 )
 
 var js *otto.Otto
@@ -298,6 +299,8 @@ func NewProxyServe(confPath string, port int) (*ProxyServe, error) {
         log.Println("get config path failed", confPath)
         return nil, err
     }
+    
+    os.Chdir(filepath.Dir(absPath))
 
     proxy := new(ProxyServe)
     proxy.configDir = filepath.Dir(absPath)

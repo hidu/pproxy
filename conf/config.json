@@ -3,7 +3,7 @@
    "title":"demo",
    "notice":"notice notice",
    "authType":0,
-   "dataDir":"./data/",
+   "dataDir":"../data/",
    "responseSave":0,
    "sessionView":0
 }

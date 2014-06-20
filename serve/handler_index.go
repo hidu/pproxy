@@ -234,7 +234,7 @@ func (ser *ProxyServe) showResponseById(w http.ResponseWriter, req *http.Request
 func (ser *ProxyServe) handleConfig(w http.ResponseWriter, req *http.Request) {
     user,isLogin:=ser.checkLogin(req)
     if(!isLogin||!user.IsAdmin){
-        w.Write([]byte("<script>alert('you are not admin')"))
+        w.Write([]byte("<script>alert('you are not admin')</script>"))
         return;
     }
     do := req.PostFormValue("type")
