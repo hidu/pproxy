@@ -25,7 +25,11 @@
             <li  class="border_first">{{.notice}}</li>
             <li><span id="connect_status">&nbsp;</span></li>
             <li>{{.userOnlineTotal}} user</li>
-           <li><a href="/login">login</a></li> 
+            {{if .isLogin}}
+              <li>{{.user.Name}}</li> 
+             {{else}}
+              <li><a href="/login">login</a></li> 
+            {{end}}
          </ul> 
          </div>
        <div class="clear"></div>

@@ -16,6 +16,7 @@ import (
     "strconv"
 )
 
+var CookieName="pproxy"
 /**
 *https://github.com/googollee/go-socket.io
  */
@@ -36,6 +37,7 @@ func (ser *ProxyServe) client_get_response(ns *socketio.NameSpace, docid_str str
         log.Println("ns error:", err)
     }
 }
+
 func (ser *ProxyServe) client_filter(ns *socketio.NameSpace, form_data string) {
     m, err := url.ParseQuery(form_data)
     if err != nil {
@@ -60,6 +62,23 @@ func send_req(client *wsClient, data map[string]interface{}) {
     if err != nil {
         log.Println("emit req failed", err)
     }
+}
+
+func (ser *ProxyServe)checkLogin(req *http.Request)(user *User,isLogin bool){
+   cookie,err:=req.Cookie(CookieName)
+   if(err!=nil){
+     return;
+   }
+   info:=strings.SplitN(cookie.Value,":",2)
+   if(len(info)!=2){
+      return 
+   }
+   if user,has:=ser.Users[info[0]];has{
+       if(user.Psw==info[1]){
+         return user,true
+       }
+   }
+   return
 }
 
 func (ser *ProxyServe) initWs() {
@@ -95,6 +114,10 @@ func (ser *ProxyServe) handleLocalReq(w http.ResponseWriter, req *http.Request) 
     values["notice"] = ser.conf.Notice
     values["port"] = fmt.Sprintf("%d",ser.conf.Port)
     values["userOnlineTotal"] = len(ser.wsClients)+1
+    
+    user,isLogin:=ser.checkLogin(req)
+    values["isLogin"]=isLogin
+    values["user"]=user
 
     if strings.HasPrefix(req.URL.Path, "/res/") {
         goutils.DefaultResource.HandleStatic(w, req, req.URL.Path)
@@ -150,6 +173,8 @@ func (ser *ProxyServe)handleLogin(w http.ResponseWriter, req *http.Request){
     if user,has:=ser.Users[name];has{
        if(user.isPswEq(psw)){
          log.Println("login suc,name=",name)
+         cookie:=&http.Cookie{Name:CookieName,Value:fmt.Sprintf("%s:%s",name,user.Psw),Path:"/"}
+         http.SetCookie(w,cookie)
          w.Write([]byte("<script>parent.location.href='/'</script>"))
        }else{
          log.Println("login failed psw incorrect,name=",name,"psw=",psw)
@@ -207,8 +232,11 @@ func (ser *ProxyServe) showResponseById(w http.ResponseWriter, req *http.Request
 }
 
 func (ser *ProxyServe) handleConfig(w http.ResponseWriter, req *http.Request) {
-//    ser.mu.Lock()
-//    defer ser.mu.Unlock()
+    user,isLogin:=ser.checkLogin(req)
+    if(!isLogin||!user.IsAdmin){
+        w.Write([]byte("<script>alert('you are not admin')"))
+        return;
+    }
     do := req.PostFormValue("type")
     var err error
     if do == "js" {
