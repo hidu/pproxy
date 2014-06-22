@@ -108,8 +108,8 @@ func (ser *ProxyServe) reqRewriteByHosts(req *http.Request) {
     if ser.hosts == nil {
         return
     }
-    if host, has := ser.hosts[req.Host]; has {
-        log.Println("rewrite host:", req.Host, "==>", host)
+    if host, has := ser.hosts[req.URL.Host]; has {
+        log.Println("rewrite host:", req.URL.Host, "==>", host)
         req.URL.Host = host
         return
     }
