@@ -102,7 +102,6 @@ func (ser *ProxyServe) reqRewriteByjs(req *http.Request) {
 func (ser *ProxyServe) reqRewrite(req *http.Request) {
     ser.reqRewriteByjs(req)
     ser.reqRewriteByHosts(req)
-
 }
 
 func (ser *ProxyServe) reqRewriteByHosts(req *http.Request) {
@@ -111,7 +110,7 @@ func (ser *ProxyServe) reqRewriteByHosts(req *http.Request) {
     }
     if host, has := ser.hosts[req.Host]; has {
         log.Println("rewrite host:", req.Host, "==>", host)
-        req.Host = host
+        req.URL.Host = host
         return
     }
     host_info := strings.Split(req.URL.Host, ":")
@@ -123,12 +122,12 @@ func (ser *ProxyServe) reqRewriteByHosts(req *http.Request) {
     req_host := strings.Join(host_info, ":")
     if host, has := ser.hosts[req_host]; has {
         log.Println("rewrite host:", req.Host, "==>", host)
-        req.Host = host
+        req.URL.Host = host
         return
     }
     if host, has := ser.hosts[host_info[0]]; has {
         log.Println("rewrite host:", req.Host, "==>", host)
-        req.Host = host
+        req.URL.Host = host
         return
     }
 }

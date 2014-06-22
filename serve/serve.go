@@ -59,7 +59,6 @@ type wsClient struct {
 }
 
 
-
 type kvType map[string]interface{}
 
 func (ser *ProxyServe) ServeHTTP(w http.ResponseWriter, req *http.Request) {
@@ -105,7 +104,7 @@ func (ser *ProxyServe) onHttpsConnect(host string, ctx *goproxy.ProxyCtx) (*gopr
 func (ser *ProxyServe) onRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
     if ser.Debug {
         req_dump_debug, _ := httputil.DumpRequest(req, false)
-        log.Println("DEBUG req BEFORE:\n", string(req_dump_debug))
+        log.Println("DEBUG req BEFORE:\n", string(req_dump_debug),"\nurl_host:",req.URL.Host)
     }
     authInfo := getAuthorInfo(req)
     uname := "guest"
@@ -132,7 +131,7 @@ func (ser *ProxyServe) onRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*htt
 
     if ser.Debug {
         req_dump_debug, _ := httputil.DumpRequest(req, false)
-        log.Println("DEBUG req AFTER:\n", string(req_dump_debug))
+        log.Println("DEBUG req AFTER:\n", string(req_dump_debug),"\nurl_host:",req.URL.Host)
     }
 
     hasSend := ser.Broadcast_Req(req, ctx.Session, req_uid, uname)
