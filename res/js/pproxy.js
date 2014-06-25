@@ -158,4 +158,16 @@ $().ready(function() {
         var docid=location.hash.substr(5);
         socket.emit("get_response", docid)
     }
+    $("#network_filter_form input:text").each(function(){
+    	pproxy_local_save(this,$(this).attr("name"));
+    });
 });
+
+function pproxy_local_save(target,id){
+	if(!window.localStorage){
+		return;
+	}
+	$(target).val(window.localStorage[id]||"").change(function(){
+		window.localStorage[id]=$(this).val();
+	});
+}

@@ -50,6 +50,7 @@ func (ser *ProxyServe) client_filter(ns *socketio.NameSpace, form_data string) {
     nsClient.filter_client_ip = strings.TrimSpace(m.Get("client_ip"))
     nsClient.filter_hide = m["hide"]
     nsClient.filter_url = strings.Split(strings.Replace(m.Get("url_match"), " ", "", -1), "|")
+    nsClient.filter_url_hide=strings.Split(strings.Replace(m.Get("hide_url"), " ", "", -1), "|")
     user := strings.TrimSpace(m.Get("user"))
     nsClient.user = user
     if user == "" {

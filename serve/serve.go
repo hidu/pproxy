@@ -56,6 +56,7 @@ type wsClient struct {
     filter_client_ip string
     filter_hide      []string
     filter_url       []string
+    filter_url_hide  []string
 }
 
 

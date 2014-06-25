@@ -8,7 +8,7 @@
 	  <tr>
 	  <th width="60px">client:</th>
 	  <td><input type="text" class="form-control w120" id='client_ip' name="client_ip" placeholder="client ip">
-	  user:<input type="text" name="user" class="form-control w120" >
+	  user:<input type="text" name="user" class="form-control w120" placeholder="basic auth uname">
 	  </td>
 	  </tr>
 	  <tr><th>hide:</th>
@@ -16,10 +16,11 @@
 	  <label><input type="checkbox" name="hide" value='image'>image</label>
 	  <label><input type="checkbox" name="hide" value='js'>js</label>
 	  <label><input type="checkbox" name="hide" value='css'>css</label>
+	  <label>&nbsp;&nbsp;&nbsp;<input type="text" name="hide_url" value='' class="form-control w120" placeholder="any part in url"></label>
 	  </td>
 	  </tr>
 	  <tr>
-	  <th>url:</th><td><input type="text" name="url_match" class="form-control" >
+	  <th nowrap>url match:</th><td><input type="text" name="url_match" class="form-control" style="width:285px" placeholder="any part in url">
 	  </td></tr>
   </table>
   </fieldset>
