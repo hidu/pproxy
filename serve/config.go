@@ -41,6 +41,9 @@ const (
 )
 //"0:no auth | 1:basic auth | 2:basic auth with any name"
 
+func getVersion() string{
+  return string(goutils.DefaultResource.Load("/res/version"))
+}
 
 func (u *User)isPswEq(psw string) bool{
   return u.Psw==goutils.StrMd5(psw)

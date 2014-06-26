@@ -70,7 +70,7 @@ func checkFilter(req *http.Request, client *wsClient) bool {
     }
     if(len(client.filter_url_hide)>0){
         for _, hide_kw := range client.filter_url_hide {
-           if strings.Contains(req.URL.String(),hide_kw) {
+           if hide_kw!="" && strings.Contains(req.URL.String(),hide_kw) {
                  return false
            }
         }

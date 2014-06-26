@@ -150,6 +150,10 @@ function h(html) {
 }
 
 $().ready(function() {
+	$("#network_filter_form input:text").each(function(){
+		pproxy_local_save(this,$(this).attr("name"));
+	});
+	
     $("#network_filter_form").change(function() {
         var form_data = $(this).serialize();
         socket.emit("client_filter", form_data);
@@ -158,9 +162,6 @@ $().ready(function() {
         var docid=location.hash.substr(5);
         socket.emit("get_response", docid)
     }
-    $("#network_filter_form input:text").each(function(){
-    	pproxy_local_save(this,$(this).attr("name"));
-    });
 });
 
 function pproxy_local_save(target,id){

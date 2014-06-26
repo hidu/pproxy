@@ -12,6 +12,7 @@ import (
     "encoding/json"
     "fmt"
     "compress/gzip"
+    "strings"
 )
 
 func Int64ToBytes(i int64) []byte {
@@ -94,4 +95,16 @@ func gzipDocode(buf *bytes.Buffer) string{
         log.Println("unzip body failed", err)
         return ""
     }
+}
+
+func parseUrlInputAsSlice(input string) []string{
+  arr:=strings.Split(input,"|")
+  result:=make([]string,0)
+  for _,val:=range arr{
+     val=strings.TrimSpace(val)
+     if(val!=""){
+       result=append(result,val)
+     }
+  }
+  return result;
 }

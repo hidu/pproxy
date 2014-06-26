@@ -299,7 +299,7 @@ func NewProxyServe(confPath string, port int) (*ProxyServe, error) {
         log.Println("get config path failed", confPath)
         return nil, err
     }
-    
+    getVersion()
     os.Chdir(filepath.Dir(absPath))
 
     proxy := new(ProxyServe)
@@ -321,7 +321,7 @@ func NewProxyServe(confPath string, port int) (*ProxyServe, error) {
             }
         }
     }
-
+    
     proxy.loadHosts()
 
     proxy.mydb = NewTieDb(fmt.Sprintf("%s/%d/", conf.DataDir, conf.Port))
