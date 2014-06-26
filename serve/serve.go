@@ -52,9 +52,10 @@ type ProxyServe struct {
 
 type wsClient struct {
     ns               *socketio.NameSpace
-    user             string
-    filter_client_ip string
-    filter_hide      []string
+    user              string
+    filter_user      []string
+    filter_ip        []string
+    filter_hide_ext  []string
     filter_url       []string
     filter_url_hide  []string
 }

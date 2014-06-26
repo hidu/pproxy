@@ -22,10 +22,10 @@ func (ser *ProxyServe) Broadcast_Req(req *http.Request, id int64, docid uint64, 
     defer ser.mu.RUnlock()
     hasSend := false
     for _, client := range ser.wsClients {
-        if(ser.conf.SessionView==SessionView_IP_FILTER && client.filter_client_ip==""){
+        if(ser.conf.SessionView==SessionView_IP_FILTER && len(client.filter_ip)==0){
            continue
         }
-        if (client.user == user||user=="guest") && checkFilter(req, client) {
+        if (user=="guest") && checkFilter(req, client,user) {
             send_req(client, data)
             hasSend = true
         }
@@ -40,27 +40,51 @@ var extTypes map[string][]string = map[string][]string{
     "image": []string{"jpg", "jpeg", "png", "gif", "bmp", "tiff", "jpe", "tif", "webp", "ico"},
 }
 
-func checkFilter(req *http.Request, client *wsClient) bool {
-    addr_info:=strings.Split(req.RemoteAddr,":")
-    if client.filter_client_ip != "" && addr_info[0]!=client.filter_client_ip {
-        return false
+func checkFilter(req *http.Request, client *wsClient,user string) bool {
+    if(len(client.filter_user)>0){
+       user_in_list:=false
+       for _,name:=range client.filter_user{
+          if(name!="" && name==user){
+             user_in_list=true
+             break
+          }
+       }
+       if(!user_in_list){
+          return false
+       }
     }
+    
+    if(len(client.filter_ip)>0){
+      addr_info:=strings.Split(req.RemoteAddr,":")
+      ip_in_list:=false;
+      for _,ip:=range client.filter_ip{
+         if(ip!="" && addr_info[0]==ip){
+            ip_in_list=true
+            break
+         }
+      }
+      if(!ip_in_list){
+         return false;
+      }
+    }
+    
     if len(client.filter_url) > 0 {
         url := req.URL.String()
-        has := false
+        has_kw := false
         for _, subUrl := range client.filter_url {
             if strings.Contains(url, subUrl) {
-                has = true
+                has_kw = true
                 break
             }
         }
-        if !has {
+        if !has_kw {
             return false
         }
     }
-    if len(client.filter_hide) > 0 {
+    
+    if len(client.filter_hide_ext) > 0 {
         ext := strings.ToLower(strings.Trim(filepath.Ext(req.URL.Path), "."))
-        for _, hide_type := range client.filter_hide {
+        for _, hide_type := range client.filter_hide_ext {
             for _, hide_ext := range extTypes[hide_type] {
                 if ext == hide_ext {
                     return false

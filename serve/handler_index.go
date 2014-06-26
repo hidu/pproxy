@@ -47,15 +47,17 @@ func (ser *ProxyServe) client_filter(ns *socketio.NameSpace, form_data string) {
     ser.mu.Lock()
     defer ser.mu.Unlock()
     nsClient := ser.wsClients[ns.Id()]
-    nsClient.filter_client_ip = strings.TrimSpace(m.Get("client_ip"))
-    nsClient.filter_hide = m["hide"]
-    nsClient.filter_url = parseUrlInputAsSlice(m.Get("url_match"))
-    nsClient.filter_url_hide=parseUrlInputAsSlice(m.Get("hide_url"))
-    user := strings.TrimSpace(m.Get("user"))
-    nsClient.user = user
-    if user == "" {
-        nsClient.user = "guest"
+    nsClient.filter_ip         = parseUrlInputAsSlice(m.Get("client_ip"))
+    nsClient.filter_hide_ext   = m["hide"]
+    nsClient.filter_url        = parseUrlInputAsSlice(m.Get("url_match"))
+    nsClient.filter_url_hide   =parseUrlInputAsSlice(m.Get("hide_url"))
+   
+    user := parseUrlInputAsSlice(m.Get("user"))
+    if len(user)==0 {
+       user=append(user,"guest");
     }
+    
+    nsClient.filter_user       = user
 }
 
 
