@@ -39,7 +39,9 @@ socket.on("res",
                 res_link = "<a href='/response?id=" + res["@id"] + "' target='_blank'>view</a>";
             }
             html += "<div><table class='tb_1'><caption>Response&nbsp;" + res_link + "</caption>"
-
+            
+            var hideBigBody=false;
+            
             if (res) {
                 if (res["dump"]) {
                     html += "<tr><th width='80px'>res_dump:</th><td>" + h(Base64.decode(res["dump"])).replace(/\n/g, "<br/>")
@@ -54,14 +56,25 @@ socket.on("res",
                 var bd_json = pproxy_parseAsjson(body_str)
 
                 if (bd_json) {
+                	hideBigBody=true;
                     html += "<tr><th width='80px'>body_json:</th><td>" + bd_json + "</td></tr>";
                 }
                 if (isImg) {
+                	hideBigBody=true;
                     html += "<tr><th>body_img:</th><td><img src='data:" + res["header"]["Content-Type"][0] + ";base64,"
                             + res["body"] + "'/></td></tr>";
                 }
                 if (!isImg || res["body"].length < 1000 || !isStatusOk) {
-                	html += "<tr><th width='80px'>body:</th><td>" + h(body_str).replace(/\n/g, "<br/>") + "</td></tr>";
+                	html += "<tr><th width='80px'>body:";
+                	if(res["body"].length>400){
+                		html+="<div><a href='#' onclick='return pproxy_res_td_body_toggle()'>toggle</a></div>";
+                	}else{
+                		hideBigBody=false;
+                	}
+                	html+= "</th>" +
+                			"<td>" +
+                			"<div id='res_td_body' "+(hideBigBody?"class='res_td_body' ":"")+">" + h(body_str).replace(/\n/g, "<br/>") + 
+                			"</div></td></tr>";
                 }
             }
 
@@ -69,7 +82,11 @@ socket.on("res",
             $("#right_content").empty().html(html).hide().slideDown("fast")
         })
 
-
+function pproxy_res_td_body_toggle(){
+	$("#res_td_body").toggleClass("res_td_body");
+	return false;
+}
+        
 function pproxy_parseAsjson(str) {
     try {
     	str=str+""

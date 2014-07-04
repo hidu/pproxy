@@ -91,6 +91,10 @@ fieldset {
 	border: 1px solid gray
 }
 
+.res_td_body{
+	max-height: 120px;
+	overflow: scroll;
+}
 
 .login-screen {
   min-height: 400px;
