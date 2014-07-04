@@ -124,7 +124,7 @@ func (ser *ProxyServe) handleLocalReq(w http.ResponseWriter, req *http.Request) 
     values["user"]=user
 
     if strings.HasPrefix(req.URL.Path, "/res/") {
-        goutils.DefaultResource.HandleStatic(w, req, req.URL.Path)
+        utils.DefaultResource.HandleStatic(w, req, req.URL.Path)
     } else if req.URL.Path == "/" {
         html := render_html("network.html", values, true)
         w.Write([]byte(html))
@@ -136,7 +136,7 @@ func (ser *ProxyServe) handleLocalReq(w http.ResponseWriter, req *http.Request) 
             values["rewriteJs"] = html.EscapeString(ser.RewriteJs)
             values["jsHeight"] = getTextAreaHeightByString(ser.RewriteJs, 100)
 
-            hosts_byte, _ := goutils.File_get_contents(ser.GetHostsFilePath())
+            hosts_byte, _ := utils.File_get_contents(ser.GetHostsFilePath())
             values["hosts"] = html.EscapeString(string(hosts_byte))
             values["hostsHeight"] = getTextAreaHeightByString("", 100)
             
@@ -198,7 +198,7 @@ func (ser *ProxyServe) showResponseById(w http.ResponseWriter, req *http.Request
         if responseData == nil {
             w.Write([]byte("response not found"))
         } else {
-            walker := goutils.NewInterfaceWalker(map[string]interface{}(responseData))
+            walker := utils.NewInterfaceWalker(map[string]interface{}(responseData))
             content_type := ""
             if type_header, has := walker.GetStringSlice("/header/Content-Type"); has {
                 content_type = strings.Join(type_header, ";")
@@ -248,13 +248,13 @@ func (ser *ProxyServe) handleConfig(w http.ResponseWriter, req *http.Request) {
         err = ser.parseAndSaveRewriteJs(jsStr)
         if err == nil {
             jsPath := ser.GetRewriteJsPath()
-            err = goutils.File_put_contents(jsPath, []byte(jsStr))
+            err = utils.File_put_contents(jsPath, []byte(jsStr))
             log.Println("save rewritejs ", jsPath, err)
         }
     } else if do == "hosts" {
         hosts := strings.TrimSpace(req.PostFormValue("hosts"))
         log.Println("hosts_update",hosts)
-        err = goutils.File_put_contents(ser.GetHostsFilePath(), []byte(hosts))
+        err = utils.File_put_contents(ser.GetHostsFilePath(), []byte(hosts))
         ser.loadHosts()
     }
     if err != nil {
@@ -265,8 +265,8 @@ func (ser *ProxyServe) handleConfig(w http.ResponseWriter, req *http.Request) {
 
 }
 
-func render_html(fileName string, values map[string]interface{}, layout bool) string {
-    html := goutils.DefaultResource.Load("/res/tpl/" + fileName)
+func render_html(fileName string, values map[string]interface{},layout bool) string {
+    html := utils.DefaultResource.Load("/res/tpl/" + fileName)
     tpl, _ := template.New("page").Parse(string(html))
     var bf []byte
     w := bytes.NewBuffer(bf)
@@ -274,10 +274,10 @@ func render_html(fileName string, values map[string]interface{}, layout bool) st
     body := w.String()
     if layout {
         values["body"] = body
-        values["version"] = "0.2"
+        values["version"] = PproxyVersion
         return render_html("layout.html", values, false)
     }
-    return goutils.Html_reduceSpace(body)
+    return utils.Html_reduceSpace(body)
 }
 
 func (ser *ProxyServe) handleUserInfo(w http.ResponseWriter, req *http.Request) {

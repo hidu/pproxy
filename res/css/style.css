@@ -3,7 +3,7 @@
   clear: both;
 }
 html,body{margin: 0;padding: 0}
-nav {
+#nav {
   filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=90);
   opacity: 0.9;
   background: #FFF;
@@ -15,12 +15,12 @@ nav {
 #menu{  width: 80%;
   margin: 0 auto
  }
-nav ul {
+#nav ul {
   margin: 0px auto;
   padding: 0px;
   list-style-type: none;
 }
-nav ul li {
+#nav ul li {
   float: left;
   padding: 10px 10px;
   font-size: 14px;
@@ -34,13 +34,13 @@ nav ul li {
   box-shadow: 1px 0 0 rgba(255, 255, 255, 0.11);
 }
 
-nav ul#left_submenu li:HOVER{
+#nav ul#left_submenu li:HOVER{
 	background: white;
 }
-nav ul#left_submenu li:HOVER a{
+#nav ul#left_submenu li:HOVER a{
 	color:#446CB3
 }
-nav ul li a{display: inline-block;width:50px; color:white;}
+#nav ul li a{display: inline-block;width:50px; color:white;}
 
 
 #aside {

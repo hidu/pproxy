@@ -55,7 +55,7 @@ func (t *TieDb) Clean(max_time_unix int64) {
 }
 
 func (t *TieDb) StartGcTimer(sec int64, max_life int64) {
-    goutils.SetInterval(func() {
+    utils.SetInterval(func() {
         t.Clean(time.Now().Unix() - max_life)
     }, sec)
 }

@@ -42,15 +42,15 @@ const (
 //"0:no auth | 1:basic auth | 2:basic auth with any name"
 
 func getVersion() string{
-  return string(goutils.DefaultResource.Load("/res/version"))
+  return string(utils.DefaultResource.Load("/res/version"))
 }
 
 func (u *User)isPswEq(psw string) bool{
-  return u.Psw==goutils.StrMd5(psw)
+  return u.Psw==utils.StrMd5(psw)
 }
 
 func LoadConfig(confPath string) (*Config, error) {
-    data, err := goutils.File_get_contents(confPath)
+    data, err := utils.File_get_contents(confPath)
     if err != nil {
         log.Println("load config", confPath, "failed,err:", err)
         return nil, err
@@ -68,15 +68,15 @@ type configHosts map[string]string
 
 func loadHosts(confPath string) (hosts configHosts, err error) {
     hosts = make(configHosts)
-    if !goutils.File_exists(confPath) {
+    if !utils.File_exists(confPath) {
         return
     }
-    hosts_byte, err := goutils.File_get_contents(confPath)
+    hosts_byte, err := utils.File_get_contents(confPath)
     if err != nil {
         log.Println("load hosts_file failed:", confPath, err)
         return nil, err
     }
-    hosts_arr := goutils.LoadText2Slice(string(hosts_byte))
+    hosts_arr := utils.LoadText2Slice(string(hosts_byte))
     for _, v := range hosts_arr {
         if len(v) != 2 {
             log.Println("hosts file line wrong,ignore,", v)
@@ -89,15 +89,15 @@ func loadHosts(confPath string) (hosts configHosts, err error) {
 
 func loadUsers(confPath string)(users map[string]*User,err error){
     users=make(map[string]*User)
-    if !goutils.File_exists(confPath) {
+    if !utils.File_exists(confPath) {
         return
     }
-    userInfo_byte, err := goutils.File_get_contents(confPath)
+    userInfo_byte, err := utils.File_get_contents(confPath)
     if err != nil {
         log.Println("load user file failed:", confPath, err)
         return
     }
-    lines := goutils.LoadText2Slice(string(userInfo_byte))
+    lines := utils.LoadText2Slice(string(userInfo_byte))
     for _,line:=range lines{
        if(len(line)<2){
           log.Println("skip user file,line:",line)
@@ -112,7 +112,7 @@ func loadUsers(confPath string)(users map[string]*User,err error){
            log.Println("user config wrong",line)
          }
        }else{
-          psw=goutils.StrMd5(psw)
+          psw=utils.StrMd5(psw)
        }
        users[line[0]]=&User{line[0],psw,isAdmin}
     }

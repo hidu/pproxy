@@ -312,7 +312,7 @@ func NewProxyServe(confPath string, port int) (*ProxyServe, error) {
     js = otto.New()
     jsPath := proxy.GetRewriteJsPath()
 
-    if goutils.File_exists(jsPath) {
+    if utils.File_exists(jsPath) {
         script, err := ioutil.ReadFile(jsPath)
         if err == nil {
             err = proxy.parseAndSaveRewriteJs(string(script))
