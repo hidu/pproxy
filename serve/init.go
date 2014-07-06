@@ -1,9 +1,11 @@
 package serve
 
 import (
-    "github.com/hidu/goutils"
+	"github.com/hidu/goutils"
 )
-var PproxyVersion string="0.3"
-func init(){
-   utils.ResetDefaultBundle()
+
+var PproxyVersion string = "0.3"
+
+func init() {
+	utils.ResetDefaultBundle()
 }

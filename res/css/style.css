@@ -90,6 +90,9 @@ fieldset {
 	border-radius:10px;
 	border: 1px solid gray
 }
+tr.redo{
+	color:blue;
+}
 
 .res_td_body{
 	max-height: 120px;

@@ -10,10 +10,16 @@ socket.on("disconnect", function() {
 
 socket.on("req", function(data) {
     console && console.log("req", data)
-    $("#tb_network tbody").prepend(
-      "<tr onclick=\"get_response(this,'" + data['docid'] + "')\">" + "<td>" + data["sid"] + "</td>"
-       //+ "<td></td>" 
-       + "<td>" + data["host"] + "</td>" + "<td>" + data["path"] + "</td>" + "</tr>")
+    var html="<tr onclick=\"get_response(this,'" + data['docid'] + "')\" ";
+    if(data["redo"]){
+    	html+="class='redo' "
+    }
+    html+=">" 
+    + "<td>" + data["sid"] + "</td>"
+    + "<td>" + data["host"] + "</td>" +
+    "<td>" +data["method"]+"&nbsp;"+ data["path"] + "</td>" + 
+    "</tr>"
+    $("#tb_network tbody").prepend(html)
 })
 socket.on("res",
         function(data) {
