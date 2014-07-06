@@ -13,6 +13,7 @@ import (
     "fmt"
     "compress/gzip"
     "strings"
+    "net/url"
 )
 
 func Int64ToBytes(i int64) []byte {
@@ -104,6 +105,17 @@ func parseUrlInputAsSlice(input string) []string{
      val=strings.TrimSpace(val)
      if(val!=""){
        result=append(result,val)
+     }
+  }
+  return result;
+}
+
+func GetFormValuesWithPrefix(values url.Values,prefix string) map[string][]string{
+  result:=make(map[string][]string)
+  for k,v:=range values{
+     if(strings.HasPrefix(k,prefix)){
+       k1:=strings.TrimPrefix(k,prefix)
+       result[k1]=v
      }
   }
   return result;

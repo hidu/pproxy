@@ -1,0 +1,68 @@
+<div id="bd">
+
+<form action="/redo" method="post" id="redo_form" target="_blank" class="form_0">
+<div class="h2">redo</div>
+<fieldset>
+<legend>basic</legend>
+<table>
+<tr><th>action url:</th><td><input type="text" name="basic_action_url" value="{{.action_url}}" class="form-control"></td></tr>
+<tr><th>method:</th><td><input type="text" name="basic_method" value="{{.req.method}}" class="form-control"></td></tr>
+</table>
+<input type="hidden" name="basic_client_ip" value="{{.req.client_ip}}">
+</fieldset>
+
+<fieldset>
+<legend>header 
+<font color=gray>(only use these redo with pproxy)</font> &nbsp;
+<a href="#" onclick="$('#tb_header').toggle()">show/hide</a>
+</legend>
+<table id="tb_header" style="display:none">
+{{range $k,$v:=.req.header}}
+<tr><th>{{$k}}:</th><td>
+  {{range $index,$_v:=$v}}
+    <div><input type="text" name="header_{{$k}}" value="{{$_v|html}}" class="form-control"></div>
+ {{end}}
+ </td></tr>
+{{end}}
+</table>
+</fieldset>
+
+<fieldset>
+<legend>get_params</legend>
+<table>
+{{range $k,$v:=.req.form_get}}
+<tr><th>{{$k}}:</th> <td>
+{{range $index,$_v:=$v}}
+<div><input type="text" name="get_{{$k}}" value="{{$_v|html}}" class="form-control"></div>
+{{end}}
+</td></tr>
+{{end}}
+</table>
+</fieldset>
+
+{{if eq .req.method  "POST"}}
+<fieldset>
+<legend>post_params</legend>
+<table>
+{{range $k,$v:=.req.form_post}}
+<tr><th>{{$k}}:</th><td> 
+{{range $index,$_v:=$v}}
+<div><input type="text" name="post_{{$k}}" value="{{$_v|html}}" class="form-control"></div>
+{{end}}
+</td></tr>
+{{end}}
+</table>
+</fieldset>
+{{end}}
+<br/>
+<div style="text-align:center;">
+<input type="hidden" name="redo" id="redo" value="pproxy">
+<input type="submit"  class="btn btn-primary"  value="redo with pproxy" onclick="$('#redo').val('pproxy')">
+<span style="margin-left:100px"></span>
+<input type="submit"  class="btn btn-primary" value="redo direct" onclick="$('#redo').val('direct')">
+</div>
+</form>
+<br/>
+<br/>
+
+</div>

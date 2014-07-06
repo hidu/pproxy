@@ -115,6 +115,7 @@ func (ser *ProxyServe) handleLocalReq(w http.ResponseWriter, req *http.Request) 
 
     values := make(map[string]interface{})
     values["title"] = ser.conf.Title
+    values["subTitle"] = ""
     values["notice"] = ser.conf.Notice
     values["port"] = fmt.Sprintf("%d",ser.conf.Port)
     values["userOnlineTotal"] = len(ser.wsClients)+1
@@ -129,9 +130,11 @@ func (ser *ProxyServe) handleLocalReq(w http.ResponseWriter, req *http.Request) 
         html := render_html("network.html", values, true)
         w.Write([]byte(html))
     } else if req.URL.Path == "/about" {
+        values["subTitle"]="about|"
         html := render_html("about.html", values, true)
         w.Write([]byte(html))
     } else if req.URL.Path == "/config" {
+        values["subTitle"]="config|"
         if req.Method == "GET" {
             values["rewriteJs"] = html.EscapeString(ser.RewriteJs)
             values["jsHeight"] = getTextAreaHeightByString(ser.RewriteJs, 100)
@@ -147,13 +150,16 @@ func (ser *ProxyServe) handleLocalReq(w http.ResponseWriter, req *http.Request) 
         }
     } else if req.URL.Path == "/login" {
         if req.Method == "GET" {
-         html := render_html("login.html", values, true)
+          values["subTitle"]="login|"
+          html := render_html("login.html", values, true)
           w.Write([]byte(html))
         }else{
           ser.handleLogin(w,req)
         }
     } else if req.URL.Path == "/response" {
         ser.showResponseById(w, req)
+    } else if req.URL.Path == "/redo" {
+        ser.req_redo(w, req,values)
     } else {
         http.NotFound(w, req)
     }

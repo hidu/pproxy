@@ -102,3 +102,12 @@ fieldset {
   margin: 0 auto;
   text-align: center;
 }
+
+#bd{
+	margin: 0 auto;
+	width:80%
+}
+
+.form_0 table{width: 100%}
+.form_0 th{text-align: right;width: 180px}
+.form_0 input[type=text]{width: 100%}

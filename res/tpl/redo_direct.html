@@ -1,0 +1,26 @@
+<div id="bd">
+<br/>
+<br/>
+<form action="{{.form.basic.action_url}}" method="{{.form.basic.method}}" class="form_0" id="form_redo_direct">
+<table>
+<caption>{{.form.basic.method}} &nbsp;{{.form.basic.action_url}}</caption>
+{{range $k,$v:=.form.get}}
+	{{range $_k,$_v:=$v}}
+	   <tr><th>{{$k}}:</th><td><input type="text" name="{{$k}}" value="{{$_v|html}}"></td></tr>
+	{{end}}
+{{end}}
+
+{{range $k,$v:=.form.post}}
+	{{range $_k,$_v:=$v}}
+	   <tr><th>{{$k}}:</th><td><input type="text" name="{{$k}}" value="{{$_v|html}}"></td></tr>
+	{{end}}
+{{end}}
+</table>
+
+</form>
+
+<script>
+$("#form_redo_direct").submit();
+</script>
+
+</div>

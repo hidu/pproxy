@@ -149,6 +149,7 @@ func (ser *ProxyServe) onRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*htt
         logdata["session_id"] = ctx.Session
         logdata["user"] = uname
         logdata["client_ip"] = req.RemoteAddr
+        logdata["method"] = req.Method
         logdata["form_get"] = req.URL.Query()
 
         if strings.Contains(req.Header.Get("Content-Type"), "x-www-form-urlencoded") {
