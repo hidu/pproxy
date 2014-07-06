@@ -1,4 +1,4 @@
-pproxy
+pproxy 0.3
 ======
 为马农特别准备的代理http代理服务器
 
@@ -17,7 +17,11 @@ pproxy
    
 4.登录认证支持
    支持httpBasic认证
+   
+5.redo功能
+   可以修改request的参数（get、post、header）
 </pre>
+
 使用javascript来配置重定向功能，如
 ```
 if(req.host=="www.baidu.com"){
@@ -58,7 +62,7 @@ download binary: <http://pan.baidu.com/s/1zWZUI>
 ```
 conf/
 ├── config.json          #server的配置
-├── hosts_8080           #8080端口server的honsts规则
+├── hosts_8080           #8080端口server的hosts规则
 ├── req_rewrite_8080.js  #8080端口server的url重写规则
 ├── hosts_8081
 ├── req_rewrite_8081.js
@@ -70,7 +74,7 @@ users配置:
 #name psw isAdmin
 admin e10adc3949ba59abbe56e057f20f883e:md5 admin   #帐号 admin，密码 是 md5(123456),是管理员帐号
 ```
-管理员帐号 可以在线修改配置
+可以在线修改配置时必须使用管理员帐号登录
 
 配置文件config.json 示例:
 ```
@@ -88,17 +92,17 @@ admin e10adc3949ba59abbe56e057f20f883e:md5 admin   #帐号 admin，密码 是 md
 ```
 authType:{
     0: no auth
-    1: http basic auth
-    2: http basic with any username,no password check
+    1: http basic auth (使用users中的用户信息进行认证)
+    2: http basic with any username,no password check （session表单需要输入该userName才可见session）
  }
  
  responseSave:{
-    0: all
-    1: which had been showed in the session list
+    0: all （所有通过pproxy的请求都记录）
+    1: which had been showed in the session list （只有发送到session列表的才记录）
  }
  
  sessionView:{
- 0:all
- 1:session filter client ip required
+    0:all （所有人可见）
+    1:session filter client ip required（在session列表的filter表单中输入正确的client Ip后可见对应ip的session）
  }
 ```

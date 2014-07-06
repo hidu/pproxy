@@ -53,15 +53,15 @@ var redo_skip_headers=map[string]int{"Content-Length":1}
 func (ser *ProxyServe)req_redoPost(w http.ResponseWriter, req *http.Request,values map[string]interface{}){
    redo:=req.FormValue("redo")
    basic:=make(map[string]string)
-   basic["action_url"]=req.FormValue("basic_action_url")
-   method:=req.FormValue("basic_method")
+   basic["action_url"]=strings.TrimSpace(req.FormValue("basic_action_url"))
+   method:=strings.TrimSpace(strings.ToUpper(req.FormValue("basic_method")))
    basic["method"]=method
    
 //   basic_client_ip:=req.FormValue("basic_client_ip")
    
    header:=GetFormValuesWithPrefix(req.Form,"header_")
    get:=GetFormValuesWithPrefix(req.Form,"get_")
-   post:=GetFormValuesWithPrefix(req.Form,"post")
+   post:=GetFormValuesWithPrefix(req.Form,"post_")
 
    formData:=make(map[string]interface{})
    formData["basic"]=basic
@@ -77,6 +77,25 @@ func (ser *ProxyServe)req_redoPost(w http.ResponseWriter, req *http.Request,valu
      return
    }else{
 	    req_bd:="";
+	    
+	    if(method=="POST"){
+	       form_values:=make(url.Values)
+	        for k,v:=range post{
+		        for _,_v:=range v{
+			      form_values.Add(k,_v)
+			    }
+		    }
+		    req_bd=form_values.Encode()
+	    }else{
+	       form_values:=make(url.Values)
+	        for k,v:=range get{
+		        for _,_v:=range v{
+			      form_values.Add(k,_v)
+			    }
+		    }
+		    req_bd=form_values.Encode()
+	    }
+	    
 	    redo_req,err:=http.NewRequest(method,basic["action_url"],strings.NewReader(req_bd))
 	    if(err!=nil){
 	       w.Write([]byte("build request failed\n"+err.Error()))
@@ -84,28 +103,12 @@ func (ser *ProxyServe)req_redoPost(w http.ResponseWriter, req *http.Request,valu
 	    }
 	    
 //	    redo_req.RemoteAddr=basic_client_ip
-	    
+
 	    for k,v:=range header{
 	       if _,has:=redo_skip_headers[k];has{
 	         continue
 	       }
 		    redo_req.Header.Set(k,strings.Join(v,";"))
-	    }
-	    if(redo_req.Form==nil){
-	      redo_req.Form=make(url.Values)
-	    }
-	    for k,v:=range get{
-		    for _,_v:=range v{
-		      redo_req.Form.Add(k,_v)
-		    }
-	    }
-	    if(redo_req.PostForm==nil){
-	      redo_req.PostForm=make(url.Values)
-	    }
-	    for k,v:=range post{
-		    for _,_v:=range v{
-		      redo_req.PostForm.Add(k,_v)
-		    }
 	    }
 	    ser.Goproxy.ServeHTTP(w, redo_req)
    }
