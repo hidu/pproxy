@@ -112,5 +112,6 @@ tr.redo{
 }
 
 .form_0 table{width: 100%}
-.form_0 th{text-align: right;width: 180px}
-.form_0 input[type=text]{width: 100%}
+.form_0 th{text-align: right;width: 180px;vertical-align:top;}
+.form_0 input[type=text]{width: 100%;margin-bottom:2px}
+.form_0 td.last{width: 90px;padding-left: 10px}

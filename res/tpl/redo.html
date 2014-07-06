@@ -1,6 +1,6 @@
 <div id="bd">
 
-<form action="/redo" method="post" id="redo_form" target="_blank" class="form_0">
+<form action="/redo" method="post" id="redo_form" target="_blank" class="form_0" autocomplete="off">
 <div class="h2">redo</div>
 <fieldset>
 <legend>basic</legend>
@@ -23,7 +23,11 @@
   {{range $index,$_v:=$v}}
     <div><input type="text" name="header_{{$k}}" value="{{$_v|html}}" class="form-control"></div>
  {{end}}
- </td></tr>
+ </td>
+ <td class="last">
+<div><a href="#" onclick="return add_tr(this,'header_')">add</a>&nbsp;<a href="#" onclick="return toggle_able_tr(this)">disable?</a></div>
+</td>
+ </tr>
 {{end}}
 </table>
 </fieldset>
@@ -36,8 +40,15 @@
 {{range $index,$_v:=$v}}
 <div><input type="text" name="get_{{$k}}" value="{{$_v|html}}" class="form-control"></div>
 {{end}}
-</td></tr>
+</td>
+
+<td class="last">
+<div><a href="#" onclick="return add_tr(this,'get_')">add</a>&nbsp;<a href="#" onclick="return toggle_able_tr(this)">disable?</a></div>
+</td>
+
+</tr>
 {{end}}
+
 </table>
 </fieldset>
 
@@ -50,7 +61,11 @@
 {{range $index,$_v:=$v}}
 <div><input type="text" name="post_{{$k}}" value="{{$_v|html}}" class="form-control"></div>
 {{end}}
-</td></tr>
+</td>
+<td class="last">
+<div><a href="#" onclick="return add_tr(this,'post_')">add</a>&nbsp;<a href="#" onclick="return toggle_able_tr(this)">disable?</a></div>
+</td>
+</tr>
 {{end}}
 </table>
 </fieldset>
@@ -67,3 +82,34 @@
 <br/>
 
 </div>
+
+<script>
+function toggle_able_tr(obj){
+	$(obj).parents("tr").find("input").each(function(){
+		if($(this).attr("disabled")){
+		   $(this).removeAttr("disabled");
+		}else{
+		   $(this).attr("disabled","disabled");
+		}
+	});
+	return false;
+}
+
+function add_tr(obj,pre){
+   var html="<tr>\
+   <th><input type='text' class='form-control' style='text-align:right;width:80%' onChange='tr_val_chnage(this,\""+pre+"\")' placeholder='param name'>:</th>\
+   <td><input type='text' disabled=disabled class='form-control' placeholder='param value'></td></tr>";
+   $(obj).parents("tr").after(html);
+   return false;
+}
+
+function tr_val_chnage(obj,pre){
+	var next_input=$(obj).parents("tr").find("td input");
+	var val=$.trim($(obj).val());
+	if(val==""){
+		next_input.attr("disabled","disabled");
+	}else{
+		next_input.attr("name",pre+val).removeAttr("disabled");
+	}
+}
+</script>
