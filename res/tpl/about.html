@@ -1,8 +1,10 @@
 <div id="bd0">
+ 
 <p class="h3">about</p>
  <div>a http proxy.</div>
  <div>it is easy to rewrite the request and easy to view the request.</div>
- 
+ <div>current version:<font color=blue>{{.version}}</font></div> 
+ <div id="new_version_slot"></div>
  <p class="h4">config param</p>
  <pre>
  authType:{
@@ -24,3 +26,11 @@
  <p class="h4">other</p>
  <div>get you ip : visit http://proxy.info/ with proxy env</div>
 </div>
+<br/>
+<br/>
+
+<script>
+setTimeout(function(){
+  $.getScript("http://hidu.github.io/pproxy/check.js");
+},1000);
+</script>

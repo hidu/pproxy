@@ -25,7 +25,10 @@
  {{end}}
  </td>
  <td class="last">
-<div><a href="#" onclick="return add_tr(this,'header_')">add</a>&nbsp;<a href="#" onclick="return toggle_able_tr(this)">disable?</a></div>
+ <div>
+<a href="#" onclick="return add_tr(this,'header_')">+</a>&nbsp;
+<a href="#" onclick="return toggle_able_tr(this)" title="toggle disable">X</a>
+</div>
 </td>
  </tr>
 {{end}}
@@ -43,7 +46,10 @@
 </td>
 
 <td class="last">
-<div><a href="#" onclick="return add_tr(this,'get_')">add</a>&nbsp;<a href="#" onclick="return toggle_able_tr(this)">disable?</a></div>
+<div>
+<a href="#" onclick="return add_tr(this,'get_')">+</a>&nbsp;
+<a href="#" onclick="return toggle_able_tr(this)" title="toggle disable">X</a>
+</div>
 </td>
 
 </tr>
@@ -63,7 +69,10 @@
 {{end}}
 </td>
 <td class="last">
-<div><a href="#" onclick="return add_tr(this,'post_')">add</a>&nbsp;<a href="#" onclick="return toggle_able_tr(this)">disable?</a></div>
+<div>
+<a href="#" onclick="return add_tr(this,'post_')">+</a>&nbsp;
+<a href="#" onclick="return toggle_able_tr(this)" title="toggle disable">X</a>
+</div>
 </td>
 </tr>
 {{end}}
@@ -98,7 +107,9 @@ function toggle_able_tr(obj){
 function add_tr(obj,pre){
    var html="<tr>\
    <th><input type='text' class='form-control' style='text-align:right;width:80%' onChange='tr_val_chnage(this,\""+pre+"\")' placeholder='param name'>:</th>\
-   <td><input type='text' disabled=disabled class='form-control' placeholder='param value'></td></tr>";
+   <td><input type='text' disabled=disabled class='form-control' placeholder='param value'></td>\
+   <td class='last'><a href='#' onclick='$(this).parents(\"tr\").remove();return flase;'>del</a></td>
+   </tr>";
    $(obj).parents("tr").after(html);
    return false;
 }

@@ -110,6 +110,7 @@ func (ser *ProxyServe) handleLocalReq(w http.ResponseWriter, req *http.Request) 
 	values := make(map[string]interface{})
 	values["title"] = ser.conf.Title
 	values["subTitle"] = ""
+	values["version"] = PproxyVersion
 	values["notice"] = ser.conf.Notice
 	values["port"] = fmt.Sprintf("%d", ser.conf.Port)
 	values["userOnlineTotal"] = len(ser.wsClients) + 1
@@ -277,7 +278,6 @@ func render_html(fileName string, values map[string]interface{}, layout bool) st
 	body := w.String()
 	if layout {
 		values["body"] = body
-		values["version"] = PproxyVersion
 		return render_html("layout.html", values, false)
 	}
 	return utils.Html_reduceSpace(body)
