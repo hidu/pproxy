@@ -6,9 +6,11 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+    "github.com/hidu/goutils"
 )
 
-var rewriteJsTpl = "function pproxy_rewrite(req){\n%s\nreturn req;\n}"
+//var rewriteJsTpl = "function pproxy_rewrite(req){\n%s\nreturn req;\n}"
+var rewriteJsTpl = string(utils.DefaultResource.Load("res/sjs/req_rewrite.js"))
 
 func (ser *ProxyServe) parseAndSaveRewriteJs(jsStr string) error {
 	rewriteJs := fmt.Sprintf(rewriteJsTpl, jsStr)
@@ -21,11 +23,12 @@ func (ser *ProxyServe) parseAndSaveRewriteJs(jsStr string) error {
 	return err
 }
 
-func (ser *ProxyServe) reqRewriteByjs(req *http.Request) {
+func (ser *ProxyServe) reqRewriteByjs(req *http.Request,reqCtx *requestCtx) {
 	if ser.RewriteJs == "" {
 		return
 	}
 	urlObj, _ := js.Object(`req={}`)
+	urlObj.Set("method", req.Method)
 	urlObj.Set("url", req.URL.String())
 	urlObj.Set("schema", req.URL.Scheme)
 
@@ -39,6 +42,8 @@ func (ser *ProxyServe) reqRewriteByjs(req *http.Request) {
 
 	urlObj.Set("path", req.URL.Path)
 	urlObj.Set("rawquery", req.URL.RawQuery)
+	urlObj.Set("form_get", req.URL.Query())
+	urlObj.Set("form_post", reqCtx.FormPost)
 	username := ""
 	psw := ""
 	if req.URL.User != nil {
@@ -99,8 +104,8 @@ func (ser *ProxyServe) reqRewriteByjs(req *http.Request) {
 	}
 }
 
-func (ser *ProxyServe) reqRewrite(req *http.Request) {
-	ser.reqRewriteByjs(req)
+func (ser *ProxyServe) reqRewrite(req *http.Request,reqCtx *requestCtx) {
+	ser.reqRewriteByjs(req,reqCtx)
 	ser.reqRewriteByHosts(req)
 }
 

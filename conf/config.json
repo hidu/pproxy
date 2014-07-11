@@ -2,7 +2,7 @@
    "port":8080,
    "title":"demo",
    "notice":"notice notice",
-   "authType":0,
+   "authType":3,
    "dataDir":"../data/",
    "responseSave":0,
    "sessionView":0

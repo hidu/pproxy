@@ -1,10 +1,17 @@
 var socket = io.connect();
+var connectNum=0;
 socket.on('connect', function() {
+	connectNum++
+	if(connectNum>1){
+		alert("ws error.connectNum="+connectNum);
+		socket.emit("disconnect")
+	}
     $("#connect_status").html("online")
     $("#network_filter_form").change();
 });
 
 socket.on("disconnect", function() {
+	connectNum--
     $("#connect_status").html("offline")
 });
 

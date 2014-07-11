@@ -47,6 +47,7 @@ type ProxyServe struct {
 	hosts     configHosts
 
 	Users map[string]*User
+	ProxyClients map[string]*clientSession
 }
 
 type wsClient struct {
@@ -59,14 +60,6 @@ type wsClient struct {
 	filter_url_hide []string
 }
 
-type requestCtx struct {
-	RemoteAddr   string
-	User         *User
-	Docid        uint64
-	IsReDo       bool
-	SessionId    int64
-	HasBroadcast bool
-}
 
 type kvType map[string]interface{}
 
@@ -122,6 +115,7 @@ func (ser *ProxyServe) onRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*htt
 		req_dump_debug, _ := httputil.DumpRequest(req, false)
 		log.Println("DEBUG req BEFORE:\n", string(req_dump_debug), "\nurl_host:", req.URL.Host)
 	}
+//	log.Println("RemoteAddr:",req.RemoteAddr,req.Header.Get("X-Wap-Proxy-Cookie"))
 
 	reqCtx := new(requestCtx)
 	reqCtx.User = getAuthorInfo(req)
@@ -136,6 +130,8 @@ func (ser *ProxyServe) onRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*htt
 	if _redo_user := req.Header.Get(REDO_USER_NAME); _redo_user != "" {
 		reqCtx.User = &User{Name: _redo_user, SkipCheckPsw: true}
 	}
+	
+	ser.regirestReq(req,reqCtx)
 
 	for k := range req.Header {
 		if len(k) > 5 && k[:6] == "Proxy-" {
@@ -143,12 +139,15 @@ func (ser *ProxyServe) onRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*htt
 		}
 	}
 
-	if ser.conf.AuthType > AuthType_NO && (ser.conf.AuthType == AuthType_Basic && !ser.CheckUserLogin(reqCtx.User)) {
+	if ser.conf.AuthType != AuthType_NO && !ser.checkHttpAuth(req,reqCtx) {
 		log.Println("login required", req.RemoteAddr, reqCtx.User)
 		return nil, auth.BasicUnauthorized(req, "pproxy auth need")
 	}
 
-	ser.reqRewrite(req)
+    post_vs:=getPostData(req)
+    reqCtx.FormPost=post_vs
+    
+	ser.reqRewrite(req,reqCtx)
 
 	reqCtx.Docid = NextUid() + uint64(ctx.Session)
 
@@ -176,27 +175,14 @@ func (ser *ProxyServe) onRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*htt
 		logdata["form_get"] = req.URL.Query()
 		logdata["redo"] = reqCtx.IsReDo
 
-		if strings.Contains(req.Header.Get("Content-Type"), "x-www-form-urlencoded") {
-			buf := forgetRead(&req.Body)
-			var body_str string
-			if req.Header.Get(Content_Encoding) == "gzip" {
-				body_str = gzipDocode(buf)
-			} else {
-				body_str = buf.String()
-			}
-			post_vs, post_e := url.ParseQuery(body_str)
-			if post_e != nil {
-				log.Println("parse post err", post_e)
-			}
-			logdata["form_post"] = post_vs
-		}
-
 		req_dump, err_dump := httputil.DumpRequest(req, true)
 		if err_dump != nil {
 			log.Println("dump request failed")
 			req_dump = []byte("dump failed")
 		}
 		logdata["dump"] = base64.StdEncoding.EncodeToString(req_dump)
+		
+		logdata["form_post"] = post_vs
 
 		rewrite := make(map[string]string)
 		url_new := req.URL.String()
@@ -208,7 +194,7 @@ func (ser *ProxyServe) onRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*htt
 		logdata["rewrite"] = rewrite
 
 		err := ser.mydb.RequestTable.InsertRecovery(reqCtx.Docid, logdata)
-		log.Println("save_req", ctx.Session, req.URL.String(), "docid=", reqCtx.Docid, err, rewrite)
+		log.Println("save_req", ctx.Session, req.URL.String(),"user:",reqCtx.User.Name, "docid=", reqCtx.Docid, err, rewrite)
 		if err != nil {
 			log.Println(err)
 			return req, nil
@@ -219,6 +205,26 @@ func (ser *ProxyServe) onRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*htt
 	return req, nil
 }
 
+func getPostData(req *http.Request)(post *url.Values){
+      post=new(url.Values)
+      if strings.Contains(req.Header.Get("Content-Type"), "x-www-form-urlencoded") {
+			buf := forgetRead(&req.Body)
+			var body_str string
+			if req.Header.Get(Content_Encoding) == "gzip" {
+				body_str = gzipDocode(buf)
+			} else {
+				body_str = buf.String()
+			}
+			var err error
+			*post, err = url.ParseQuery(body_str)
+			if err != nil {
+				log.Println("parse post err", err)
+			}
+			
+		}
+		return post
+}
+
 func (ser *ProxyServe) onResponse(resp *http.Response, ctx *goproxy.ProxyCtx) *http.Response {
 	if resp != nil {
 		resp.Header.Set("Connection", "close")
@@ -226,7 +232,6 @@ func (ser *ProxyServe) onResponse(resp *http.Response, ctx *goproxy.ProxyCtx) *h
 	if resp == nil || resp.Request == nil {
 		return resp
 	}
-	//		fmt.Println("resp.Header:",resp.Header)
 	ser.logResponse(resp, ctx)
 	return resp
 }
@@ -351,6 +356,10 @@ func NewProxyServe(confPath string, port int) (*ProxyServe, error) {
 	proxy.MaxResSaveLength = 2 * 1024 * 1024
 
 	rand.Seed(time.Now().UnixNano())
+	
+	proxy.ProxyClients=make(map[string]*clientSession)
+	
+	
 	//   proxy.mydb.StartGcTimer(60,store_time)
 	return proxy, nil
 }

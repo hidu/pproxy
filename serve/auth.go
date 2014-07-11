@@ -26,7 +26,7 @@ func getAuthorInfo(req *http.Request) *User {
 	return &User{Name: userpass[0], Psw: utils.StrMd5(userpass[1])}
 }
 
-func (ser *ProxyServe) CheckUserLogin(userInfo *User) bool {
+func (ser *ProxyServe) checkUserLogin(userInfo *User) bool {
 	if userInfo == nil || ser.Users == nil {
 		return false
 	}
@@ -39,4 +39,21 @@ func (ser *ProxyServe) CheckUserLogin(userInfo *User) bool {
 		return user.Psw == userInfo.Psw
 	}
 	return false
+}
+//(ser.conf.AuthType == AuthType_Basic && !ser.CheckUserLogin(reqCtx.User))
+func (ser *ProxyServe)checkHttpAuth(req *http.Request,reqCtx *requestCtx) bool{
+   switch (ser.conf.AuthType){
+      case AuthType_Basic:
+        return ser.checkUserLogin(reqCtx.User)
+      case AuthType_Basic_WithAny:
+        return reqCtx.User.Name!=""
+      case AuthType_Basic_Try:
+        if(reqCtx.ClientSession.RequestNum==1){
+            return reqCtx.User.Name!=""
+        }
+        return true
+      default:
+         return false
+   }
+   return false
 }

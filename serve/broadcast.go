@@ -51,6 +51,10 @@ func checkFilter(req *http.Request, client *wsClient, user *User) bool {
 	if len(client.filter_user) > 0 {
 		user_in_list := false
 		for _, name := range client.filter_user {
+		    if(name=="any"){
+		       //@todo add admin check
+		       return true
+		    }
 			if name != "" && name == user.Name {
 				user_in_list = true
 				break

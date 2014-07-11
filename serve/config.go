@@ -20,7 +20,8 @@ type Config struct {
 const (
 	AuthType_NO           = 0
 	AuthType_Basic        = 1
-	AuthType_BasicWithAny = 2
+	AuthType_Basic_WithAny = 2
+	AuthType_Basic_Try    = 3
 
 	ResponseSave_All      = 0
 	ResponseSave_HasBroad = 1 //has show
