@@ -24,8 +24,7 @@ func (ser *ProxyServe) Broadcast_Req(req *http.Request, reqCtx *requestCtx) bool
 	defer ser.mu.RUnlock()
 	hasSend := false
 	for _, client := range ser.wsClients {
-
-		if ser.conf.SessionView == SessionView_IP_FILTER && len(client.filter_ip) == 0 {
+		if ser.conf.SessionView == SessionView_IP_OR_USER && len(client.filter_ip) == 0 && len(client.filter_user) == 0 {
 			continue
 		}
 
@@ -51,10 +50,10 @@ func checkFilter(req *http.Request, client *wsClient, user *User) bool {
 	if len(client.filter_user) > 0 {
 		user_in_list := false
 		for _, name := range client.filter_user {
-		    if(name=="any"){
-		       //@todo add admin check
-		       return true
-		    }
+			if name == "any" && client.LoginUser != nil && client.LoginUser.IsAdmin {
+				user_in_list = true
+				break
+			}
 			if name != "" && name == user.Name {
 				user_in_list = true
 				break

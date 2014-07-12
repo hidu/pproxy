@@ -4,13 +4,11 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
-	"github.com/googollee/go-socket.io"
 	"github.com/hidu/goutils"
 	"html"
 	"log"
 	"net"
 	"net/http"
-	"net/url"
 	"strconv"
 	"strings"
 	"text/template"
@@ -18,51 +16,10 @@ import (
 
 var CookieName = "pproxy"
 
-/**
-*https://github.com/googollee/go-socket.io
- */
-func (ser *ProxyServe) client_get_response(ns *socketio.NameSpace, docid_str string) {
-	docid, err_int := strconv.ParseUint(docid_str, 10, 64)
-	if err_int != nil {
-		log.Println("parse str2int failed", err_int, docid_str)
-	}
-	log.Println("receive docid", docid)
-	req := ser.GetRequestByDocid(docid)
-	res := ser.GetResponseByDocid(docid)
-	//	fmt.Println(req)
-	data := make(map[string]interface{})
-	data["req"] = req
-	data["res"] = res
-	err := ns.Emit("res", data)
-	if err != nil {
-		log.Println("ns error:", err)
-	}
-}
-
-func (ser *ProxyServe) client_filter(ns *socketio.NameSpace, form_data string) {
-	m, err := url.ParseQuery(form_data)
-	if err != nil {
-		log.Println("parse filter data err", err)
+func (ser *ProxyServe) web_checkLogin(req *http.Request) (user *User, isLogin bool) {
+	if req == nil {
 		return
 	}
-	ser.mu.Lock()
-	defer ser.mu.Unlock()
-	nsClient := ser.wsClients[ns.Id()]
-	nsClient.filter_ip = parseUrlInputAsSlice(m.Get("client_ip"))
-	nsClient.filter_hide_ext = m["hide"]
-	nsClient.filter_url = parseUrlInputAsSlice(m.Get("url_match"))
-	nsClient.filter_url_hide = parseUrlInputAsSlice(m.Get("hide_url"))
-	nsClient.filter_user = parseUrlInputAsSlice(m.Get("user"))
-}
-
-func send_req(client *wsClient, data map[string]interface{}) {
-	err := client.ns.Emit("req", data)
-	if err != nil {
-		log.Println("emit req failed", err)
-	}
-}
-
-func (ser *ProxyServe) checkLogin(req *http.Request) (user *User, isLogin bool) {
 	cookie, err := req.Cookie(CookieName)
 	if err != nil {
 		return
@@ -79,34 +36,11 @@ func (ser *ProxyServe) checkLogin(req *http.Request) (user *User, isLogin bool) 
 	return
 }
 
-func (ser *ProxyServe) initWs() {
-	sock_config := &socketio.Config{HeartbeatTimeout: 2, ClosingTimeout: 4}
-	ser.ws = socketio.NewSocketIOServer(sock_config)
-	ser.wsClients = make(map[string]*wsClient)
-	ser.ws.On("connect", func(ns *socketio.NameSpace) {
-		log.Println("ws connected", ns.Id(), " in channel ", ns.Endpoint())
-		ser.mu.Lock()
-		defer ser.mu.Unlock()
-		ser.wsClients[ns.Id()] = &wsClient{ns: ns, user: "guest"}
-	})
-	ser.ws.On("disconnect", func(ns *socketio.NameSpace) {
-		log.Println("ws disconnect", ns.Id(), " in channel ", ns.Endpoint())
-		ser.mu.Lock()
-		defer ser.mu.Unlock()
-		if _, has := ser.wsClients[ns.Id()]; has {
-			delete(ser.wsClients, ns.Id())
-		}
-	})
-	ser.ws.On("get_response", ser.client_get_response)
-	ser.ws.On("client_filter", ser.client_filter)
-}
-
 func (ser *ProxyServe) handleLocalReq(w http.ResponseWriter, req *http.Request) {
 	if strings.HasPrefix(req.URL.Path, "/socket.io/1/") {
 		ser.ws.ServeHTTP(w, req)
 		return
 	}
-
 	values := make(map[string]interface{})
 	values["title"] = ser.conf.Title
 	values["subTitle"] = ""
@@ -115,7 +49,7 @@ func (ser *ProxyServe) handleLocalReq(w http.ResponseWriter, req *http.Request) 
 	values["port"] = fmt.Sprintf("%d", ser.conf.Port)
 	values["userOnlineTotal"] = len(ser.wsClients) + 1
 
-	user, isLogin := ser.checkLogin(req)
+	user, isLogin := ser.web_checkLogin(req)
 	values["isLogin"] = isLogin
 	values["user"] = user
 
@@ -141,7 +75,7 @@ func (ser *ProxyServe) handleLocalReq(w http.ResponseWriter, req *http.Request) 
 			html := render_html("config.html", values, true)
 			w.Write([]byte(html))
 		} else if req.Method == "POST" {
-			ser.handleConfig(w, req)
+			ser.web_handleConfig(w, req)
 		}
 	} else if req.URL.Path == "/login" {
 		if req.Method == "GET" {
@@ -152,22 +86,17 @@ func (ser *ProxyServe) handleLocalReq(w http.ResponseWriter, req *http.Request) 
 			ser.handleLogin(w, req)
 		}
 	} else if req.URL.Path == "/response" {
-		ser.showResponseById(w, req)
+		ser.web_showResponseById(w, req)
 	} else if req.URL.Path == "/redo" {
 		ser.req_redo(w, req, values)
+	} else if req.URL.Path == "/logout" {
+		cookie := &http.Cookie{Name: CookieName, Value: "", Path: "/"}
+		http.SetCookie(w, cookie)
+		http.Redirect(w, req, "/", 302)
 	} else {
 		http.NotFound(w, req)
 	}
 }
-
-func getTextAreaHeightByString(mystr string, minHeight int) int {
-	height := (len(strings.Split(mystr, "\n")) + 1) * 25
-	if height < minHeight {
-		height = minHeight
-	}
-	return height
-}
-
 func (ser *ProxyServe) handleLogin(w http.ResponseWriter, req *http.Request) {
 	name := strings.TrimSpace(req.FormValue("name"))
 	psw := strings.TrimSpace(req.FormValue("psw"))
@@ -191,7 +120,7 @@ func (ser *ProxyServe) handleLogin(w http.ResponseWriter, req *http.Request) {
 	w.Write([]byte("<script>alert('user not exists')</script>"))
 }
 
-func (ser *ProxyServe) showResponseById(w http.ResponseWriter, req *http.Request) {
+func (ser *ProxyServe) web_showResponseById(w http.ResponseWriter, req *http.Request) {
 	id := req.FormValue("id")
 	docid, uint_parse_err := strconv.ParseUint(id, 10, 64)
 	if uint_parse_err == nil {
@@ -239,8 +168,8 @@ func (ser *ProxyServe) showResponseById(w http.ResponseWriter, req *http.Request
 	}
 }
 
-func (ser *ProxyServe) handleConfig(w http.ResponseWriter, req *http.Request) {
-	user, isLogin := ser.checkLogin(req)
+func (ser *ProxyServe) web_handleConfig(w http.ResponseWriter, req *http.Request) {
+	user, isLogin := ser.web_checkLogin(req)
 	if !isLogin || !user.IsAdmin {
 		w.Write([]byte("<script>alert('you are not admin')</script>"))
 		return

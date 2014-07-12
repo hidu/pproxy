@@ -2,11 +2,11 @@ package serve
 
 import (
 	"fmt"
+	"github.com/hidu/goutils"
 	"log"
 	"net/http"
 	"net/url"
 	"strings"
-    "github.com/hidu/goutils"
 )
 
 //var rewriteJsTpl = "function pproxy_rewrite(req){\n%s\nreturn req;\n}"
@@ -23,7 +23,7 @@ func (ser *ProxyServe) parseAndSaveRewriteJs(jsStr string) error {
 	return err
 }
 
-func (ser *ProxyServe) reqRewriteByjs(req *http.Request,reqCtx *requestCtx) {
+func (ser *ProxyServe) reqRewriteByjs(req *http.Request, reqCtx *requestCtx) {
 	if ser.RewriteJs == "" {
 		return
 	}
@@ -104,8 +104,8 @@ func (ser *ProxyServe) reqRewriteByjs(req *http.Request,reqCtx *requestCtx) {
 	}
 }
 
-func (ser *ProxyServe) reqRewrite(req *http.Request,reqCtx *requestCtx) {
-	ser.reqRewriteByjs(req,reqCtx)
+func (ser *ProxyServe) reqRewrite(req *http.Request, reqCtx *requestCtx) {
+	ser.reqRewriteByjs(req, reqCtx)
 	ser.reqRewriteByHosts(req)
 }
 

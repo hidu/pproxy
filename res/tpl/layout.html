@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <link href="/res/img/favicon.ico"  rel="shortcut icon" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="author" content="duwei">
 <meta name="src" content="https://github.com/hidu/pproxy">
 <title>{{.subTitle}}{{.title}} | pproxy {{.version}}</title>
@@ -28,6 +29,7 @@
             <li>{{.userOnlineTotal}} user</li>
             {{if .isLogin}}
               <li>{{.user.Name}}</li> 
+              <li><a href="/logout">logout</a></li> 
              {{else}}
               <li><a href="/login">login</a></li> 
             {{end}}

@@ -12,7 +12,7 @@ socket.on('connect', function() {
 
 socket.on("disconnect", function() {
 	connectNum--
-    $("#connect_status").html("offline")
+    $("#connect_status").html("<font color=pink>offline</font>")
 });
 
 socket.on("req", function(data) {

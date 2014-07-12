@@ -3,7 +3,7 @@ package serve
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/googollee/go-socket.io"
+	"github.com/hidu/go-socket.io"
 	"github.com/hidu/goproxy"
 	"github.com/hidu/goproxy/ext/auth"
 	"github.com/hidu/goutils"
@@ -46,20 +46,9 @@ type ProxyServe struct {
 	configDir string
 	hosts     configHosts
 
-	Users map[string]*User
+	Users        map[string]*User
 	ProxyClients map[string]*clientSession
 }
-
-type wsClient struct {
-	ns              *socketio.NameSpace
-	user            string
-	filter_user     []string
-	filter_ip       []string
-	filter_hide_ext []string
-	filter_url      []string
-	filter_url_hide []string
-}
-
 
 type kvType map[string]interface{}
 
@@ -91,7 +80,7 @@ func (ser *ProxyServe) Start() {
 	ser.Goproxy.OnResponse().DoFunc(ser.onResponse)
 	addr := fmt.Sprintf("%s:%d", "", ser.conf.Port)
 	log.Println("proxy listen at ", addr)
-	ser.initWs()
+	ser.ws_init()
 	err := http.ListenAndServe(addr, ser)
 	log.Println(err)
 }
@@ -115,7 +104,7 @@ func (ser *ProxyServe) onRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*htt
 		req_dump_debug, _ := httputil.DumpRequest(req, false)
 		log.Println("DEBUG req BEFORE:\n", string(req_dump_debug), "\nurl_host:", req.URL.Host)
 	}
-//	log.Println("RemoteAddr:",req.RemoteAddr,req.Header.Get("X-Wap-Proxy-Cookie"))
+	//	log.Println("RemoteAddr:",req.RemoteAddr,req.Header.Get("X-Wap-Proxy-Cookie"))
 
 	reqCtx := new(requestCtx)
 	reqCtx.User = getAuthorInfo(req)
@@ -130,8 +119,8 @@ func (ser *ProxyServe) onRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*htt
 	if _redo_user := req.Header.Get(REDO_USER_NAME); _redo_user != "" {
 		reqCtx.User = &User{Name: _redo_user, SkipCheckPsw: true}
 	}
-	
-	ser.regirestReq(req,reqCtx)
+
+	ser.regirestReq(req, reqCtx)
 
 	for k := range req.Header {
 		if len(k) > 5 && k[:6] == "Proxy-" {
@@ -139,15 +128,15 @@ func (ser *ProxyServe) onRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*htt
 		}
 	}
 
-	if ser.conf.AuthType != AuthType_NO && !ser.checkHttpAuth(req,reqCtx) {
+	if ser.conf.AuthType != AuthType_NO && !ser.checkHttpAuth(req, reqCtx) {
 		log.Println("login required", req.RemoteAddr, reqCtx.User)
 		return nil, auth.BasicUnauthorized(req, "pproxy auth need")
 	}
 
-    post_vs:=getPostData(req)
-    reqCtx.FormPost=post_vs
-    
-	ser.reqRewrite(req,reqCtx)
+	post_vs := getPostData(req)
+	reqCtx.FormPost = post_vs
+
+	ser.reqRewrite(req, reqCtx)
 
 	reqCtx.Docid = NextUid() + uint64(ctx.Session)
 
@@ -181,7 +170,7 @@ func (ser *ProxyServe) onRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*htt
 			req_dump = []byte("dump failed")
 		}
 		logdata["dump"] = base64.StdEncoding.EncodeToString(req_dump)
-		
+
 		logdata["form_post"] = post_vs
 
 		rewrite := make(map[string]string)
@@ -194,7 +183,7 @@ func (ser *ProxyServe) onRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*htt
 		logdata["rewrite"] = rewrite
 
 		err := ser.mydb.RequestTable.InsertRecovery(reqCtx.Docid, logdata)
-		log.Println("save_req", ctx.Session, req.URL.String(),"user:",reqCtx.User.Name, "docid=", reqCtx.Docid, err, rewrite)
+		log.Println("save_req", ctx.Session, req.URL.String(), "user:", reqCtx.User.Name, "docid=", reqCtx.Docid, err, rewrite)
 		if err != nil {
 			log.Println(err)
 			return req, nil
@@ -205,24 +194,24 @@ func (ser *ProxyServe) onRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*htt
 	return req, nil
 }
 
-func getPostData(req *http.Request)(post *url.Values){
-      post=new(url.Values)
-      if strings.Contains(req.Header.Get("Content-Type"), "x-www-form-urlencoded") {
-			buf := forgetRead(&req.Body)
-			var body_str string
-			if req.Header.Get(Content_Encoding) == "gzip" {
-				body_str = gzipDocode(buf)
-			} else {
-				body_str = buf.String()
-			}
-			var err error
-			*post, err = url.ParseQuery(body_str)
-			if err != nil {
-				log.Println("parse post err", err)
-			}
-			
+func getPostData(req *http.Request) (post *url.Values) {
+	post = new(url.Values)
+	if strings.Contains(req.Header.Get("Content-Type"), "x-www-form-urlencoded") {
+		buf := forgetRead(&req.Body)
+		var body_str string
+		if req.Header.Get(Content_Encoding) == "gzip" {
+			body_str = gzipDocode(buf)
+		} else {
+			body_str = buf.String()
 		}
-		return post
+		var err error
+		*post, err = url.ParseQuery(body_str)
+		if err != nil {
+			log.Println("parse post err", err)
+		}
+
+	}
+	return post
 }
 
 func (ser *ProxyServe) onResponse(resp *http.Response, ctx *goproxy.ProxyCtx) *http.Response {
@@ -356,10 +345,9 @@ func NewProxyServe(confPath string, port int) (*ProxyServe, error) {
 	proxy.MaxResSaveLength = 2 * 1024 * 1024
 
 	rand.Seed(time.Now().UnixNano())
-	
-	proxy.ProxyClients=make(map[string]*clientSession)
-	
-	
+
+	proxy.ProxyClients = make(map[string]*clientSession)
+
 	//   proxy.mydb.StartGcTimer(60,store_time)
 	return proxy, nil
 }

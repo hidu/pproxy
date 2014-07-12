@@ -120,3 +120,11 @@ func GetFormValuesWithPrefix(values url.Values, prefix string) map[string][]stri
 	}
 	return result
 }
+
+func getTextAreaHeightByString(mystr string, minHeight int) int {
+	height := (len(strings.Split(mystr, "\n")) + 1) * 25
+	if height < minHeight {
+		height = minHeight
+	}
+	return height
+}

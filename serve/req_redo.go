@@ -92,12 +92,12 @@ func (ser *ProxyServe) req_redoPost(w http.ResponseWriter, req *http.Request, va
 					form_values.Add(k, _v)
 				}
 			}
-			if(strings.Contains(_url,"?")){
-			 _url+="&"
-			}else{
-			 _url+="?"
+			if strings.Contains(_url, "?") {
+				_url += "&"
+			} else {
+				_url += "?"
 			}
-			_url +=form_values.Encode()
+			_url += form_values.Encode()
 		}
 
 		if len(post) > 0 {
