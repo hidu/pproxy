@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 	"text/template"
+	"time"
 )
 
 var CookieName = "pproxy"
@@ -107,7 +108,12 @@ func (ser *ProxyServe) handleLogin(w http.ResponseWriter, req *http.Request) {
 	if user, has := ser.Users[name]; has {
 		if user.isPswEq(psw) {
 			log.Println("login suc,name=", name)
-			cookie := &http.Cookie{Name: CookieName, Value: fmt.Sprintf("%s:%s", name, user.Psw), Path: "/"}
+			cookie := &http.Cookie{
+				Name:    CookieName,
+				Value:   fmt.Sprintf("%s:%s", name, user.Psw),
+				Path:    "/",
+				Expires: time.Now().Add(86400 * time.Second),
+			}
 			http.SetCookie(w, cookie)
 			w.Write([]byte("<script>parent.location.href='/'</script>"))
 		} else {

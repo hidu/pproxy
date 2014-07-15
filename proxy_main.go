@@ -4,6 +4,7 @@ import (
 	"./serve"
 	"flag"
 	"fmt"
+	"log"
 	"os"
 )
 
@@ -13,6 +14,7 @@ var port = flag.Int("port", 0, "main proxy port")
 var debug = flag.Bool("debug", false, "debug the request")
 
 func main() {
+	log.SetFlags(log.Lshortfile | log.LstdFlags | log.Ldate)
 	flag.Parse()
 	ser, err := serve.NewProxyServe(*configPath, *port)
 	if err != nil {

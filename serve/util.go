@@ -97,6 +97,13 @@ func gzipDocode(buf *bytes.Buffer) string {
 		return ""
 	}
 }
+func gzipEncode(data []byte) *bytes.Buffer {
+	buf := bytes.NewBuffer([]byte{})
+	gw := gzip.NewWriter(buf)
+	defer gw.Close()
+	gw.Write(data)
+	return buf
+}
 
 func parseUrlInputAsSlice(input string) []string {
 	arr := strings.Split(input, "|")

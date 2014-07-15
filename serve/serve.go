@@ -136,7 +136,7 @@ func (ser *ProxyServe) onRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*htt
 	post_vs := getPostData(req)
 	reqCtx.FormPost = post_vs
 
-	ser.reqRewrite(req, reqCtx)
+	rewrite_code:=ser.reqRewrite(req, reqCtx)
 
 	reqCtx.Docid = NextUid() + uint64(ctx.Session)
 
@@ -190,6 +190,9 @@ func (ser *ProxyServe) onRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*htt
 		}
 	} else {
 		reqCtx.Docid = 0
+	}
+	if(rewrite_code!=200){
+	   return nil,goproxy.NewResponse(req,goproxy.ContentTypeText,rewrite_code,"pproxy error")
 	}
 	return req, nil
 }

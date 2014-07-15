@@ -2,6 +2,7 @@ package serve
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/hidu/goutils"
 	"log"
 	"strings"
@@ -35,6 +36,10 @@ type User struct {
 	Psw          string //md5 encode
 	IsAdmin      bool
 	SkipCheckPsw bool
+}
+
+func (u *User) String() string {
+	return fmt.Sprintf("Name:%s,Psw:%s,isAdmin:%v,SkipCheckPsw:%v", u.Name, u.Psw, u.IsAdmin, u.SkipCheckPsw)
 }
 
 const (
