@@ -92,7 +92,7 @@ func (ser *ProxyServe) reqRewriteByjs(req *http.Request, reqCtx *requestCtx) int
 
 
 	changeFlag := make(map[string]string)
-	for k, v := range url_obj["PproxyChangeFlags"].(map[string]interface{}) {
+	for k, v := range url_obj["flag"].(map[string]interface{}) {
 		changeFlag[k] = fmt.Sprintf("%v", v)
 	}
 	if(ser.Debug){

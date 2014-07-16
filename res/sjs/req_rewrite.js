@@ -3,10 +3,10 @@ function pproxy_rewrite(req){
 	req.get=pproxy_params_copy(req._pproxy_get)
 	req.post=pproxy_params_copy(req._pproxy_post)
 	
-	req.PproxyChangeFlags={"get":0,"post":0}
+	req.flag={"get":0,"post":0}
 	
-	var form_get=pproxy_obj_helper(req.get,req.PproxyChangeFlags,"get");
-	var form_post=pproxy_obj_helper(req.post,req.PproxyChangeFlags,"post");
+	var form_get=pproxy_obj_helper(req.get,req.flag,"get");
+	var form_post=pproxy_obj_helper(req.post,req.flag,"post");
 	
 	CUSTOM_JS
 	return req;
