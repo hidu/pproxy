@@ -100,19 +100,19 @@ admin e10adc3949ba59abbe56e057f20f883e:md5 admin   #帐号 admin，密码 是 md
 配置项说明：
 ```
 authType:{
-    0: no auth
-    1: http basic auth (使用users中的用户信息进行认证)
-    2: http basic with any username,no password check （session表单需要输入该userName才可见session）
-    3：try http basic(第一次访问的时候尝试httpBasic认证)
+    0 : no auth
+    1 : http basic auth (使用users中的用户信息进行认证)
+    2 : http basic with any username,no password check （session表单需要输入该userName才可见session）
+    3 ：try http basic(第一次访问的时候尝试httpBasic认证)
  }
  
  responseSave:{
-    0: all （所有通过pproxy的请求都记录）
-    1: which had been showed in the session list （只有发送到session列表的才记录）
+    0 : all （所有通过pproxy的请求都记录）
+    1 : which had been showed in the session list （只有发送到session列表的才记录）
  }
  
  sessionView:{
-    0:all （所有人可见）
-    1:session filter client ip or userName（在session列表的filter表单中输入正确的client Ip或者http basic username）
+    0 : all （所有人可见）
+    1 : need ip or userName（在session列表的filter表单中输入正确的client Ip或者http basic username）
  }
 ```
