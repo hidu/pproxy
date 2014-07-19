@@ -11,13 +11,11 @@ import (
 	"io/ioutil"
 	"log"
 	"math/rand"
-	"net"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -53,14 +51,18 @@ type ProxyServe struct {
 type kvType map[string]interface{}
 
 func (ser *ProxyServe) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	host, port, _ := net.SplitHostPort(req.Host)
-
+	host, port_int, err := getHostPortFromReq(req)
+	if(err!=nil){
+	   w.WriteHeader(http.StatusBadRequest)
+	   w.Write([]byte("bad request"))
+	   log.Println("bad request,err",err)
+	   return
+	}
 	if req.Host == "p.info" || req.Host == "proxy.info" {
 		ser.handleUserInfo(w, req)
 		return
 	}
 
-	port_int, _ := strconv.Atoi(port)
 	isLocalReq := port_int == ser.conf.Port
 	if isLocalReq {
 		isLocalReq = IsLocalIp(host)

@@ -14,6 +14,8 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
+	"net/http"
+	"strconv"
 )
 
 func Int64ToBytes(i int64) []byte {
@@ -134,4 +136,24 @@ func getTextAreaHeightByString(mystr string, minHeight int) int {
 		height = minHeight
 	}
 	return height
+}
+
+
+func getHostPortFromReq(req *http.Request)(host string,port int,err error){
+  var port_str string
+  req_host:=req.Host
+  if(!strings.Contains(req_host,":")){
+      if(strings.HasPrefix(req.Proto,"HTTP")){
+         req_host+=":80"
+      }
+  }
+  host, port_str, err = net.SplitHostPort(req_host)
+  if(err!=nil){
+    return
+  }
+  port, err= strconv.Atoi(port_str)
+  if(err!=nil){
+     return
+  }
+  return
 }

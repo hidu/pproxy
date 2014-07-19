@@ -32,7 +32,7 @@ func (ser *ProxyServe) Broadcast_Req(req *http.Request, reqCtx *requestCtx) bool
 			continue
 		}
 
-		if checkFilter(req, client, reqCtx.User) {
+		if checkFilter(req, client, reqCtx) {
 			send_req(client, data)
 			hasSend = true
 		}
@@ -46,7 +46,7 @@ var extTypes map[string][]string = map[string][]string{
 	"image": {"jpg", "jpeg", "png", "gif", "bmp", "tiff", "jpe", "tif", "webp", "ico"},
 }
 
-func checkFilter(req *http.Request, client *wsClient, user *User) bool {
+func checkFilter(req *http.Request, client *wsClient, reqCtx *requestCtx) bool {
 	if len(client.filter_user) > 0 {
 		user_in_list := false
 		for _, name := range client.filter_user {
@@ -54,7 +54,7 @@ func checkFilter(req *http.Request, client *wsClient, user *User) bool {
 				user_in_list = true
 				break
 			}
-			if name != "" && name == user.Name {
+			if name != "" && name == reqCtx.User.Name {
 				user_in_list = true
 				break
 			}
@@ -65,7 +65,7 @@ func checkFilter(req *http.Request, client *wsClient, user *User) bool {
 	}
 
 	if len(client.filter_ip) > 0 {
-		addr_info := strings.Split(req.RemoteAddr, ":")
+		addr_info := strings.Split(reqCtx.RemoteAddr, ":")
 		ip_in_list := false
 		for _, ip := range client.filter_ip {
 			if ip != "" && addr_info[0] == ip {
@@ -103,8 +103,9 @@ func checkFilter(req *http.Request, client *wsClient, user *User) bool {
 		}
 	}
 	if len(client.filter_url_hide) > 0 {
+	    _url:=req.URL.String()
 		for _, hide_kw := range client.filter_url_hide {
-			if hide_kw != "" && strings.Contains(req.URL.String(), hide_kw) {
+			if hide_kw != "" && strings.Contains(_url, hide_kw) {
 				return false
 			}
 		}

@@ -1,0 +1,45 @@
+<div id="bd0">
+<br/>
+<p class="h4">使用说明</p>
+简单的介绍下如何使用该程序抓取分析http协议
+<p class="h6">1.客户端（如手机）</p>
+<pre>
+找到wifi网络设置项
+设置代理为 <b>手动</b>
+主机地址 ： <b>{{.pproxy_host}}</b>
+主机端口 ： <b>{{.pproxy_port}}</b>
+
+</pre>
+<small>推荐android 用户使用类似 proxyDroid 这样的应用来管理多个代理</small>
+
+<p class="h6">2.服务端-前端</p>
+<pre>
+进入<a href="/">首页的session列表</a>查看所有http会话。
+输入客户端的ip地址 或者http basic认证的用户名来过滤查看对应的会话信息。
+所有的输入框都可以使用<font color=red>|</font>来输入多个条件(或)。如user:<input type="text" value="a|b" style="width:40px">表示过滤出用户为a或b的。
+redo 功能可以很方便的让我们重发请求。
+</pre>
+
+
+ <p class="h4">配置项说明</p>
+ <pre>
+ 客户端认证类型：
+ authType:{
+    0: 无认证
+    1: http basic auth
+    2: http basic,用户名不为空即可
+ }
+ 
+ response在何时进行存储：
+ responseSave:{
+    0: 所有
+    1: request在session列表中出现过
+ }
+ 
+ 会话查看限制条件：
+ sessionView:{
+ 0 : 无限制，会话发送给所有人
+ 1 : 客户端ip或者http认证的用户名其中一个不为空
+ }
+ </pre>
+</div>

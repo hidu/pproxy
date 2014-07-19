@@ -49,6 +49,9 @@ func (ser *ProxyServe) handleLocalReq(w http.ResponseWriter, req *http.Request) 
 	values["notice"] = ser.conf.Notice
 	values["port"] = fmt.Sprintf("%d", ser.conf.Port)
 	values["userOnlineTotal"] = len(ser.wsClients) + 1
+	_host,_port,_:=getHostPortFromReq(req)
+	values["pproxy_host"]=_host
+	values["pproxy_port"]=_port
 
 	user, isLogin := ser.web_checkLogin(req)
 	values["isLogin"] = isLogin
@@ -63,7 +66,11 @@ func (ser *ProxyServe) handleLocalReq(w http.ResponseWriter, req *http.Request) 
 		values["subTitle"] = "about|"
 		html := render_html("about.html", values, true)
 		w.Write([]byte(html))
-	} else if req.URL.Path == "/config" {
+	} else if req.URL.Path == "/useage" {
+		values["subTitle"] = "useage|"
+		html := render_html("useage.html", values, true)
+		w.Write([]byte(html))
+	}else if req.URL.Path == "/config" {
 		values["subTitle"] = "config|"
 		if req.Method == "GET" {
 			values["rewriteJs"] = html.EscapeString(ser.RewriteJs)
