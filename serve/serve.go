@@ -52,11 +52,11 @@ type kvType map[string]interface{}
 
 func (ser *ProxyServe) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	host, port_int, err := getHostPortFromReq(req)
-	if(err!=nil){
-	   w.WriteHeader(http.StatusBadRequest)
-	   w.Write([]byte("bad request"))
-	   log.Println("bad request,err",err)
-	   return
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("bad request"))
+		log.Println("bad request,err", err)
+		return
 	}
 	if req.Host == "p.info" || req.Host == "proxy.info" {
 		ser.handleUserInfo(w, req)
@@ -108,12 +108,12 @@ func (ser *ProxyServe) onRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*htt
 	}
 	//	log.Println("RemoteAddr:",req.RemoteAddr,req.Header.Get("X-Wap-Proxy-Cookie"))
 
-	reqCtx :=NewRequestCtx()
+	reqCtx := NewRequestCtx()
 	reqCtx.User = getAuthorInfo(req)
 	reqCtx.IsReDo = len(req.Header.Get(REDO_FLAG)) > 0
 	reqCtx.SessionId = ctx.Session
-	
-	reqCtx.LogData["url"]=req.URL.String()
+
+	reqCtx.LogData["url"] = req.URL.String()
 
 	reqCtx.RemoteAddr = req.RemoteAddr
 	if _redo_addr := req.Header.Get(REDO_REMOTEADDR); _redo_addr != "" {
@@ -140,7 +140,7 @@ func (ser *ProxyServe) onRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*htt
 	post_vs := getPostData(req)
 	reqCtx.FormPost = post_vs
 
-	rewrite_code:=ser.reqRewrite(req, reqCtx)
+	rewrite_code := ser.reqRewrite(req, reqCtx)
 
 	reqCtx.Docid = NextUid() + uint64(ctx.Session)
 
@@ -195,8 +195,8 @@ func (ser *ProxyServe) onRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*htt
 	} else {
 		reqCtx.Docid = 0
 	}
-	if(rewrite_code!=200){
-	   return nil,goproxy.NewResponse(req,goproxy.ContentTypeText,rewrite_code,"pproxy error")
+	if rewrite_code != 200 {
+		return nil, goproxy.NewResponse(req, goproxy.ContentTypeText, rewrite_code, "pproxy error")
 	}
 	return req, nil
 }

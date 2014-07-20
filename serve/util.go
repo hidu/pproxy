@@ -12,10 +12,10 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"net/url"
-	"strings"
 	"net/http"
+	"net/url"
 	"strconv"
+	"strings"
 )
 
 func Int64ToBytes(i int64) []byte {
@@ -138,45 +138,43 @@ func getTextAreaHeightByString(mystr string, minHeight int) int {
 	return height
 }
 
-
-func getHostPortFromReq(req *http.Request)(host string,port int,err error){
-  var port_str string
-  req_host:=req.Host
-  if(!strings.Contains(req_host,":")){
-      if(strings.HasPrefix(req.Proto,"HTTP")){
-         req_host+=":80"
-      }
-  }
-  host, port_str, err = net.SplitHostPort(req_host)
-  if(err!=nil){
-    return
-  }
-  port, err= strconv.Atoi(port_str)
-  if(err!=nil){
-     return
-  }
-  return
+func getHostPortFromReq(req *http.Request) (host string, port int, err error) {
+	var port_str string
+	req_host := req.Host
+	if !strings.Contains(req_host, ":") {
+		if strings.HasPrefix(req.Proto, "HTTP") {
+			req_host += ":80"
+		}
+	}
+	host, port_str, err = net.SplitHostPort(req_host)
+	if err != nil {
+		return
+	}
+	port, err = strconv.Atoi(port_str)
+	if err != nil {
+		return
+	}
+	return
 }
 
-
-func checkUrlValuesChange(first url.Values,second url.Values)(change bool){
-  for k,v:=range first{
-     sec_v,has:=second[k]
-     if !has{
-        return true
-     }
-     if(len(v)!=len(sec_v) || fmt.Sprintf("%v",v)!=fmt.Sprintf("%v",sec_v)){
-        return true
-     }
-  }
-  for k,v:=range second{
-     first_v,has:=first[k]
-     if !has{
-        return true
-     }
-     if(len(v)!=len(first_v) || fmt.Sprintf("%v",v)!=fmt.Sprintf("%v",first_v)){
-        return true
-     }
-  }
-  return false
+func checkUrlValuesChange(first url.Values, second url.Values) (change bool) {
+	for k, v := range first {
+		sec_v, has := second[k]
+		if !has {
+			return true
+		}
+		if len(v) != len(sec_v) || fmt.Sprintf("%v", v) != fmt.Sprintf("%v", sec_v) {
+			return true
+		}
+	}
+	for k, v := range second {
+		first_v, has := first[k]
+		if !has {
+			return true
+		}
+		if len(v) != len(first_v) || fmt.Sprintf("%v", v) != fmt.Sprintf("%v", first_v) {
+			return true
+		}
+	}
+	return false
 }

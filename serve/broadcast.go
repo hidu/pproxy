@@ -103,7 +103,7 @@ func checkFilter(req *http.Request, client *wsClient, reqCtx *requestCtx) bool {
 		}
 	}
 	if len(client.filter_url_hide) > 0 {
-	    _url:=req.URL.String()
+		_url := req.URL.String()
 		for _, hide_kw := range client.filter_url_hide {
 			if hide_kw != "" && strings.Contains(_url, hide_kw) {
 				return false

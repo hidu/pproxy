@@ -9,7 +9,7 @@ import (
 )
 
 var configPath = flag.String("conf", "./conf/config.json", "json config path")
-var port = flag.Int("port", 0, "main proxy port")
+var port = flag.Int("port", 0, "proxy port")
 
 var debug = flag.Bool("debug", false, "debug the request")
 

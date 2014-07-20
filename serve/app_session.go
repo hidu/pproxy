@@ -13,7 +13,7 @@ type clientSession struct {
 	FirstRequestTime time.Time
 	LastRequestTime  time.Time
 	IntervalDuration time.Duration
-	User  *User
+	User             *User
 }
 
 func (ser *ProxyServe) regirestReq(req *http.Request, reqCtx *requestCtx) {
@@ -26,12 +26,12 @@ func (ser *ProxyServe) regirestReq(req *http.Request, reqCtx *requestCtx) {
 		session = client
 	} else {
 		session = &clientSession{
-		                     Ip: ip,
-		                     RequestNum: 0, 
-		                     FirstRequestTime: now, 
-		                     LastRequestTime: now, 
-		                     IntervalDuration: 0,
-		                     }
+			Ip:               ip,
+			RequestNum:       0,
+			FirstRequestTime: now,
+			LastRequestTime:  now,
+			IntervalDuration: 0,
+		}
 		ser.ProxyClients[ip] = session
 	}
 	session.IntervalDuration = now.Sub(session.LastRequestTime)
