@@ -14,6 +14,13 @@ type requestCtx struct {
 	HasBroadcast  bool
 	FormPost      *url.Values
 	ClientSession *clientSession
+	LogData map[string]interface{}
+}
+
+func NewRequestCtx() *requestCtx{
+  ctx:= new(requestCtx)
+  ctx.LogData=make(map[string]interface{})
+  return ctx
 }
 
 func (ctx *requestCtx) GetIp() string {

@@ -1,12 +1,15 @@
 
 function pproxy_rewrite(req){
-	req.get=pproxy_params_copy(req._pproxy_get)
-	req.post=pproxy_params_copy(req._pproxy_post)
+	req.get=pproxy_params_copy(req.origin.get);
+	req.post=pproxy_params_copy(req.origin.post);
 	
-	req.flag={"get":0,"post":0}
 	
-	var form_get=pproxy_obj_helper(req.get,req.flag,"get");
-	var form_post=pproxy_obj_helper(req.post,req.flag,"post");
+	for(var k in req.origin.header){
+		req[k]=req.origin.header[k]+"";
+	}
+	
+	var form_get=pproxy_obj_helper(req.get);
+	var form_post=pproxy_obj_helper(req.post);
 	
 	CUSTOM_JS
 	return req;
@@ -24,27 +27,26 @@ function pproxy_params_copy(obj){
     return newObj
 } 
 
-function pproxy_obj_helper(values,flagObj,type){
+function pproxy_obj_helper(values){
   return {
       get:function(name){
     	  return values[name]
       },
       set:function(name,val){
     	  values[name]=[val]
-    	  flagObj[type]=1
       },
       add:function(name,val){
-    	  val=val+""
-    	  if(values[name]!=undefined){
-    		  values[name].push(val)
-    	  }else{
-    		  values[name]=[val]
+    	  if(typeof values[name]=="undefined"){
+    		  values[name]=[] 
     	  }
-    	  flagObj[type]=1
+    	  if(typeof values[name]!="Object"){
+    		  values[name]=[values[name]+""]
+    	  }
+    	  val=val+""
+          values[name].push(val)
       },
       del:function(name){
     	  delete values[name]
-    	  flagObj[type]=1
       },
       len:function(name){
     	  if(name==undefined){

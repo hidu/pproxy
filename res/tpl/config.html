@@ -15,20 +15,23 @@
 <td valign="top">
 <pre>
 <b>req demo:</b>
-url : http://wenku.baidu.com/album/list?cid=126
+url : http://www.example.com/album/list?cid=126
 schema : http
-host : wenku.baidu.com
-port : 
+host : www.example.com
+port : 80
 path : /album/list
 get: {cid:[123]}
 post: {}
 username : 
 password : 
+method: GET
 ===============================================
 //demo code:
 if(req.host=="www.baidu.com"){
    req.host="www.163.com"
    req.host_addr="127.0.0.0:81" // send req to 127.0.0.1:81
+   form_get.add("a","a")
+   //form_post.set("d","a")
 }
 </pre>
 </td>

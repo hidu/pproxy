@@ -20,8 +20,36 @@
 redo 功能可以很方便的让我们重发请求。
 </pre>
 
+<p class="h6">3.改写请求</p>
+<pre>
+即对request进行修改。
+pproxy使用js代码来进行配置，大致如下 
+function rewrite(req){
+    //here you code
+    return req
+}
+url : http://www.example.com/album/list?cid=126
+req对象有如下一下属性：
+schema : http
+host : www.example.com
+port : 80
+path : /album/list
+get: {cid:[123]}
+post: {}
+username : 
+password : 
+method: GET
+form_get  : {add:function(k,v){},set:function(k,v){},get:function(k){},len:function(){}} 
+form_post : {add:function(k,v){},set:function(k,v){},get:function(k){},len:function(){}}
 
- <p class="h4">配置项说明</p>
+host_addr: #修改该请求的host是使用，如 127.0.0.1:3218
+
+#注意 get 和post的值是数组，如上cid参数
+#form_get 用于更方便的操作  get参数对象
+#form_post 用于更方便的操作 post参数对象
+</pre>
+
+ <p class="h4">4.配置项说明</p>
  <pre>
  客户端认证类型：
  authType:{

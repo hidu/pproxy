@@ -91,7 +91,7 @@ func (ser *ProxyServe) Start() {
 func (ser *ProxyServe) onHttpsConnect(host string, ctx *goproxy.ProxyCtx) (*goproxy.ConnectAction, string) {
 	//   log.Println("https:",host,ctx.Req)
 
-	reqCtx := new(requestCtx)
+	reqCtx := NewRequestCtx()
 	reqCtx.User = &User{SkipCheckPsw: true}
 	reqCtx.RemoteAddr = host
 	reqCtx.Docid = 0
@@ -104,14 +104,16 @@ func (ser *ProxyServe) onHttpsConnect(host string, ctx *goproxy.ProxyCtx) (*gopr
 func (ser *ProxyServe) onRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
 	if ser.Debug {
 		req_dump_debug, _ := httputil.DumpRequest(req, false)
-		log.Println("DEBUG req BEFORE:\n", string(req_dump_debug), "\nurl_host:", req.URL.Host)
+		log.Println("DEBUG req BEFORE:\n", string(req_dump_debug), "\nurl_full:", req.URL.String())
 	}
 	//	log.Println("RemoteAddr:",req.RemoteAddr,req.Header.Get("X-Wap-Proxy-Cookie"))
 
-	reqCtx := new(requestCtx)
+	reqCtx :=NewRequestCtx()
 	reqCtx.User = getAuthorInfo(req)
 	reqCtx.IsReDo = len(req.Header.Get(REDO_FLAG)) > 0
 	reqCtx.SessionId = ctx.Session
+	
+	reqCtx.LogData["url"]=req.URL.String()
 
 	reqCtx.RemoteAddr = req.RemoteAddr
 	if _redo_addr := req.Header.Get(REDO_REMOTEADDR); _redo_addr != "" {

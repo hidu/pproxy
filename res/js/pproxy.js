@@ -184,11 +184,16 @@ $().ready(function() {
 	$("#network_filter_form input:text").each(function(){
 		pproxy_local_save(this,$(this).attr("name"));
 	});
-	
-    $("#network_filter_form").change(function() {
+	var filter_form=$("#network_filter_form");
+	filter_form.change(function() {
         var form_data = $(this).serialize();
         socket.emit("client_filter", form_data);
     }).change();
+    
+	filter_form.find("input:text").keyup(function(){
+		filter_form.change();
+    });
+    
     if(location.hash.match(/req_\d+/)){
         var docid=location.hash.substr(5);
         socket.emit("get_response", docid)

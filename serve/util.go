@@ -157,3 +157,26 @@ func getHostPortFromReq(req *http.Request)(host string,port int,err error){
   }
   return
 }
+
+
+func checkUrlValuesChange(first url.Values,second url.Values)(change bool){
+  for k,v:=range first{
+     sec_v,has:=second[k]
+     if !has{
+        return true
+     }
+     if(len(v)!=len(sec_v) || fmt.Sprintf("%v",v)!=fmt.Sprintf("%v",sec_v)){
+        return true
+     }
+  }
+  for k,v:=range second{
+     first_v,has:=first[k]
+     if !has{
+        return true
+     }
+     if(len(v)!=len(first_v) || fmt.Sprintf("%v",v)!=fmt.Sprintf("%v",first_v)){
+        return true
+     }
+  }
+  return false
+}

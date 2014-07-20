@@ -32,34 +32,41 @@ func (ser *ProxyServe) reqRewriteByjs(req *http.Request, reqCtx *requestCtx) int
 	if ser.RewriteJs == "" {
 		return 200
 	}
-	urlObj, _ := js.Object(`req={}`)
-	urlObj.Set("method", req.Method)
-	urlObj.Set("url", req.URL.String())
-	urlObj.Set("schema", req.URL.Scheme)
-
-	host_info := strings.Split(req.URL.Host, ":")
-	urlObj.Set("host", host_info[0])
-	if len(host_info) == 2 {
-		urlObj.Set("port", host_info[1])
-	} else {
-		urlObj.Set("port", "")
-	}
-	urlObj.Set("path", req.URL.Path)
-	urlObj.Set("_pproxy_get", req.URL.Query())
-	urlObj.Set("_pproxy_post", *reqCtx.FormPost)
-
-	u_s, _ := urlObj.Value().ToString()
-	fmt.Println("urlObj:", u_s)
+	origin_url:=req.URL.String()
+	origin_get_query:=req.URL.Query()
+	///================================================================
+	headerKv:=make(map[string]string)
+	headerKv["method"]=req.Method
+	headerKv["schema"]=req.URL.Scheme
+	headerKv["path"]=req.URL.Path
+	
+	_host,port_int,_:=getHostPortFromReq(req)
+	
+	headerKv["host"]=_host
+	headerKv["port"]=fmt.Sprintf("%d",port_int)
+	
 	username := ""
 	psw := ""
 	if req.URL.User != nil {
 		username = req.URL.User.Username()
 		psw, _ = req.URL.User.Password()
 	}
-	urlObj.Set("username", username)
-	urlObj.Set("password", psw)
+	headerKv["username"]=username
+	headerKv["password"]=psw
+	
+	//===================================================================
+	rewriteData:=make(map[string]interface{})
+	rewriteData["header"]=headerKv
+	rewriteData["get"]=origin_get_query
+	rewriteData["post"]=*reqCtx.FormPost
 
-	js_ret, err_js := ser.RewriteJsFn.Call(ser.RewriteJsFn, urlObj)
+  	reqJsObj, _ := js.Object(`req={}`)
+	reqJsObj.Set("origin",rewriteData)
+	
+	///===================================
+	
+
+	js_ret, err_js := ser.RewriteJsFn.Call(ser.RewriteJsFn, reqJsObj)
 
 	if err_js != nil {
 		log.Println("js filter err:", err_js, js_ret)
@@ -76,78 +83,117 @@ func (ser *ProxyServe) reqRewriteByjs(req *http.Request, reqCtx *requestCtx) int
 		return 502
 	}
     //================================================================================
-	url_obj := obj.(map[string]interface{})
-	schema := getMapValStr(url_obj, "schema")
-	url_new := schema + "://"
-	uname := getMapValStr(url_obj, "username")
-	if uname != "" {
-		url_new += fmt.Sprintf("%s:%s@", uname, getMapValStr(url_obj, "password"))
+    
+	reqObjNew := obj.(map[string]interface{})
+	
+	headerKvNew:=make(map[string]string)
+	isHeaderChange:=false
+	
+	for k,v:=range headerKv{
+	    _newVal:=getMapValStr(reqObjNew,k)
+	    headerKvNew[k]=_newVal
+	    if(_newVal!=v){
+			isHeaderChange=true
+	    }
 	}
-	host := getMapValStr(url_obj, "host")
-	port := getMapValStr(url_obj, "port")
-	if port != "" {
-		host += ":" + port
+	//-------------------------------------------------------
+	var get_new url.Values
+	
+	isGetChange:=false
+	
+	if _get, has := reqObjNew["get"]; has {
+		get_new = _req_mapToUrlValue(_get)
+		isGetChange=checkUrlValuesChange(origin_get_query,get_new)
 	}
-	url_new += fmt.Sprintf("%s%s", host, getMapValStr(url_obj, "path"))
-
-
-	changeFlag := make(map[string]string)
-	for k, v := range url_obj["flag"].(map[string]interface{}) {
-		changeFlag[k] = fmt.Sprintf("%v", v)
+	//-------------------------------------------------------
+	var post_new url.Values
+    isPostChange:=false
+	if _post, has := reqObjNew["post"]; has {
+		post_new = _req_mapToUrlValue(_post)
+		isPostChange=checkUrlValuesChange(*reqCtx.FormPost,post_new)
 	}
+	
+	
+	
+	host_addr := getMapValStr(reqObjNew, "host_addr")
+	isHostAddrChange:=host_addr!=""
+	
 	if(ser.Debug){
-		fmt.Println("changeFlag:",changeFlag)
+	   fmt.Println("rewriteChange:","is_get_change:",isGetChange,"new_get:",get_new,
+	   "isPostChange:",isPostChange,"new_post:",post_new,
+	   "isHostAddrChange:",isHostAddrChange,"new_host_addr:",host_addr,
+	   )
 	}
-
-	if changeFlag["get"] == "1" {
-		if _get, has := url_obj["get"]; has {
-			get := _req_mapToUrlValue(_get)
-			url_new += "?" + get.Encode()
-			if(ser.Debug){
-			   fmt.Println("rewrite_form_get:",get)
-			}
+	
+    ///===============================================================================
+    if(!isHeaderChange && !isGetChange && !isPostChange && !isHostAddrChange){
+      return 200
+    }
+    ///===============================================================================
+	
+	
+	var url_base string;
+	
+	if(isHeaderChange){
+		schema := headerKvNew["schema"]
+		url_base= schema + "://"
+		
+		if headerKvNew["username"] != "" {
+			url_base += fmt.Sprintf("%s:%s@", headerKvNew["username"], headerKvNew["password"])
+		}
+		url_base += headerKvNew["host"]
+		if headerKvNew["port"] != "" {
+			url_base += ":" + headerKvNew["port"]
+		}
+		url_base += headerKvNew["path"]
+	}else{
+		if(req.URL.RawQuery==""){
+			url_base=origin_url
+		}else{
+			url_base=origin_url[:len(origin_url)-len(req.URL.RawQuery)-1]
 		}
 	}
-	
-	
-	var url_err error
-	req.URL, url_err = url.Parse(url_new)
-	if ser.Debug {
-		log.Println("DEBUG req_rewrite,url_new:", url_new, "req_new:", req.URL)
-	}
-	if url_err != nil {
-		log.Println("js filter err:", js_ret, url_err)
-		return 502
-	}
 
-	req.Host = req.URL.Host
+	if(isGetChange){
+		url_base += "?" + get_new.Encode()
+	}else{
+		url_base += "?" + req.URL.RawQuery
+	}
+	
+	if(isHeaderChange||isGetChange){
+		var url_err error
+		req.URL, url_err = url.Parse(url_base)
+		if ser.Debug {
+			log.Println("DEBUG req_rewrite,url_new:", url_base, "req_new:", req.URL)
+		}
+		if url_err != nil {
+			log.Println("js filter err:", js_ret, url_err)
+			return 502
+		}
+	
+		req.Host = req.URL.Host
+	}
 	
    //////////////////////////////////////////////////////////////////////////////
 	
 	
-	if changeFlag["post"] == "1" {
-		if _post, has := url_obj["post"]; has {
-			post := _req_mapToUrlValue(_post)
-			buf := bytes.NewBuffer([]byte{})
-			_post_body := post.Encode()
-			req.Header.Del("Content-Length")
-			if req.Header.Get(Content_Encoding) == "gzip" {
-				tmp := gzipEncode([]byte(_post_body)).Bytes()
-				buf.Write(tmp)
-			} else {
-				buf.WriteString(_post_body)
-			}
-			req.ContentLength = int64(buf.Len())
-			req.Body = ioutil.NopCloser(buf).(io.ReadCloser)
-			
-			if(ser.Debug){
-			   fmt.Println("rewrite_form_post:",post)
-			}
+	if(isPostChange){
+		buf := bytes.NewBuffer([]byte{})
+		_post_body := post_new.Encode()
+		req.Header.Del("Content-Length")
+		if req.Header.Get(Content_Encoding) == "gzip" {
+			tmp := gzipEncode([]byte(_post_body)).Bytes()
+			buf.Write(tmp)
+		} else {
+			buf.WriteString(_post_body)
 		}
+		req.ContentLength = int64(buf.Len())
+		req.Body = ioutil.NopCloser(buf).(io.ReadCloser)
 	}
+		
 	////////////////////////////////////////////////////////////////////////////
-	host_addr := getMapValStr(url_obj, "host_addr")
-	if host_addr != "" {
+	
+	if isHostAddrChange {
 		req.URL.Host = host_addr
 	}
 	return 200
@@ -200,8 +246,10 @@ func _req_mapToUrlValue(values interface{}) url.Values {
 		switch value := arr.(type) {
 		case []interface{}:
 			for _, v := range value {
-				uValues.Add(k, fmt.Sprintf("%s", v))
+				uValues.Add(k, fmt.Sprintf("%v", v))
 			}
+		case interface{}:
+		   uValues.Set(k, fmt.Sprintf("%v", value))
 		default:
 			log.Println("unkonw type:", value)
 		}
