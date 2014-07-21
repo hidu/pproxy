@@ -3,6 +3,7 @@ pproxy 0.4
 http抓包代理程序,http协议调试工具。  
 采用golang编写，采用bs模式(s-代理程序，b-会话查看、配置管理等功能)  
 
+下载编译好的可执行文件: <http://pan.baidu.com/s/1i3pAe7V>  
 
 
 <pre>
@@ -64,7 +65,7 @@ www.baidu.com 127.0.0.1
 www.baidu.com:81 10.0.2.2:8080
 ```
 
-download binary: <http://pan.baidu.com/s/1zWZUI>
+
 
 
 配置文件：
