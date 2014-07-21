@@ -93,7 +93,7 @@ admin e10adc3949ba59abbe56e057f20f883e:md5 admin   #帐号 admin，密码 是 md
 ```
 可以在线修改配置时必须使用管理员帐号登录
 
-配置文件config.json 示例:
+配置文件示例:
 ```
 port : 8080
 
