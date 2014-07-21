@@ -322,7 +322,7 @@ func NewProxyServe(confPath string, port int) (*ProxyServe, error) {
 		log.Println("get config path failed", confPath)
 		return nil, err
 	}
-	getVersion()
+	GetVersion()
 	os.Chdir(filepath.Dir(absPath))
 
 	proxy := new(ProxyServe)

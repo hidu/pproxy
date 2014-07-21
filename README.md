@@ -45,17 +45,25 @@ if(req.host.indexOf("baidu.com")>-1){
 
 req变量示例：
 ```
-url : http://wenku.baidu.com/album/list?cid=126
+#url : http://www.example.com/album/list?cid=126
+#req对象有如下一下属性：
 schema : http
-host : wenku.baidu.com
-port : 
+host : www.example.com
+port : 80
 path : /album/list
-rawquery : cid=126
+get: {cid:[123]}
+post: {}
 username : 
 password : 
-get : {"a":["a"],"b":["1","2"]}    #get参数 值为数组类型
-post : {"a":["a"],"b":["1","2"]}
-flag: {"get":"0","post":"0"}       #get和post修改标记 值为1为修改过
+method: GET
+form_get  : {add:function(k,v){},set:function(k,v){},get:function(k){},len:function(){}} 
+form_post : {add:function(k,v){},set:function(k,v){},get:function(k){},len:function(){}}
+
+host_addr: #修改该请求的host是使用，如 127.0.0.1:3218
+
+#注意 get 和post的值是数组，如上cid参数
+#form_get 用于更方便的操作  get参数对象
+#form_post 用于更方便的操作 post参数对象
 ```
 除了url变量外，其他的都是可以修改来对request进行重写的
 
@@ -64,7 +72,6 @@ flag: {"get":"0","post":"0"}       #get和post修改标记 值为1为修改过
 www.baidu.com 127.0.0.1
 www.baidu.com:81 10.0.2.2:8080
 ```
-
 
 
 
@@ -88,32 +95,24 @@ admin e10adc3949ba59abbe56e057f20f883e:md5 admin   #帐号 admin，密码 是 md
 
 配置文件config.json 示例:
 ```
-{
-   "port":8080,
-   "title":"demo",
-   "notice":"notice notice",
-   "authType":0,
-   "dataDir":"../data/",
-   "responseSave":0,
-   "sessionView":0
-}
-```
-配置项说明：
-```
-authType:{
-    0 : no auth
-    1 : http basic auth (使用users中的用户信息进行认证)
-    2 : http basic with any username,no password check （session表单需要输入该userName才可见session）
-    3 ：try http basic(第一次访问的时候尝试httpBasic认证)
- }
- 
- responseSave:{
-    0 : all （所有通过pproxy的请求都记录）
-    1 : which had been showed in the session list （只有发送到session列表的才记录）
- }
- 
- sessionView:{
-    0 : all （所有人可见）
-    1 : need ip or userName（在session列表的filter表单中输入正确的client Ip或者http basic username）
- }
+port : 8080
+
+title : demo
+notice :notice notice
+
+#数据存放目录，相对于当前配置的路径
+dataDir : ../data/
+
+#代理服务认证方式
+authType : none
+#options:{none : 无认证     basic : http basic  try_basic : 尝试httpBasic认证 }
+
+#那些request和response数据进行存储
+responseSave : all
+#options:{ all : 所有   only_broadcast : 发送到session list的才存储}
+
+#session列表查看数据
+sessionView : all
+# options :{ all:所有人可见 ip_or_user : 输入正确的ip或者user后可见}
+
 ```

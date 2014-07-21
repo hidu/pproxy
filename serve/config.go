@@ -1,11 +1,11 @@
 package serve
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/hidu/goutils"
 	"log"
 	"strings"
+	"github.com/Unknwon/goconfig"
 )
 
 type Config struct {
@@ -48,26 +48,67 @@ const (
 
 //"0:no auth | 1:basic auth | 2:basic auth with any name"
 
-func getVersion() string {
+func GetVersion() string {
 	return string(utils.DefaultResource.Load("/res/version"))
 }
+
+func GetDemoConf()string{
+	return strings.TrimSpace(string(utils.DefaultResource.Load("/res/conf/demo_conf.ini")))
+}
+
 
 func (u *User) isPswEq(psw string) bool {
 	return u.Psw == utils.StrMd5(psw)
 }
 
 func LoadConfig(confPath string) (*Config, error) {
-	data, err := utils.File_get_contents(confPath)
+    gconf,err:=goconfig.LoadConfigFile(confPath)
 	if err != nil {
 		log.Println("load config", confPath, "failed,err:", err)
 		return nil, err
 	}
-	var config *Config
-	err = json.Unmarshal(data, &config)
-	if err != nil {
-		log.Println("config is  incorrect", err)
-		return nil, err
+	config:=new(Config)
+	config.Port=gconf.MustInt(goconfig.DEFAULT_SECTION,"port",8080)
+	config.Title=gconf.MustValue(goconfig.DEFAULT_SECTION,"title")
+	config.Notice=gconf.MustValue(goconfig.DEFAULT_SECTION,"notice")
+	config.DataDir=gconf.MustValue(goconfig.DEFAULT_SECTION,"dataDir")
+	
+	_authType:=strings.ToLower(gconf.MustValue(goconfig.DEFAULT_SECTION,"authType","none"))
+	authTypes:=map[string]int{"none":0,"basic":1,"try_basic":2}
+	
+	hasError:=false
+	if authType,has:=authTypes[_authType];has{
+	  config.AuthType=authType
+	}else{
+	   hasError=true
+	   log.Println("conf error,unknow value authType:",_authType)
 	}
+	
+	_responseSave:=strings.ToLower(gconf.MustValue(goconfig.DEFAULT_SECTION,"responseSave","all"))
+	responseSaveMap:=map[string]int{"all":0,"only_broadcast":1}
+	
+	if responseSave,has:=responseSaveMap[_responseSave];has{
+	  config.ResponseSave=responseSave
+	}else{
+		 hasError=true
+	     log.Println("conf error,unknow value responseSave:",_authType)
+	}
+	
+	_sessionView:=strings.ToLower(gconf.MustValue(goconfig.DEFAULT_SECTION,"sessionView","all"))
+	sessionViewMap:=map[string]int{"all":0,"ip_or_user":1}
+	
+	if sessionView,has:=sessionViewMap[_sessionView];has{
+	  config.SessionView=sessionView
+	}else{
+	     hasError=true
+	     log.Println("conf error,unknow value responseSave:",_authType)
+	}
+	
+	if(hasError){
+	   return config,fmt.Errorf("confg error")
+	}
+	
+	
 	return config, nil
 }
 
