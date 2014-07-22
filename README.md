@@ -78,7 +78,7 @@ www.baidu.com:81 10.0.2.2:8080
 配置文件：
 ```
 conf/
-├── config.json          #server的配置
+├── pproxy.conf          #server的配置
 ├── hosts_8080           #8080端口server的hosts规则
 ├── req_rewrite_8080.js  #8080端口server的url重写规则
 ├── hosts_8081
