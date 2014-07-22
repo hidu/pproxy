@@ -53,7 +53,7 @@ func GetVersion() string {
 }
 
 func GetDemoConf()string{
-	return strings.TrimSpace(string(utils.DefaultResource.Load("/res/conf/demo_conf.ini")))
+	return strings.TrimSpace(string(utils.DefaultResource.Load("/res/conf/demo.conf")))
 }
 
 
@@ -105,7 +105,7 @@ func LoadConfig(confPath string) (*Config, error) {
 	}
 	
 	if(hasError){
-	   return config,fmt.Errorf("confg error")
+	   return config,fmt.Errorf("config error")
 	}
 	
 	

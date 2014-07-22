@@ -8,7 +8,7 @@ import (
 	"os"
 )
 
-var configPath = flag.String("conf", "./conf/pproxy.ini", "json config path")
+var configPath = flag.String("conf", "./conf/pproxy.conf", "pproxy's config file")
 var port = flag.Int("port", 0, "proxy port")
 var debug = flag.Bool("debug", false, "debug the request")
 var show_conf=flag.Bool("demo_conf",false,"show default conf")
@@ -20,9 +20,6 @@ func main() {
 	
 	if(*show_conf){
 	  demo_conf:=serve.GetDemoConf()
-	  fmt.Println("##########################################################")
-	  fmt.Println("                  pproxy demo conf")
-	  fmt.Println("##########################################################")
 	  fmt.Println(demo_conf)
 	  os.Exit(0)
 	}
