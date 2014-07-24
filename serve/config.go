@@ -2,10 +2,10 @@ package serve
 
 import (
 	"fmt"
+	"github.com/Unknwon/goconfig"
 	"github.com/hidu/goutils"
 	"log"
 	"strings"
-	"github.com/Unknwon/goconfig"
 )
 
 type Config struct {
@@ -52,63 +52,61 @@ func GetVersion() string {
 	return string(utils.DefaultResource.Load("/res/version"))
 }
 
-func GetDemoConf()string{
+func GetDemoConf() string {
 	return strings.TrimSpace(string(utils.DefaultResource.Load("/res/conf/demo.conf")))
 }
-
 
 func (u *User) isPswEq(psw string) bool {
 	return u.Psw == utils.StrMd5(psw)
 }
 
 func LoadConfig(confPath string) (*Config, error) {
-    gconf,err:=goconfig.LoadConfigFile(confPath)
+	gconf, err := goconfig.LoadConfigFile(confPath)
 	if err != nil {
 		log.Println("load config", confPath, "failed,err:", err)
 		return nil, err
 	}
-	config:=new(Config)
-	config.Port=gconf.MustInt(goconfig.DEFAULT_SECTION,"port",8080)
-	config.Title=gconf.MustValue(goconfig.DEFAULT_SECTION,"title")
-	config.Notice=gconf.MustValue(goconfig.DEFAULT_SECTION,"notice")
-	config.DataDir=gconf.MustValue(goconfig.DEFAULT_SECTION,"dataDir")
-	
-	_authType:=strings.ToLower(gconf.MustValue(goconfig.DEFAULT_SECTION,"authType","none"))
-	authTypes:=map[string]int{"none":0,"basic":1,"try_basic":2}
-	
-	hasError:=false
-	if authType,has:=authTypes[_authType];has{
-	  config.AuthType=authType
-	}else{
-	   hasError=true
-	   log.Println("conf error,unknow value authType:",_authType)
+	config := new(Config)
+	config.Port = gconf.MustInt(goconfig.DEFAULT_SECTION, "port", 8080)
+	config.Title = gconf.MustValue(goconfig.DEFAULT_SECTION, "title")
+	config.Notice = gconf.MustValue(goconfig.DEFAULT_SECTION, "notice")
+	config.DataDir = gconf.MustValue(goconfig.DEFAULT_SECTION, "dataDir")
+
+	_authType := strings.ToLower(gconf.MustValue(goconfig.DEFAULT_SECTION, "authType", "none"))
+	authTypes := map[string]int{"none": 0, "basic": 1, "try_basic": 2}
+
+	hasError := false
+	if authType, has := authTypes[_authType]; has {
+		config.AuthType = authType
+	} else {
+		hasError = true
+		log.Println("conf error,unknow value authType:", _authType)
 	}
-	
-	_responseSave:=strings.ToLower(gconf.MustValue(goconfig.DEFAULT_SECTION,"responseSave","all"))
-	responseSaveMap:=map[string]int{"all":0,"only_broadcast":1}
-	
-	if responseSave,has:=responseSaveMap[_responseSave];has{
-	  config.ResponseSave=responseSave
-	}else{
-		 hasError=true
-	     log.Println("conf error,unknow value responseSave:",_authType)
+
+	_responseSave := strings.ToLower(gconf.MustValue(goconfig.DEFAULT_SECTION, "responseSave", "all"))
+	responseSaveMap := map[string]int{"all": 0, "only_broadcast": 1}
+
+	if responseSave, has := responseSaveMap[_responseSave]; has {
+		config.ResponseSave = responseSave
+	} else {
+		hasError = true
+		log.Println("conf error,unknow value responseSave:", _authType)
 	}
-	
-	_sessionView:=strings.ToLower(gconf.MustValue(goconfig.DEFAULT_SECTION,"sessionView","all"))
-	sessionViewMap:=map[string]int{"all":0,"ip_or_user":1}
-	
-	if sessionView,has:=sessionViewMap[_sessionView];has{
-	  config.SessionView=sessionView
-	}else{
-	     hasError=true
-	     log.Println("conf error,unknow value responseSave:",_authType)
+
+	_sessionView := strings.ToLower(gconf.MustValue(goconfig.DEFAULT_SECTION, "sessionView", "all"))
+	sessionViewMap := map[string]int{"all": 0, "ip_or_user": 1}
+
+	if sessionView, has := sessionViewMap[_sessionView]; has {
+		config.SessionView = sessionView
+	} else {
+		hasError = true
+		log.Println("conf error,unknow value responseSave:", _authType)
 	}
-	
-	if(hasError){
-	   return config,fmt.Errorf("config error")
+
+	if hasError {
+		return config, fmt.Errorf("config error")
 	}
-	
-	
+
 	return config, nil
 }
 

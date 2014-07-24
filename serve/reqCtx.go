@@ -1,6 +1,7 @@
 package serve
 
 import (
+	"log"
 	"net/url"
 	"strings"
 )
@@ -26,4 +27,8 @@ func NewRequestCtx() *requestCtx {
 func (ctx *requestCtx) GetIp() string {
 	host_info := strings.Split(ctx.RemoteAddr, ":")
 	return host_info[0]
+}
+
+func (ctx *requestCtx) PrintLog() {
+	log.Println("session_id:", ctx.SessionId, "docid:", ctx.Docid, "broadcast:", ctx.HasBroadcast, "data:", ctx.LogData)
 }
