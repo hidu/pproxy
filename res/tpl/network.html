@@ -7,21 +7,23 @@
    	<table width="100%">
 	  <tr>
 	  <th width="60px">client:</th>
-	  <td><input type="text" class="form-control w120" id='client_ip' name="client_ip" placeholder="client ip">
-	  <b style="margin-left:2px">user:</b>
-	  <input type="text" name="user" class="form-control w120" placeholder="basic auth uname" title="">
+	  <td>
+	  <input type="text" class="form-control w150" id='client_ip' name="client_ip" placeholder="client ip">
+	  <span class="right"><b style="margin-left:2px">user:</b>
+	  <input type="text" name="user" class="form-control w150" placeholder="basic auth uname" title="">
+	  </span>
 	  </td>
 	  </tr>
-	  <tr><th>hide:</th>
+	  <tr><th>exclude:</th>
 	  <td>
 	  <label><input type="checkbox" name="hide" value='image'>image</label>
 	  <label><input type="checkbox" name="hide" value='js'>js</label>
 	  <label><input type="checkbox" name="hide" value='css'>css</label>
-	  <label>&nbsp;&nbsp;&nbsp;<input type="text" name="hide_url" value='' class="form-control w120" placeholder="any part of url"></label>
+	  <label class="right"><input type="text" name="hide_url" value='' class="form-control w150" placeholder="any part of url"></label>
 	  </td>
 	  </tr>
 	  <tr>
-	  <th nowrap>url match:</th><td><input type="text" name="url_match" class="form-control" style="width:285px" placeholder="any part of url">
+	  <th nowrap>url:</th><td><input type="text" name="url_match" class="form-control" style="width:99%" placeholder="any part of url">
 	  </td></tr>
   </table>
   </fieldset>

@@ -51,6 +51,7 @@ html,body{margin: 0;padding: 0}
     margin-left: 455px;
 }
 .w120{width: 120px}
+.w150{width: 150px}
 
 #connect_status{padding:6px;color: white}
 
@@ -67,7 +68,8 @@ table {border-collapse: collapse;border-spacing: 0;}
 .t_c{text-align: center !important;}
 .t_r{text-align: right !important;}
 .t_l{text-align: left !important;}
- 
+
+#network_filter_form fieldset{padding-right:3px}
 
  #tb_network{font-size: 11px}
  #tb_network td{overflow: auto;cursor: pointer;}
