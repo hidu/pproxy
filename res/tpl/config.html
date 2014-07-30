@@ -7,7 +7,10 @@
 <td valign="top" style="width:61.8%">
 <b>req rewrite</b>&nbsp; file is:<font color=gray>[req_rewrite_{{.port}}.js]</font>
 <form  method="post" action="/config" autocomplete="off" target="ifr_form">
+function rewrite(req){
 <textarea style="width:100%;height:{{.jsHeight}}px" name="js">{{.rewriteJs}}</textarea>
+return req;<br/>
+}
 <input type="hidden" name="type" value="js">
 <div style="text-align:right"><input type="submit" class="btn btn-primary" value="save"></div>
 </form>

@@ -30,5 +30,11 @@ func (ctx *requestCtx) GetIp() string {
 }
 
 func (ctx *requestCtx) PrintLog() {
-	log.Println("session_id:", ctx.SessionId, "docid:", ctx.Docid, "broadcast:", ctx.HasBroadcast, "data:", ctx.LogData)
+	log.Println(
+	           "session_id:", ctx.SessionId,
+	           "reqNum:", ctx.ClientSession.RequestNum,
+	           "docid:", ctx.Docid,
+	            "broadcast:", ctx.HasBroadcast, 
+	            "data:", ctx.LogData,
+	            )
 }

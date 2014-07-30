@@ -44,30 +44,17 @@ form_post : {add:function(k,v){},set:function(k,v){},get:function(k){},len:funct
 
 host_addr: #修改该请求的host是使用，如 127.0.0.1:3218
 
-#注意 get 和post的值是数组，如上cid参数
+#注意 get 和post的值是二维数组，如上cid参数
 #form_get 用于更方便的操作  get参数对象
 #form_post 用于更方便的操作 post参数对象
 </pre>
 
- <p class="h4">4.配置项说明</p>
- <pre>
- 客户端认证类型：
- authType:{
-    0: 无认证
-    1: http basic auth
-    2: http basic,用户名不为空即可
- }
- 
- response在何时进行存储：
- responseSave:{
-    0: 所有
-    1: request在session列表中出现过
- }
- 
- 会话查看限制条件：
- sessionView:{
- 0 : 无限制，会话发送给所有人
- 1 : 客户端ip或者http认证的用户名其中一个不为空
- }
- </pre>
-</div>
+<p class="h6">4.改写Hosts</p>
+<pre>
+news.baidu.com 127.0.0.1
+
+news.163.com 127.0.0.1:8080
+
+#只修改指定端口的hosts
+news.baidu.com:81 127.0.0.1:82
+</pre>

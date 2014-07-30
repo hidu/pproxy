@@ -1,10 +1,16 @@
 var socket = io.connect();
 var connectNum=0;
+
+function pproxy_log(msg){
+	$("#log_div").append((new Date().toString())+":"+msg);
+}
+
 socket.on('connect', function() {
 	connectNum++
 	if(connectNum>1){
-		alert("ws error.connectNum="+connectNum);
+		pproxy_log("ws error.connectNum="+connectNum);
 		socket.emit("disconnect")
+		return;
 	}
     $("#connect_status").html("online")
     $("#network_filter_form").change();
@@ -35,16 +41,16 @@ socket.on("res",
             var res = data["res"];
             var re_do_str="&nbsp;<a target='_blank' href='/redo?id="+req["@id"]+"'>redo</a>";
             var html = "<div><table class='tb_1'><caption>Request"+re_do_str+"</caption>";
-            html += "<tr><th width='80px'>url:</th><td>" + h(req["url"]) + "</td></tr>"
+            html += "<tr><th width='80px'>url</th><td>" + h(req["url"]) + "</td></tr>"
             if (req["rewrite"] && req["rewrite"]["url"]) {
-                html += "<tr><th>rewrite:</th><td>" + req["rewrite"]["url"] + "</td></tr>";
+                html += "<tr><th>rewrite</th><td>" + req["rewrite"]["url"] + "</td></tr>";
             }
-            html += "<tr><th>proxy_urer:</th><td><b>ip:</b>" + req["client_ip"] + "&nbsp;&nbsp;<b>docid:</b>"
+            html += "<tr><th>proxy_urer</th><td><b>ip:</b>" + req["client_ip"] + "&nbsp;&nbsp;<b>docid:</b>"
                     + req["@id"] + "&nbsp;<b>uname:</b>" + req["user"] + "</td></tr>";
             html += pproxy_tr_sub_table(req["form_get"], "get_params");
             html += pproxy_tr_sub_table(req["form_post"], "post_params");
             if (req["dump"]) {
-                html += "<tr><th>req_dump:</th><td>" + h(Base64.decode(req["dump"])).replace(/\n/g, "<br/>")
+                html += "<tr><th>req_dump</th><td>" + h(Base64.decode(req["dump"])).replace(/\n/g, "<br/>")
                         + "</td></tr>";
             }
             html += "</table></div>";
@@ -58,7 +64,7 @@ socket.on("res",
             
             if (res) {
                 if (res["dump"]) {
-                    html += "<tr><th width='80px'>res_dump:</th><td>" + h(Base64.decode(res["dump"])).replace(/\n/g, "<br/>")
+                    html += "<tr><th width='80px'>res_dump</th><td>" + h(Base64.decode(res["dump"])).replace(/\n/g, "<br/>")
                     + "</td></tr>";
                 }
                 var body_str = Base64.decode(res["body"])
@@ -71,15 +77,15 @@ socket.on("res",
 
                 if (bd_json) {
                 	hideBigBody=true;
-                    html += "<tr><th width='80px'>body_json:</th><td>" + bd_json + "</td></tr>";
+                    html += "<tr><th width='80px'>body_json</th><td>" + bd_json + "</td></tr>";
                 }
                 if (isImg) {
                 	hideBigBody=true;
-                    html += "<tr><th>body_img:</th><td><img src='data:" + res["header"]["Content-Type"][0] + ";base64,"
+                    html += "<tr><th>body_img</th><td><img src='data:" + res["header"]["Content-Type"][0] + ";base64,"
                             + res["body"] + "'/></td></tr>";
                 }
                 if (!isImg || res["body"].length < 1000 || !isStatusOk) {
-                	html += "<tr><th width='80px'>body:";
+                	html += "<tr><th width='80px'>body";
                 	if(res["body"].length>400){
                 		html+="<div><a href='#' onclick='return pproxy_res_td_body_toggle()'>toggle</a></div>";
                 	}else{
@@ -121,10 +127,14 @@ function pproxy_tr_sub_table(obj, name) {
     if (!obj) {
         return "";
     }
-    var html = "<tr><th>" + name + ":</th><td class='td_has_sub'><table class='tb_1'>";
+    var html = "<tr><th>" + name + "</th><td class='td_has_sub'><table class='tb_1'>";
     var i = 0;
+    var max_key_len=0;
     for ( var k in obj) {
-        html += "<tr><th width='80px'>" + k + ":</th><td><ul class='td_ul'>";
+    	max_key_len=Math.max(max_key_len,(k+"").length)
+    }
+    for ( var k in obj) {
+        html += "<tr><th  "+(max_key_len<40?"width='120px' nowrap":"width='140px'")+">" + k + "</th><td><ul class='td_ul'>";
         for ( var i in obj[k]) {
             html += "<li>";
             var json_str = pproxy_parseAsjson(obj[k]);
