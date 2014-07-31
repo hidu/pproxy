@@ -2,7 +2,7 @@ var socket = io.connect();
 var connectNum=0;
 
 function pproxy_log(msg){
-	$("#log_div").append((new Date().toString())+":"+msg);
+	$("#log_div").append("<div>"+(new Date().toString())+":"+msg+"</div>");
 }
 
 socket.on('connect', function() {
@@ -137,11 +137,11 @@ function pproxy_tr_sub_table(obj, name) {
         html += "<tr><th  "+(max_key_len<40?"width='120px' nowrap":"width='140px'")+">" + k + "</th><td><ul class='td_ul'>";
         for ( var i in obj[k]) {
             html += "<li>";
-            var json_str = pproxy_parseAsjson(obj[k]);
+            var json_str = pproxy_parseAsjson(obj[k][i]);
             if (json_str) {
                 html += json_str;
             } else {
-                html += h(obj[k])
+                html += h(obj[k][i])
             }
             html += "</li>";
         }
@@ -181,6 +181,9 @@ function bytesToString(bytes) {
 }
 
 function h(html) {
+	if(html==""){
+		return "&nbsp;";
+	}
 	html = (html+"").replace(/&/g, '&amp;')
 				.replace(/</g, '&lt;')
 				.replace(/>/g, '&gt;')
