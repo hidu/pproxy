@@ -43,7 +43,7 @@ func (ser *ProxyServe) Broadcast_Req(req *http.Request, reqCtx *requestCtx) bool
 var extTypes map[string][]string = map[string][]string{
 	"js":    {"js"},
 	"css":   {"css"},
-	"image": {"jpg", "jpeg", "png", "gif", "bmp", "tiff", "jpe", "tif", "webp", "ico","webp"},
+	"image": {"jpg", "jpeg", "png", "gif", "bmp", "tiff", "jpe", "tif", "webp", "ico", "webp"},
 }
 
 func checkFilter(req *http.Request, client *wsClient, reqCtx *requestCtx) bool {

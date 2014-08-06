@@ -38,7 +38,7 @@ func (ser *ProxyServe) web_checkLogin(req *http.Request) (user *User, isLogin bo
 }
 
 func (ser *ProxyServe) handleLocalReq(w http.ResponseWriter, req *http.Request) {
-	if strings.HasPrefix(req.URL.Path, "/socket.io/1/") {
+	if strings.HasPrefix(req.URL.Path, "/socket.io/") {
 		ser.ws.ServeHTTP(w, req)
 		return
 	}

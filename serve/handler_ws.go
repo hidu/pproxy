@@ -1,14 +1,14 @@
 package serve
 
 import (
-	"github.com/hidu/go-socket.io"
+	"github.com/googollee/go-socket.io"
 	"log"
 	"net/url"
 	"strconv"
 )
 
 type wsClient struct {
-	ns              *socketio.NameSpace
+	ns              socketio.Socket
 	user            string
 	filter_user     []string
 	filter_ip       []string
@@ -19,19 +19,20 @@ type wsClient struct {
 }
 
 func (ser *ProxyServe) ws_init() {
-	sock_config := &socketio.Config{HeartbeatTimeout: 2, ClosingTimeout: 4}
-
-	ser.ws = socketio.NewSocketIOServer(sock_config)
-
+	var err error
+	ser.ws, err = socketio.NewServer(nil)
+	if err != nil {
+		log.Fatal(err)
+	}
 	ser.wsClients = make(map[string]*wsClient)
-	ser.ws.On("connect", func(ns *socketio.NameSpace) {
-		log.Println("ws connected", ns.Session.Request.RemoteAddr, ns.Id(), " in channel ", ns.Endpoint())
+	ser.ws.On("connection", func(ns socketio.Socket) {
+		log.Println("ws connected", ns.Request().RemoteAddr, ns.Id())
 		ser.mu.Lock()
 		defer ser.mu.Unlock()
 		ser.wsClients[ns.Id()] = &wsClient{ns: ns, user: "guest"}
 	})
-	ser.ws.On("disconnect", func(ns *socketio.NameSpace) {
-		log.Println("ws disconnect", ns.Session.Request.RemoteAddr, ns.Id(), " in channel ", ns.Endpoint())
+	ser.ws.On("disconnection", func(ns socketio.Socket) {
+		log.Println("ws disconnect", ns.Request().RemoteAddr, ns.Id())
 		ser.mu.Lock()
 		defer ser.mu.Unlock()
 		if _, has := ser.wsClients[ns.Id()]; has {
@@ -45,7 +46,7 @@ func (ser *ProxyServe) ws_init() {
 /**
 *https://github.com/googollee/go-socket.io
  */
-func (ser *ProxyServe) ws_get_response(ns *socketio.NameSpace, docid_str string) {
+func (ser *ProxyServe) ws_get_response(ns socketio.Socket, docid_str string) {
 	docid, err_int := strconv.ParseUint(docid_str, 10, 64)
 	if err_int != nil {
 		log.Println("parse str2int failed", err_int, docid_str)
@@ -63,7 +64,7 @@ func (ser *ProxyServe) ws_get_response(ns *socketio.NameSpace, docid_str string)
 	}
 }
 
-func (ser *ProxyServe) ws_save_filter(ns *socketio.NameSpace, form_data string) {
+func (ser *ProxyServe) ws_save_filter(ns socketio.Socket, form_data string) {
 	m, err := url.ParseQuery(form_data)
 	if err != nil {
 		log.Println("parse filter data err", err)
@@ -71,16 +72,19 @@ func (ser *ProxyServe) ws_save_filter(ns *socketio.NameSpace, form_data string) 
 	}
 	ser.mu.Lock()
 	defer ser.mu.Unlock()
-	nsClient := ser.wsClients[ns.Id()]
-	nsClient.filter_ip = parseUrlInputAsSlice(m.Get("client_ip"))
-	nsClient.filter_hide_ext = m["hide"]
-	nsClient.filter_url = parseUrlInputAsSlice(m.Get("url_match"))
-	nsClient.filter_url_hide = parseUrlInputAsSlice(m.Get("hide_url"))
-	nsClient.filter_user = parseUrlInputAsSlice(m.Get("user"))
+	if nsClient, has := ser.wsClients[ns.Id()]; has {
+		nsClient.filter_ip = parseUrlInputAsSlice(m.Get("client_ip"))
+		nsClient.filter_hide_ext = m["hide"]
+		nsClient.filter_url = parseUrlInputAsSlice(m.Get("url_match"))
+		nsClient.filter_url_hide = parseUrlInputAsSlice(m.Get("hide_url"))
+		nsClient.filter_user = parseUrlInputAsSlice(m.Get("user"))
 
-	loginUser, isLogin := ser.web_checkLogin(ns.Session.Request)
-	if isLogin {
-		nsClient.LoginUser = loginUser
+		loginUser, isLogin := ser.web_checkLogin(ns.Request())
+		if isLogin {
+			nsClient.LoginUser = loginUser
+		}
+	} else {
+		log.Println("ws_save_filter failed,ws not exists")
 	}
 }
 

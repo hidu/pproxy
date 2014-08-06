@@ -2,7 +2,7 @@ package serve
 
 import (
 	"fmt"
-	"github.com/hidu/go-socket.io"
+	"github.com/googollee/go-socket.io"
 	"github.com/hidu/goproxy"
 
 	"github.com/hidu/goutils"
@@ -25,7 +25,7 @@ type ProxyServe struct {
 	Goproxy *goproxy.ProxyHttpServer
 
 	mydb      *TieDb
-	ws        *socketio.SocketIOServer
+	ws        *socketio.Server
 	wsClients map[string]*wsClient
 	startTime time.Time
 
@@ -155,10 +155,9 @@ func NewProxyServe(confPath string, port int) (*ProxyServe, error) {
 			}
 		}
 	}
+	setupLog(conf.DataDir, conf.Port)
 
 	proxy.loadHosts()
-
-	setupLog(conf.DataDir, conf.Port)
 
 	proxy.mydb = NewTieDb(fmt.Sprintf("%s/%d/", conf.DataDir, conf.Port))
 	proxy.startTime = time.Now()
