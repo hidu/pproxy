@@ -22,8 +22,9 @@ echo -e "#name psw isAdmin\nadmin psw admin">conf/users
 cp ../conf/req_rewrite_8080.js conf/
 echo -e "news.baidu.com 127.0.0.1\nnews.163.com 127.0.0.1:81">conf/hosts_8080
 
+t=$(date +"%Y%m%d%H")
 ################################################
-target_linux="pproxy_${version}.tar.gz"
+target_linux="pproxy_${version}_linux_$t.tar.gz"
 if [ -f $target_linux ];then
    rm $target_linux
 fi
@@ -41,8 +42,9 @@ tar -czvf $target_linux $dir_new
 
 rm -rf  $dir_new
 
+
 ################################################
-target_windows="pproxy_${version}.zip"
+target_windows="pproxy_${version}_windows_$t.zip"
 if [ -f $target_windows ];then
    rm $target_windows
 fi
