@@ -1,4 +1,4 @@
-var socket = io.connect();
+var socket = io();
 var connectNum=0;
 
 function pproxy_log(msg){
@@ -9,7 +9,7 @@ socket.on('connect', function() {
 	connectNum++
 	if(connectNum>1){
 		pproxy_log("ws error.connectNum="+connectNum);
-		socket.emit("disconnect")
+		socket.emit("disconnect");
 		return;
 	}
     $("#connect_status").html("online")
@@ -17,22 +17,22 @@ socket.on('connect', function() {
 });
 
 socket.on("disconnect", function() {
-	connectNum--
-    $("#connect_status").html("<font color=pink>offline</font>")
+	connectNum--;
+    $("#connect_status").html("<font color=pink>offline</font>");
 });
 
 socket.on("req", function(data) {
     console && console.log("req", data)
     var html="<tr onclick=\"get_response(this,'" + data['docid'] + "')\" ";
     if(data["redo"]){
-    	html+="class='redo' "
+    	html+="class='redo' ";
     }
     html+=">" 
     + "<td>" + data["sid"] + "</td>"
     + "<td>" + data["host"] + "</td>" +
     "<td>" +data["method"]+"&nbsp;"+ data["path"] + "</td>" + 
-    "</tr>"
-    $("#tb_network tbody").prepend(html)
+    "</tr>";
+    $("#tb_network tbody").prepend(html);
 })
 socket.on("res",
         function(data) {
@@ -45,8 +45,9 @@ socket.on("res",
             if (req["rewrite"] && req["rewrite"]["url"]) {
                 html += "<tr><th>rewrite</th><td>" + req["rewrite"]["url"] + "</td></tr>";
             }
-            html += "<tr><th>proxy_urer</th><td><b>ip:</b>" + req["client_ip"] + "&nbsp;&nbsp;<b>docid:</b>"
-                    + req["@id"] + "&nbsp;<b>uname:</b>" + req["user"] + "</td></tr>";
+            html += "<tr><th>proxy_urer</th>" +
+            		"<td><b>ip : </b>&nbsp;" +req["client_ip"] + "&nbsp;&nbsp;<b> docid : </b>&nbsp;"+ req["@id"] + 
+            		"</td></tr>";
             html += pproxy_tr_sub_table(req["form_get"], "get_params");
             html += pproxy_tr_sub_table(req["form_post"], "post_params");
             if (req["dump"]) {
@@ -71,9 +72,9 @@ socket.on("res",
                 var isImg = res["header"]["Content-Type"] != undefined
                         && res["header"]["Content-Type"][0].indexOf("image") > -1;
 
-                var isStatusOk = res["status"] == 200
+                var isStatusOk = res["status"] == 200;
 
-                var bd_json = pproxy_parseAsjson(body_str)
+                var bd_json = pproxy_parseAsjson(body_str);
 
                 if (bd_json) {
                 	hideBigBody=true;
@@ -99,7 +100,7 @@ socket.on("res",
             }
 
             html += "</table></div>";
-            $("#right_content").empty().html(html).hide().slideDown("fast")
+            $("#right_content").empty().html(html).hide().slideDown("fast");
         })
 
 function pproxy_res_td_body_toggle(){
@@ -115,7 +116,7 @@ function pproxy_parseAsjson(str) {
     	}
         var jsonObj = JSON.parse(str);
         if (jsonObj) {
-            var json_str = JSON.stringify(jsonObj, null, 4)
+            var json_str = JSON.stringify(jsonObj, null, 4);
             return "<pre>" + json_str + "</pre>";
         }
     } catch (e) {
@@ -131,7 +132,7 @@ function pproxy_tr_sub_table(obj, name) {
     var i = 0;
     var max_key_len=0;
     for ( var k in obj) {
-    	max_key_len=Math.max(max_key_len,(k+"").length)
+    	max_key_len=Math.max(max_key_len,(k+"").length);
     }
     for ( var k in obj) {
         html += "<tr><th  "+(max_key_len<40?"width='120px' nowrap":"width='140px'")+">" + k + "</th><td><ul class='td_ul'>";
@@ -141,7 +142,7 @@ function pproxy_tr_sub_table(obj, name) {
             if (json_str) {
                 html += json_str;
             } else {
-                html += h(obj[k][i])
+                html += h(obj[k][i]);
             }
             html += "</li>";
         }
@@ -155,21 +156,27 @@ function pproxy_tr_sub_table(obj, name) {
     return html
 }
 
-function get_response(tr, docid) {
-    console && console.log("get_response docid=", docid)
-    var loading_msg="loading...docid=" + docid
-    var isValidId=(docid+"").length>2
+function pproxy_show_response(docid){
+	console && console.log("get_response docid=", docid);
+    var loading_msg="loading...docid=" + docid;
+    var isValidId=(docid+"").length>2;
     if(!isValidId){
     	loading_msg="https request:no data"
+    }else{
+    	loading_msg+="&nbsp;<a href='javascript:;' onclick=\"pproxy_show_response('"+docid+"')\">reload</a>";
     }
-    $("#right_content").empty().html("<center style='margin:200px 0 auto'>"+loading_msg+"</center>")
+    $("#right_content").empty().html("<center style='margin:200px 0 auto'>"+loading_msg+"</center>");
     if(!isValidId){
     	return;
     }
-    socket.emit("get_response", docid)
-    $(tr).parent("tbody").find("tr").removeClass("selected")
-    $(tr).addClass("selected")
-    location.hash="req_"+docid
+	socket.emit("get_response", docid);
+}
+
+function get_response(tr, docid) {
+    pproxy_show_response(docid);
+    $(tr).parent("tbody").find("tr").removeClass("selected");
+    $(tr).addClass("selected");
+    location.hash="req_"+docid;
 }
 
 function bytesToString(bytes) {
@@ -209,7 +216,11 @@ $().ready(function() {
     
     if(location.hash.match(/req_\d+/)){
         var docid=location.hash.substr(5);
-        socket.emit("get_response", docid)
+        setTimeout((function(id){
+        	return function(){
+        		pproxy_show_response(id);
+        	}
+        })(docid),500);
     }
 });
 
