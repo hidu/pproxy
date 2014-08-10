@@ -44,7 +44,7 @@ socket.on("res",
             var html = "<div><table class='tb_1'><caption>Request"+re_do_str+"</caption>";
             html += "<tr><th width='80px'>url</th><td>" + h(req["url"]) + "</td></tr>"
             if (req["rewrite"] && req["rewrite"]["url"]) {
-                html += "<tr><th>rewrite</th><td>" + h(req["rewrite"]["url"]) + "</td></tr>";
+                html += "<tr><th>redirect</th><td><span style='color:blue'>" + h(req["rewrite"]["url"]) + "</span></td></tr>";
             }
             if (req["msg"]) {
             	html += "<tr><th>msg</th><td><span style='color:red'>" + h(req["msg"])+"</span></td></tr>";

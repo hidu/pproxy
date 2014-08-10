@@ -13,6 +13,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"net/http/httputil"
 	"strings"
 	"time"
 )
@@ -24,8 +25,6 @@ var (
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
 	}
-	// DefaultDialer is a dialer with all fields set to the default zero values.
-	DefaultDialer = websocket.DefaultDialer
 )
 
 // WebsocketProxy is an HTTP Handler that takes an incoming WebSocket
@@ -36,8 +35,7 @@ type WebsocketProxy struct {
 	Upgrader *websocket.Upgrader
 	// Dialer contains options for connecting to the backend WebSocket server.
 	// If nil, DefaultDialer is used.
-	Dialer *websocket.Dialer
-	ser    *ProxyServe
+	ser *ProxyServe
 }
 
 // NewProxy returns a new Websocket reverse proxy that rewrites the
@@ -48,10 +46,6 @@ func NewWsProxy(ser *ProxyServe) *WebsocketProxy {
 
 // ServeHTTP implements the http.Handler that proxies WebSocket connections.
 func (w *WebsocketProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	//	dialer := w.Dialer
-	//	if w.Dialer == nil {
-	//		dialer = DefaultDialer
-	//	}
 	// Connect to the backend URL, also pass the headers we get from the requst
 	// together with the Forwarded headers we prepared above.
 	// TODO: support multiplexing on the same backend connection instead of
@@ -87,7 +81,9 @@ func (w *WebsocketProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		showErrorRes("websocket rewrite failed")
 		return
 	}
-
+	if rewrite_code == 200 {
+		req.Header.Set("Origin", "http://"+req.Host)
+	}
 	requestHeader := http.Header{}
 	requestHeader.Add("Origin", req.Header.Get("Origin"))
 	for _, prot := range req.Header[http.CanonicalHeaderKey("Sec-WebSocket-Protocol")] {
@@ -96,9 +92,13 @@ func (w *WebsocketProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	for _, cookie := range req.Header[http.CanonicalHeaderKey("Cookie")] {
 		requestHeader.Add("Cookie", cookie)
 	}
-
+	if w.ser.Debug {
+		req_dump_debug, _ := httputil.DumpRequest(req, true)
+		log.Println("rewrite_code:\n", rewrite_code)
+		log.Println("ws_req_after_rewrite:\n", string(req_dump_debug), "\n")
+		log.Println("ws_requestHeader:", requestHeader, "\n")
+	}
 	_url := req.URL.String()
-	//	connBackend, resp, err := dialer.Dial(_url, requestHeader)
 	connBackend, resp, err := getWsDialer(req, requestHeader)
 	if err != nil {
 		_logMsg := fmt.Sprintf("websocketproxy: couldn't dial to remote backend url %s,url:%s\n", err, _url)
@@ -164,7 +164,7 @@ func getWsDialer(req *http.Request, requestHeader http.Header) (*websocket.Conn,
 			break
 		}
 	}
-	
+
 	netConn, err := netDial("tcp", fmt.Sprintf("%s:%d", _host, _port))
 	if err != nil {
 		return nil, nil, err
@@ -181,7 +181,7 @@ func getWsDialer(req *http.Request, requestHeader http.Header) (*websocket.Conn,
 	}
 
 	if req.URL.Scheme == "wss" {
-     	_reqHost, _, _ := parseHostPort(req.Host)
+		_reqHost, _, _ := parseHostPort(req.Host)
 		cfg := d.TLSClientConfig
 		if cfg == nil {
 			cfg = &tls.Config{ServerName: _reqHost}
