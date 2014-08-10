@@ -127,6 +127,6 @@ func (ser *ProxyServe) req_redoPost(w http.ResponseWriter, req *http.Request, va
 			}
 			redo_req.Header.Set(k, strings.Join(v, ";"))
 		}
-		ser.Goproxy.ServeHTTP(w, redo_req)
+		ser.goproxy.ServeHTTP(w, redo_req)
 	}
 }

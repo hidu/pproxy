@@ -4,8 +4,9 @@ import (
 	"github.com/hidu/goutils"
 )
 
-var PproxyVersion string = "0.4.1"
+var PproxyVersion string = ""
 
 func init() {
 	utils.ResetDefaultBundle()
+	PproxyVersion = GetVersion()
 }

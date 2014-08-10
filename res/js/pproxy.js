@@ -208,7 +208,10 @@ $().ready(function() {
 	filter_form.change(function() {
         var form_data = $(this).serialize();
         socket.emit("client_filter", form_data);
-    }).change();
+    });
+    
+    setTimeout(function(){filter_form.change();},500);
+    setTimeout(function(){filter_form.change();},3000);
     
 	filter_form.find("input:text").keyup(function(){
 		filter_form.change();

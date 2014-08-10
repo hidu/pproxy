@@ -1,3 +1,6 @@
+2014-08-10
+   1.websocket proxy support
+   
 2014-08-06
    1:update socket.io
    

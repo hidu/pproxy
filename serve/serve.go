@@ -11,10 +11,11 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
-
+	"net/http/httputil"
 	"os"
 	"path/filepath"
 
+	"strings"
 	"sync"
 	"time"
 )
@@ -22,8 +23,8 @@ import (
 var js *otto.Otto
 
 type ProxyServe struct {
-	Goproxy *goproxy.ProxyHttpServer
-
+	goproxy   *goproxy.ProxyHttpServer
+	wsproxy   *WebsocketProxy
 	mydb      *TieDb
 	ws        *socketio.Server
 	wsClients map[string]*wsClient
@@ -69,15 +70,27 @@ func (ser *ProxyServe) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	if isLocalReq {
 		ser.handleLocalReq(w, req)
 	} else {
-		ser.Goproxy.ServeHTTP(w, req)
+		if ser.Debug {
+			req_dump_debug, _ := httputil.DumpRequest(req, false)
+			log.Println("DEBUG req BEFORE:\n", string(req_dump_debug), "\nurl_full:", req.URL.String())
+		}
+		isWebSocket := strings.ToLower(req.Header.Get("Upgrade")) == "websocket"
+		if isWebSocket {
+			ser.wsproxy.ServeHTTP(w, req)
+		} else {
+			ser.goproxy.ServeHTTP(w, req)
+		}
 	}
 }
 
 func (ser *ProxyServe) Start() {
-	ser.Goproxy = goproxy.NewProxyHttpServer()
-	ser.Goproxy.OnRequest().HandleConnectFunc(ser.onHttpsConnect)
-	ser.Goproxy.OnRequest().DoFunc(ser.onRequest)
-	ser.Goproxy.OnResponse().DoFunc(ser.onResponse)
+	ser.goproxy = goproxy.NewProxyHttpServer()
+	ser.goproxy.OnRequest().HandleConnectFunc(ser.onHttpsConnect)
+	ser.goproxy.OnRequest().DoFunc(ser.onRequest)
+	ser.goproxy.OnResponse().DoFunc(ser.onResponse)
+
+	ser.wsproxy = NewWsProxy()
+
 	addr := fmt.Sprintf("%s:%d", "", ser.conf.Port)
 	log.Println("proxy listen at ", addr)
 	ser.ws_init()

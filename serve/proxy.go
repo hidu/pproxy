@@ -27,12 +27,7 @@ func (ser *ProxyServe) onHttpsConnect(host string, ctx *goproxy.ProxyCtx) (*gopr
 }
 
 func (ser *ProxyServe) onRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
-	if ser.Debug {
-		req_dump_debug, _ := httputil.DumpRequest(req, false)
-		log.Println("DEBUG req BEFORE:\n", string(req_dump_debug), "\nurl_full:", req.URL.String())
-	}
 	//	log.Println("RemoteAddr:",req.RemoteAddr,req.Header.Get("X-Wap-Proxy-Cookie"))
-
 	reqCtx := NewRequestCtx()
 	reqCtx.User = getAuthorInfo(req)
 	reqCtx.IsReDo = len(req.Header.Get(REDO_FLAG)) > 0
@@ -152,7 +147,7 @@ func getPostData(req *http.Request) (post *url.Values) {
 
 func (ser *ProxyServe) onResponse(resp *http.Response, ctx *goproxy.ProxyCtx) *http.Response {
 	if resp != nil {
-		resp.Header.Set("Connection", "close")
+		//resp.Header.Set("Connection", "close")
 	}
 	if resp == nil || resp.Request == nil {
 		return resp
