@@ -139,14 +139,28 @@ func getTextAreaHeightByString(mystr string, minHeight int) int {
 }
 
 func getHostPortFromReq(req *http.Request) (host string, port int, err error) {
-	var port_str string
-	req_host := req.Host
-	if !strings.Contains(req_host, ":") {
-		if strings.HasPrefix(req.Proto, "HTTP") {
-			req_host += ":80"
+	host, port, err = parseHostPort(req.Host)
+	if err == nil && port == 0 {
+		switch req.URL.Scheme {
+		case "http":
+			port = 80
+			break
+		case "https":
+			port = 443
+			break
+		default:
+			break
 		}
 	}
-	host, port_str, err = net.SplitHostPort(req_host)
+	return
+}
+
+func parseHostPort(hostPortstr string) (host string, port int, err error) {
+	var port_str string
+	if !strings.Contains(hostPortstr, ":") {
+		hostPortstr += ":0"
+	}
+	host, port_str, err = net.SplitHostPort(hostPortstr)
 	if err != nil {
 		return
 	}

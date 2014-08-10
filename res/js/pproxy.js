@@ -39,11 +39,15 @@ socket.on("res",
             console && console.log("res", data)
             var req = data["req"];
             var res = data["res"];
-            var re_do_str="&nbsp;<a target='_blank' href='/redo?id="+req["@id"]+"'>redo</a>";
+            var re_do_str=req["schema"]=="http"?("&nbsp;<a target='_blank' href='/redo?id="+req["@id"]+"'>redo</a>"):"";
+            
             var html = "<div><table class='tb_1'><caption>Request"+re_do_str+"</caption>";
             html += "<tr><th width='80px'>url</th><td>" + h(req["url"]) + "</td></tr>"
             if (req["rewrite"] && req["rewrite"]["url"]) {
-                html += "<tr><th>rewrite</th><td>" + req["rewrite"]["url"] + "</td></tr>";
+                html += "<tr><th>rewrite</th><td>" + h(req["rewrite"]["url"]) + "</td></tr>";
+            }
+            if (req["msg"]) {
+            	html += "<tr><th>msg</th><td><span style='color:red'>" + h(req["msg"])+"</span></td></tr>";
             }
             html += "<tr><th>proxy_urer</th>" +
             		"<td><b>ip : </b>&nbsp;" +req["client_ip"] + "&nbsp;&nbsp;<b> docid : </b>&nbsp;"+ req["@id"] + 

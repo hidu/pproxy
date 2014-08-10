@@ -16,7 +16,7 @@ import (
 func (ser *ProxyServe) onHttpsConnect(host string, ctx *goproxy.ProxyCtx) (*goproxy.ConnectAction, string) {
 	//   log.Println("https:",host,ctx.Req)
 
-	reqCtx := NewRequestCtx()
+	reqCtx := NewRequestCtx(nil)
 	reqCtx.User = &User{SkipCheckPsw: true}
 	reqCtx.RemoteAddr = host
 	reqCtx.Docid = 0
@@ -28,26 +28,11 @@ func (ser *ProxyServe) onHttpsConnect(host string, ctx *goproxy.ProxyCtx) (*gopr
 
 func (ser *ProxyServe) onRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
 	//	log.Println("RemoteAddr:",req.RemoteAddr,req.Header.Get("X-Wap-Proxy-Cookie"))
-	reqCtx := NewRequestCtx()
-	reqCtx.User = getAuthorInfo(req)
-	reqCtx.IsReDo = len(req.Header.Get(REDO_FLAG)) > 0
+	reqCtx := NewRequestCtx(req)
 	reqCtx.SessionId = ctx.Session
-
-	reqCtx.LogData["url"] = req.URL.String()
-	reqCtx.LogData["remote_addr"] = req.RemoteAddr
+	ser.regirestReq(req, reqCtx)
 
 	defer reqCtx.PrintLog()
-
-	reqCtx.RemoteAddr = req.RemoteAddr
-	if _redo_addr := req.Header.Get(REDO_REMOTEADDR); _redo_addr != "" {
-		reqCtx.RemoteAddr = _redo_addr
-	}
-
-	if _redo_user := req.Header.Get(REDO_USER_NAME); _redo_user != "" {
-		reqCtx.User = &User{Name: _redo_user, SkipCheckPsw: true}
-	}
-
-	ser.regirestReq(req, reqCtx)
 
 	for k := range req.Header {
 		if len(k) > 5 && k[:6] == "Proxy-" {
@@ -64,10 +49,7 @@ func (ser *ProxyServe) onRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*htt
 	reqCtx.FormPost = post_vs
 
 	rewrite_code := ser.reqRewrite(req, reqCtx)
-
 	reqCtx.LogData["js_rewrite_code"] = rewrite_code
-
-	reqCtx.Docid = NextUid() + uint64(ctx.Session)
 
 	ctx.UserData = reqCtx
 
@@ -75,23 +57,35 @@ func (ser *ProxyServe) onRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*htt
 		req_dump_debug, _ := httputil.DumpRequest(req, false)
 		log.Println("DEBUG req AFTER:\n", string(req_dump_debug), "\nurl_host:", req.URL.Host)
 	}
-
 	reqCtx.HasBroadcast = ser.Broadcast_Req(req, reqCtx)
 
+	defer ser.saveRequestData(req, reqCtx)
+
+	if rewrite_code != 200 && rewrite_code != 304 {
+		reqCtx.Msg = "rewrite"
+		return nil, goproxy.NewResponse(req, goproxy.ContentTypeText, rewrite_code, "pproxy error")
+	}
+
+	return req, nil
+}
+
+func (ser *ProxyServe) saveRequestData(req *http.Request, reqCtx *requestCtx) {
 	if ser.conf.ResponseSave == ResponseSave_All || (ser.conf.ResponseSave == ResponseSave_HasBroad && reqCtx.HasBroadcast) {
 		logdata := kvType{}
 		logdata["host"] = req.Host
+		logdata["schema"] = req.URL.Scheme
 		logdata["header"] = map[string][]string(req.Header)
-		logdata["url"] = req.URL.String()
+		logdata["url"] = reqCtx.OriginUrl
 		logdata["path"] = req.URL.Path
 		logdata["cookies"] = req.Cookies()
 		logdata["now"] = time.Now().Unix()
-		logdata["session_id"] = ctx.Session
+		logdata["session_id"] = reqCtx.SessionId
 		logdata["user"] = reqCtx.User.Name
 		logdata["client_ip"] = reqCtx.RemoteAddr
 		logdata["method"] = req.Method
 		logdata["form_get"] = req.URL.Query()
 		logdata["redo"] = reqCtx.IsReDo
+		logdata["msg"] = reqCtx.Msg
 
 		req_dump, err_dump := httputil.DumpRequest(req, true)
 		if err_dump != nil {
@@ -100,7 +94,7 @@ func (ser *ProxyServe) onRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*htt
 		}
 		logdata["dump"] = base64.StdEncoding.EncodeToString(req_dump)
 
-		logdata["form_post"] = post_vs
+		logdata["form_post"] = reqCtx.FormPost
 
 		rewrite := make(map[string]string)
 		url_new := req.URL.String()
@@ -113,16 +107,11 @@ func (ser *ProxyServe) onRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*htt
 
 		err := ser.mydb.RequestTable.InsertRecovery(reqCtx.Docid, logdata)
 		if err != nil {
-			log.Println(err)
-			return req, nil
+			log.Println("save req failed:", err)
 		}
 	} else {
 		reqCtx.Docid = 0
 	}
-	if rewrite_code != 200 {
-		return nil, goproxy.NewResponse(req, goproxy.ContentTypeText, rewrite_code, "pproxy error")
-	}
-	return req, nil
 }
 
 func getPostData(req *http.Request) (post *url.Values) {

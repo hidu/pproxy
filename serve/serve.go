@@ -89,7 +89,7 @@ func (ser *ProxyServe) Start() {
 	ser.goproxy.OnRequest().DoFunc(ser.onRequest)
 	ser.goproxy.OnResponse().DoFunc(ser.onResponse)
 
-	ser.wsproxy = NewWsProxy()
+	ser.wsproxy = NewWsProxy(ser)
 
 	addr := fmt.Sprintf("%s:%d", "", ser.conf.Port)
 	log.Println("proxy listen at ", addr)

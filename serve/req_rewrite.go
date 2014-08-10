@@ -30,7 +30,7 @@ func (ser *ProxyServe) parseAndSaveRewriteJs(jsStr string) error {
 
 func (ser *ProxyServe) reqRewriteByjs(req *http.Request, reqCtx *requestCtx) int {
 	if ser.RewriteJs == "" {
-		return 200
+		return 304
 	}
 	origin_url := req.URL.String()
 	origin_get_query := req.URL.Query()
@@ -124,7 +124,7 @@ func (ser *ProxyServe) reqRewriteByjs(req *http.Request, reqCtx *requestCtx) int
 
 	///===============================================================================
 	if !isHeaderChange && !isGetChange && !isPostChange && !isHostAddrChange {
-		return 200
+		return 304
 	}
 	///===============================================================================
 

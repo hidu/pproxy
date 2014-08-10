@@ -6,10 +6,15 @@ package serve
 */
 
 import (
+	"crypto/tls"
+	"fmt"
 	"github.com/gorilla/websocket"
 	"io"
 	"log"
+	"net"
 	"net/http"
+	"strings"
+	"time"
 )
 
 var (
@@ -32,28 +37,21 @@ type WebsocketProxy struct {
 	// Dialer contains options for connecting to the backend WebSocket server.
 	// If nil, DefaultDialer is used.
 	Dialer *websocket.Dialer
-}
-
-// ProxyHandler returns a new http.Handler interface that reverse proxies the
-// request to the given target.
-func ProxyHandler() http.Handler {
-	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		NewWsProxy().ServeHTTP(rw, req)
-	})
+	ser    *ProxyServe
 }
 
 // NewProxy returns a new Websocket reverse proxy that rewrites the
 // URL's to the scheme, host and base path provider in target.
-func NewWsProxy() *WebsocketProxy {
-	return &WebsocketProxy{}
+func NewWsProxy(ser *ProxyServe) *WebsocketProxy {
+	return &WebsocketProxy{ser: ser}
 }
 
 // ServeHTTP implements the http.Handler that proxies WebSocket connections.
 func (w *WebsocketProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	dialer := w.Dialer
-	if w.Dialer == nil {
-		dialer = DefaultDialer
-	}
+	//	dialer := w.Dialer
+	//	if w.Dialer == nil {
+	//		dialer = DefaultDialer
+	//	}
 	// Connect to the backend URL, also pass the headers we get from the requst
 	// together with the Forwarded headers we prepared above.
 	// TODO: support multiplexing on the same backend connection instead of
@@ -61,12 +59,55 @@ func (w *WebsocketProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	// optional:
 	// http://tools.ietf.org/html/draft-ietf-hybi-websocket-multiplexing-01
 	req.URL.Scheme = "ws" + req.URL.Scheme[4:]
-	_url := req.URL.String()
-	connBackend, resp, err := dialer.Dial(_url, req.Header)
-	if err != nil {
-		log.Printf("websocketproxy: couldn't dial to remote backend url %s,url:%s\n", err, _url)
+
+	reqCtx := NewRequestCtx(req)
+	w.ser.regirestReq(req, reqCtx)
+
+	rewrite_code := w.ser.reqRewrite(req, reqCtx)
+	reqCtx.HasBroadcast = w.ser.Broadcast_Req(req, reqCtx)
+	hasSave := false
+
+	saveReq := func() {
+		if hasSave {
+			return
+		}
+		w.ser.saveRequestData(req, reqCtx)
+		reqCtx.PrintLog()
+		hasSave = true
+	}
+	showErrorRes := func(msg string) {
+		reqCtx.Msg = msg
+		log.Println(msg)
+		rw.WriteHeader(http.StatusInternalServerError)
+		rw.Write([]byte(msg))
+	}
+
+	defer saveReq()
+	if rewrite_code != 200 && rewrite_code != 304 {
+		showErrorRes("websocket rewrite failed")
 		return
 	}
+
+	requestHeader := http.Header{}
+	requestHeader.Add("Origin", req.Header.Get("Origin"))
+	for _, prot := range req.Header[http.CanonicalHeaderKey("Sec-WebSocket-Protocol")] {
+		requestHeader.Add("Sec-WebSocket-Protocol", prot)
+	}
+	for _, cookie := range req.Header[http.CanonicalHeaderKey("Cookie")] {
+		requestHeader.Add("Cookie", cookie)
+	}
+
+	_url := req.URL.String()
+	//	connBackend, resp, err := dialer.Dial(_url, requestHeader)
+	connBackend, resp, err := getWsDialer(req, requestHeader)
+	if err != nil {
+		_logMsg := fmt.Sprintf("websocketproxy: couldn't dial to remote backend url %s,url:%s\n", err, _url)
+		showErrorRes(_logMsg)
+		return
+	}
+
+	saveReq()
+
 	defer connBackend.Close()
 	upgrader := w.Upgrader
 	if w.Upgrader == nil {
@@ -81,6 +122,7 @@ func (w *WebsocketProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	connPub, err := upgrader.Upgrade(rw, req, upgradeHeader)
 	if err != nil {
 		log.Printf("websocketproxy: couldn't upgrade %s\n", err)
+		showErrorRes("websocket error")
 		return
 	}
 	defer connPub.Close()
@@ -93,4 +135,97 @@ func (w *WebsocketProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	go cp(connBackend.UnderlyingConn(), connPub.UnderlyingConn())
 	go cp(connPub.UnderlyingConn(), connBackend.UnderlyingConn())
 	<-errc
+}
+
+func getWsDialer(req *http.Request, requestHeader http.Header) (*websocket.Conn, *http.Response, error) {
+
+	d := &websocket.Dialer{}
+
+	var deadline time.Time
+	if d.HandshakeTimeout != 0 {
+		deadline = time.Now().Add(d.HandshakeTimeout)
+	}
+
+	netDial := d.NetDial
+	if netDial == nil {
+		netDialer := &net.Dialer{Deadline: deadline}
+		netDial = netDialer.Dial
+	}
+	_host, _port, _ := parseHostPort(req.URL.Host)
+	if _port == 0 {
+		switch req.URL.Scheme {
+		case "ws":
+			_port = 80
+			break
+		case "wss":
+			_port = 443
+			break
+		default:
+			break
+		}
+	}
+	
+	netConn, err := netDial("tcp", fmt.Sprintf("%s:%d", _host, _port))
+	if err != nil {
+		return nil, nil, err
+	}
+
+	defer func() {
+		if netConn != nil {
+			netConn.Close()
+		}
+	}()
+
+	if err := netConn.SetDeadline(deadline); err != nil {
+		return nil, nil, err
+	}
+
+	if req.URL.Scheme == "wss" {
+     	_reqHost, _, _ := parseHostPort(req.Host)
+		cfg := d.TLSClientConfig
+		if cfg == nil {
+			cfg = &tls.Config{ServerName: _reqHost}
+		} else if cfg.ServerName == "" {
+			shallowCopy := *cfg
+			cfg = &shallowCopy
+			cfg.ServerName = _reqHost
+		}
+		tlsConn := tls.Client(netConn, cfg)
+		netConn = tlsConn
+		if err := tlsConn.Handshake(); err != nil {
+			return nil, nil, err
+		}
+		if !cfg.InsecureSkipVerify {
+			if err := tlsConn.VerifyHostname(cfg.ServerName); err != nil {
+				return nil, nil, err
+			}
+		}
+	}
+
+	readBufferSize := d.ReadBufferSize
+	if readBufferSize == 0 {
+		readBufferSize = 4096
+	}
+
+	writeBufferSize := d.WriteBufferSize
+	if writeBufferSize == 0 {
+		writeBufferSize = 4096
+	}
+
+	if len(d.Subprotocols) > 0 {
+		h := http.Header{}
+		for k, v := range requestHeader {
+			h[k] = v
+		}
+		h.Set("Sec-Websocket-Protocol", strings.Join(d.Subprotocols, ", "))
+		requestHeader = h
+	}
+	conn, resp, err := websocket.NewClient(netConn, req.URL, requestHeader, readBufferSize, writeBufferSize)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	netConn.SetDeadline(time.Time{})
+	netConn = nil // to avoid close in defer.
+	return conn, resp, nil
 }
