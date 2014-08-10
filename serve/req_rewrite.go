@@ -193,13 +193,26 @@ func (ser *ProxyServe) reqRewriteByjs(req *http.Request, reqCtx *requestCtx) int
 
 	if isHostAddrChange {
 		req.URL.Host = host_addr
+		if ser.Debug {
+			log.Println("rewrite host addr:", req.URL.Host, "==>", host_addr)
+		}
 	}
 	return 200
 }
 
 func (ser *ProxyServe) reqRewrite(req *http.Request, reqCtx *requestCtx) int {
+	origin_host := req.Host + "#" + req.URL.Host
 	statusCode1 := ser.reqRewriteByjs(req, reqCtx)
-	statusCode2 := ser.reqRewriteByHosts(req)
+	new_host := req.Host + "#" + req.URL.Host
+
+	if ser.Debug {
+		log.Println("rewrte_debug:\n", "origin_host:", origin_host, "\nnew_host:", new_host, "\n")
+	}
+
+	statusCode2 := 304
+	if origin_host == new_host {
+		statusCode2 = ser.reqRewriteByHosts(req)
+	}
 	if statusCode1 == 200 || statusCode2 == 200 {
 		return 200
 	}
@@ -230,9 +243,13 @@ func (ser *ProxyServe) reqRewriteByHosts(req *http.Request) int {
 		req.URL.Host = host
 		return 200
 	}
+
 	if host, has := ser.hosts[host_info[0]]; has {
 		log.Println("rewrite host:", req.Host, "==>", host)
 		req.URL.Host = host
+		if !strings.Contains(host, ":") {
+			req.URL.Host += ":" + host_info[1]
+		}
 		return 200
 	}
 	return 304

@@ -7,3 +7,6 @@ if (req.host == "news.163.com") {
 	req.post["d"] = "ddd"
 	req.post["c"] = 123
 }
+if (req.host == "news.baidu.com" && req.schema=="ws") {
+  req.host_addr="127.0.0.1:23456"
+}

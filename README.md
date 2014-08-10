@@ -1,7 +1,9 @@
-pproxy 0.4
+pproxy 0.4.2
 ======
 http抓包代理程序,http协议调试工具。  
 采用golang编写，采用bs模式(s-代理程序，b-会话查看、配置管理等功能)  
+
+0.4.2版本已经支持websocket代理，以及重定向(和普通http请求一样使用)  
 
 下载编译好的可执行文件: <http://pan.baidu.com/s/1i3pAe7V>  
 
@@ -10,6 +12,7 @@ http抓包代理程序,http协议调试工具。
 支持：
 1.url重定向
    如把 http://www.baidu.com/s?wd=pproxy 修改为 http://m.baidu.com/s?wd=pproxy
+   或者把 ws://www.test.com/a 重定向到 ws://www.example.com/b
    
 2.form表单动态  
    get、post可以动态修改（增删改）  
