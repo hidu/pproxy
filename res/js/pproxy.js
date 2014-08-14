@@ -21,7 +21,12 @@ socket.on("disconnect", function() {
     $("#connect_status").html("<font color=pink>offline</font>");
 });
 
-socket.on("req", function(data) {
+
+
+socket.on("req", function(dataStr64) {
+    var dataStr=Base64.decode(dataStr64);
+	var data=$.parseJSON(dataStr)
+	
     console && console.log("req", data)
     var html="<tr onclick=\"get_response(this,'" + data['docid'] + "')\" ";
     if(data["redo"]){
@@ -35,8 +40,10 @@ socket.on("req", function(data) {
     $("#tb_network tbody").prepend(html);
 })
 socket.on("res",
-        function(data) {
-            console && console.log("res", data)
+        function(dataStr64) {
+	        var dataStr=Base64.decode(dataStr64);
+			var data=$.parseJSON(dataStr)
+			
             var req = data["req"];
             var res = data["res"];
             var re_do_str=req["schema"]=="http"?("&nbsp;<a target='_blank' href='/redo?id="+req["@id"]+"'>redo</a>"):"";

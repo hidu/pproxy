@@ -3,6 +3,7 @@ package serve
 import (
 	"github.com/googollee/go-socket.io"
 	"log"
+	"fmt"
 	"net/url"
 	"strconv"
 )
@@ -54,11 +55,16 @@ func (ser *ProxyServe) ws_get_response(ns socketio.Socket, docid_str string) {
 	log.Println("receive docid", docid)
 	req := ser.GetRequestByDocid(docid)
 	res := ser.GetResponseByDocid(docid)
-	//	fmt.Println(req)
+	if(ser.Debug){
+		fmt.Println("req:\n",req,"\n==========\n")
+		fmt.Println("res:\n",res,"\n==========\n")
+	}
+//	delete(req,"header")
 	data := make(map[string]interface{})
 	data["req"] = req
 	data["res"] = res
-	err := ns.Emit("res", data)
+	
+	err := ns.Emit("res", gob_encode(data))
 	if err != nil {
 		log.Println("ns error:", err)
 	}
@@ -89,7 +95,7 @@ func (ser *ProxyServe) ws_save_filter(ns socketio.Socket, form_data string) {
 }
 
 func send_req(client *wsClient, data map[string]interface{}) {
-	err := client.ns.Emit("req", data)
+	err := client.ns.Emit("req", gob_encode(data))
 	if err != nil {
 		log.Println("emit req failed", err)
 	}
