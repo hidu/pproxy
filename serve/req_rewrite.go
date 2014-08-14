@@ -53,6 +53,9 @@ func (ser *ProxyServe) reqRewriteByjs(req *http.Request, reqCtx *requestCtx) int
 		psw, _ = req.URL.User.Password()
 	}
 	headerKv["username"] = username
+	
+	headerKv["proxy_user"] = reqCtx.User.Name
+	
 	headerKv["password"] = psw
 
 	//===================================================================

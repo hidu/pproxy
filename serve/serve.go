@@ -179,6 +179,10 @@ func NewProxyServe(confPath string, port int) (*ProxyServe, error) {
 	rand.Seed(time.Now().UnixNano())
 
 	proxy.ProxyClients = make(map[string]*clientSession)
+	
+	utils.SetInterval(func() {
+	 	proxy.cleanExpiredSession();
+	},60);
 
 	//   proxy.mydb.StartGcTimer(60,store_time)
 	return proxy, nil
