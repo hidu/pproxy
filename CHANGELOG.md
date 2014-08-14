@@ -1,5 +1,7 @@
 2014-08-14
    1.emit data with base64encode
+   2.fix some url has no schema
+   
 2014-08-10
    1.websocket proxy support
    

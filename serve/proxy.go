@@ -28,6 +28,8 @@ func (ser *ProxyServe) onHttpsConnect(host string, ctx *goproxy.ProxyCtx) (*gopr
 
 func (ser *ProxyServe) onRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
 	//	log.Println("RemoteAddr:",req.RemoteAddr,req.Header.Get("X-Wap-Proxy-Cookie"))
+	req_dump_debug, _ := httputil.DumpRequest(req, false)
+	log.Println("req_dump_debug:\n", req.URL.String(), "\n", string(req_dump_debug), "\n\n")
 	reqCtx := NewRequestCtx(req)
 	reqCtx.SessionId = ctx.Session
 	ser.regirestReq(req, reqCtx)

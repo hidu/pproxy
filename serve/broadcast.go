@@ -13,7 +13,11 @@ func (ser *ProxyServe) Broadcast_Req(req *http.Request, reqCtx *requestCtx) bool
 	data["sid"] = reqCtx.SessionId % 1000
 	data["host"] = req.Host
 	data["client_ip"] = req.RemoteAddr
-	data["path"] = req.URL.Path
+	urlPath := req.URL.Path
+	if req.URL.RawQuery != "" {
+		urlPath += "?" + req.URL.RawQuery
+	}
+	data["path"] = urlPath
 	if req.Method == "CONNECT" {
 		data["path"] = "https req,unknow path"
 	}

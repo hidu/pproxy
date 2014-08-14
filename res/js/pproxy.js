@@ -43,7 +43,7 @@ socket.on("res",
         function(dataStr64) {
 	        var dataStr=Base64.decode(dataStr64);
 			var data=$.parseJSON(dataStr)
-			
+			console && console.log(data)
             var req = data["req"];
             var res = data["res"];
             var re_do_str=req["schema"]=="http"?("&nbsp;<a target='_blank' href='/redo?id="+req["@id"]+"'>redo</a>"):"";

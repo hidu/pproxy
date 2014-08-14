@@ -15,6 +15,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"net/url"
 	"strings"
 	"sync"
 	"time"
@@ -71,13 +72,26 @@ func (ser *ProxyServe) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		ser.handleLocalReq(w, req)
 	} else {
 		if ser.Debug {
-			req_dump_debug, _ := httputil.DumpRequest(req, false)
-			log.Println("DEBUG req BEFORE:\n", string(req_dump_debug), "\nurl_full:", req.URL.String())
+			req_dump_debug, _ := httputil.DumpRequest(req, req.Method == "GET")
+			log.Println("DEBUG req BEFORE:\nurl_full:", req.URL.String(), "\nschema:", req.URL.Scheme, "\n", string(req_dump_debug), "\n\n")
 		}
 		isWebSocket := strings.ToLower(req.Header.Get("Upgrade")) == "websocket"
 		if isWebSocket {
 			ser.wsproxy.ServeHTTP(w, req)
 		} else {
+			if !req.URL.IsAbs() {
+				urlOrigin := req.URL.String()
+				urlStr := "http://" + req.Host + req.URL.Path
+				if req.URL.RawQuery != "" {
+					urlStr += "?" + req.URL.RawQuery
+				}
+				var err error
+				req.URL, err = url.Parse(urlStr)
+				if err != nil {
+					log.Println("fix url failed,originUrl:", urlOrigin, "err:", err)
+					return
+				}
+			}
 			ser.goproxy.ServeHTTP(w, req)
 		}
 	}
@@ -179,10 +193,10 @@ func NewProxyServe(confPath string, port int) (*ProxyServe, error) {
 	rand.Seed(time.Now().UnixNano())
 
 	proxy.ProxyClients = make(map[string]*clientSession)
-	
+
 	utils.SetInterval(func() {
-	 	proxy.cleanExpiredSession();
-	},60);
+		proxy.cleanExpiredSession()
+	}, 60)
 
 	//   proxy.mydb.StartGcTimer(60,store_time)
 	return proxy, nil

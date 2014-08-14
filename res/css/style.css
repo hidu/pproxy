@@ -42,13 +42,13 @@ html,body{margin: 0;padding: 0}
 }
 #nav ul li a{display: inline-block;width:50px; color:white;}
 
+#network-tb td{
+    vertical-align: top
+}
 
 #aside {
-    position: absolute;
-    width: 450px;
-}
-#right_content {
-    margin-left: 455px;
+    width:33%;
+    min-width: 450px;
 }
 .w120{width: 120px}
 .w140{width: 140px}
@@ -74,6 +74,7 @@ table {border-collapse: collapse;border-spacing: 0;}
 
  #tb_network{font-size: 11px}
  #tb_network td{overflow: auto;cursor: pointer;}
+#right_content{margin-top:5px}
  #right_content table th,#right_content table td{font-size:11px;vertical-align: top}
  #div_tb_network_list {overflow:auto;max-height: 600px;min-height:450px}
  tr.selected{background: #ccffee;}

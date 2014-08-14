@@ -1,9 +1,9 @@
 package serve
 
 import (
+	"log"
 	"net/http"
 	"time"
-	 "log"
 )
 
 type clientSession struct {
@@ -31,35 +31,35 @@ func (ser *ProxyServe) regirestReq(req *http.Request, reqCtx *requestCtx) {
 			LastRequestTime:  now,
 		}
 	}
-	if(reqCtx.User.Name=="" && session.User!=nil){
-	  reqCtx.User=session.User
-	}else if(reqCtx.User.Name!=""){
-	   session.User=reqCtx.User
+	if reqCtx.User.Name == "" && session.User != nil {
+		reqCtx.User = session.User
+	} else if reqCtx.User.Name != "" {
+		session.User = reqCtx.User
 	}
-	
-	session.LastRequestTime=now
+
+	session.LastRequestTime = now
 	session.RequestNum++
-	if(ser.Debug){
-		log.Println("session_debug:",session)
+	if ser.Debug {
+		log.Println("session_debug:", session)
 	}
-    ser.ProxyClients[ip] = session
-    
+	ser.ProxyClients[ip] = session
+
 	reqCtx.ClientSession = session
 }
 
-func (ser *ProxyServe)cleanExpiredSession(){
+func (ser *ProxyServe) cleanExpiredSession() {
 	ser.mu.Lock()
 	defer ser.mu.Unlock()
 	now := time.Now()
-	deleteIps:=[]string{}
-	for ip,session:=range ser.ProxyClients{
-	   t:=now.Sub(session.LastRequestTime)
-	   if t.Minutes()>10 {
-	     deleteIps=append(deleteIps,ip)
-	   }
+	deleteIps := []string{}
+	for ip, session := range ser.ProxyClients {
+		t := now.Sub(session.LastRequestTime)
+		if t.Minutes() > 10 {
+			deleteIps = append(deleteIps, ip)
+		}
 	}
-	for _,ip:=range deleteIps{
-	  delete(ser.ProxyClients,ip)
-	  log.Println("session expired:ip=",ip)
+	for _, ip := range deleteIps {
+		delete(ser.ProxyClients, ip)
+		log.Println("session expired:ip=", ip)
 	}
 }

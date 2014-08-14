@@ -2,7 +2,9 @@
 <script src="/res/js/socket.io.js"></script>
 <script src="/res/js/pproxy.js"></script>
 
-<div id="aside">
+<table id="network-tb">
+<tr>
+<td id="aside">
 <div id="network_list_div">
 <div style='margin:3px'>
 <form id="network_filter_form">
@@ -11,23 +13,22 @@
    	<table width="100%">
 	  <tr>
 	  <th width="60px">client:</th>
-	  <td>
-	  <input type="text" class="form-control w140" id='client_ip' name="client_ip" placeholder="client ip">
-	  <span class="right"><b style="margin-left:2px">user:</b>
-	  <input type="text" name="user" class="form-control w150" placeholder="basic auth uname" title="">
-	  </span>
-	  </td>
+	  <td width="40%"><input type="text" class="form-control" style='width:95%' id='client_ip' name="client_ip" placeholder="client ip"> </td>
+	  <th width="60px">user:</th>
+	  <td width="40%"><input type="text" name="user" class="form-control" style="width:95%" placeholder="basic auth uname" title=""></td>
 	  </tr>
 	  <tr><th>exclude:</th>
 	  <td>
-	  <label><input type="checkbox" name="hide" value='image'>image</label>
-	  <label><input type="checkbox" name="hide" value='js'>js</label>
-	  <label><input type="checkbox" name="hide" value='css'>css</label>
-	  <label class="right"><input type="text" name="hide_url" value='' class="form-control w150" placeholder="any part of url"></label>
+		  <label><input type="checkbox" name="hide" value='image'>image</label>
+		  <label><input type="checkbox" name="hide" value='js'>js</label>
+		  <label><input type="checkbox" name="hide" value='css'>css</label>
+      </td>
+      <td></td>		  
+	   <td> <input type="text" name="hide_url" value='' class="form-control" style="width:95%" placeholder="any part of url"></td>
 	  </td>
 	  </tr>
 	  <tr>
-	  <th nowrap>url:</th><td><input type="text" name="url_match" class="form-control" style="width:99%" placeholder="any part of url">
+	  <th nowrap>url:</th><td colspan=4><input type="text" name="url_match" class="form-control" style="width:98%" placeholder="any part of url">
 	  </td></tr>
   </table>
   </fieldset>
@@ -38,11 +39,9 @@
 	 <table id='tb_network' class="tb_1">
 	  <thead>
 	     <tr><th width="30px">#</th>
-	         <!-- <th width="40px">status</th>  -->
 	         <th width="120px">host</th>
 	         <th>path
 	         <div class='right'><a  onclick="$('#tb_network tbody').empty()" href="javascript:;">clean</a></div>
-	         
 	         </th>
 	         </tr>
 	  </thead>
@@ -52,6 +51,9 @@
  </div>
 </div>
 
-</div>
-<br/>
+</td>
+<td>
 <div id="right_content"></div>
+</td>
+</tr>
+</table>
