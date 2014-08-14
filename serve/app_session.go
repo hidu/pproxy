@@ -31,6 +31,12 @@ func (ser *ProxyServe) regirestReq(req *http.Request, reqCtx *requestCtx) {
 			LastRequestTime:  now,
 		}
 	}
+	if(reqCtx.User.Name=="" && session.User!=nil){
+	  reqCtx.User=session.User
+	}else if(reqCtx.User.Name!=""){
+	   session.User=reqCtx.User
+	}
+	
 	session.LastRequestTime=now
 	session.RequestNum++
 	if(ser.Debug){
@@ -48,7 +54,7 @@ func (ser *ProxyServe)cleanExpiredSession(){
 	deleteIps:=[]string{}
 	for ip,session:=range ser.ProxyClients{
 	   t:=now.Sub(session.LastRequestTime)
-	   if t.Minutes()>1 {
+	   if t.Minutes()>10 {
 	     deleteIps=append(deleteIps,ip)
 	   }
 	}

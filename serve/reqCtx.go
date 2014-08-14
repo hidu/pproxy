@@ -59,6 +59,7 @@ func (ctx *requestCtx) PrintLog() {
 		"session_id:", ctx.SessionId,
 		"reqNum:", reqNum,
 		"docid:", ctx.Docid,
+		"uname:", ctx.User.Name,
 		"broadcast:", ctx.HasBroadcast,
 		"data:", ctx.LogData,
 	)
