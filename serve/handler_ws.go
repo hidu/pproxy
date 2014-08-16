@@ -24,6 +24,7 @@ func (ser *ProxyServe) ws_init() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	ser.wsClients = make(map[string]*wsClient)
 	ser.ws.On("connection", func(ns socketio.Socket) {
 		log.Println("ws connected", ns.Request().RemoteAddr, ns.Id())
@@ -95,6 +96,11 @@ func (ser *ProxyServe) ws_save_filter(ns socketio.Socket, form_data string) {
 }
 
 func send_req(client *wsClient, data map[string]interface{}) {
+	defer func() {
+		if e := recover(); e != nil {
+			fmt.Println(e)
+		}
+	}()
 	err := client.ns.Emit("req", gob_encode(data))
 	if err != nil {
 		log.Println("emit req failed", err)

@@ -18,6 +18,7 @@ func (ser *ProxyServe) Broadcast_Req(req *http.Request, reqCtx *requestCtx) bool
 		urlPath += "?" + req.URL.RawQuery
 	}
 	data["path"] = urlPath
+	data["url"] = req.URL.String()
 	if req.Method == "CONNECT" {
 		data["path"] = "https req,unknow path"
 	}

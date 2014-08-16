@@ -71,7 +71,6 @@ func (ser *ProxyServe) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	if isLocalReq {
 		isLocalReq = IsLocalIp(host)
 	}
-
 	if isLocalReq {
 		ser.handleLocalReq(w, req)
 	} else {
