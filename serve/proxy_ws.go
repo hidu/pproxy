@@ -54,7 +54,7 @@ func (w *WebsocketProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	// http://tools.ietf.org/html/draft-ietf-hybi-websocket-multiplexing-01
 	req.URL.Scheme = "ws" + req.URL.Scheme[4:]
 
-	reqCtx := NewRequestCtx(req)
+	reqCtx := NewRequestCtx(w.ser, req)
 	w.ser.regirestReq(req, reqCtx)
 
 	rewrite_code := w.ser.reqRewrite(req, reqCtx)

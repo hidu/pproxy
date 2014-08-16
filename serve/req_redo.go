@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strconv"
 	"strings"
 )
 
@@ -25,7 +24,7 @@ func (ser *ProxyServe) req_redo(w http.ResponseWriter, req *http.Request, values
 		w.Write([]byte("empty id param"))
 		return
 	}
-	docid, err_int := strconv.ParseUint(docid_str, 10, 64)
+	docid, err_int := parseDocId(docid_str)
 	if err_int != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(fmt.Sprintf("param id[%s] error:\n%s", docid_str, err_int)))

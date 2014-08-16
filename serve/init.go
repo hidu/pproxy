@@ -7,6 +7,7 @@ import (
 var PproxyVersion string = ""
 
 func init() {
+
 	utils.ResetDefaultBundle()
 	PproxyVersion = GetVersion()
 }

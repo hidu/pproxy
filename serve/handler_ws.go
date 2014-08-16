@@ -5,7 +5,6 @@ import (
 	"github.com/googollee/go-socket.io"
 	"log"
 	"net/url"
-	"strconv"
 )
 
 type wsClient struct {
@@ -48,9 +47,10 @@ func (ser *ProxyServe) ws_init() {
 *https://github.com/googollee/go-socket.io
  */
 func (ser *ProxyServe) ws_get_response(ns socketio.Socket, docid_str string) {
-	docid, err_int := strconv.ParseUint(docid_str, 10, 64)
-	if err_int != nil {
-		log.Println("parse str2int failed", err_int, docid_str)
+	docid, uint_parse_err := parseDocId(docid_str)
+	if uint_parse_err != nil {
+		log.Println("parse str2int failed", docid_str, uint_parse_err)
+		return
 	}
 	log.Println("receive docid", docid)
 	req := ser.GetRequestByDocid(docid)

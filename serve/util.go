@@ -89,6 +89,9 @@ func getMapValStr(m map[string]interface{}, k string) string {
 }
 
 func gzipDocode(buf *bytes.Buffer) string {
+	if buf.Len() < 1 {
+		return ""
+	}
 	gr, err := gzip.NewReader(buf)
 	defer gr.Close()
 	if err == nil {
@@ -191,4 +194,12 @@ func checkUrlValuesChange(first url.Values, second url.Values) (change bool) {
 		}
 	}
 	return false
+}
+
+func parseDocId(strid string) (docid int, err error) {
+	docid64, parse_err := strconv.ParseUint(strid, 10, 64)
+	if parse_err == nil {
+		return int(docid64), nil
+	}
+	return 0, parse_err
 }

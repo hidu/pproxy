@@ -35,7 +35,7 @@ socket.on("req", function(dataStr64) {
     html+=">" 
     + "<td>" + data["sid"] + "</td>"
     + "<td>" + data["host"] + "</td>" +
-    "<td>" +data["method"]+"&nbsp;"+ data["path"] + "</td>" + 
+    "<td>" +data["method"]+"&nbsp;"+ (data["path"]+"").substr(0,60) + "</td>" + 
     "</tr>";
     $("#tb_network tbody").prepend(html);
 })
@@ -46,7 +46,7 @@ socket.on("res",
 			console && console.log(data)
             var req = data["req"];
             var res = data["res"];
-            var re_do_str=req["schema"]=="http"?("&nbsp;<a target='_blank' href='/redo?id="+req["@id"]+"'>redo</a>"):"";
+            var re_do_str=req["schema"]=="http"?("&nbsp;<a target='_blank' href='/redo?id="+req["id"]+"'>redo</a>"):"";
             
             var html = "<div><table class='tb_1'><caption>Request"+re_do_str+"</caption>";
             html += "<tr><th width='80px'>url</th><td>" + h(req["url"]) + "</td></tr>"
@@ -57,7 +57,7 @@ socket.on("res",
             	html += "<tr><th>msg</th><td><span style='color:red'>" + h(req["msg"])+"</span></td></tr>";
             }
             html += "<tr><th>proxy_urer</th>" +
-            		"<td><b>ip : </b>&nbsp;" +req["client_ip"] + "&nbsp;&nbsp;<b> docid : </b>&nbsp;"+ req["@id"] + 
+            		"<td><b>ip : </b>&nbsp;" +req["client_ip"] + "&nbsp;&nbsp;<b> docid : </b>&nbsp;"+ req["id"] + 
             		"</td></tr>";
             html += pproxy_tr_sub_table(req["form_get"], "get_params");
             html += pproxy_tr_sub_table(req["form_post"], "post_params");
@@ -68,7 +68,7 @@ socket.on("res",
             html += "</table></div>";
             var res_link = "";
             if (res) {
-                res_link = "<a href='/response?id=" + res["@id"] + "' target='_blank'>view</a>";
+                res_link = "<a href='/response?id=" + res["id"] + "' target='_blank'>view</a>";
             }
             html += "<div><table class='tb_1'><caption>Response&nbsp;" + res_link + "</caption>"
             

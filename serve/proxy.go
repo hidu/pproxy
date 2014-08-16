@@ -16,7 +16,7 @@ import (
 func (ser *ProxyServe) onHttpsConnect(host string, ctx *goproxy.ProxyCtx) (*goproxy.ConnectAction, string) {
 	//   log.Println("https:",host,ctx.Req)
 
-	reqCtx := NewRequestCtx(nil)
+	reqCtx := NewRequestCtx(ser, nil)
 	reqCtx.User = &User{SkipCheckPsw: true}
 	reqCtx.RemoteAddr = host
 	reqCtx.Docid = 0
@@ -28,9 +28,7 @@ func (ser *ProxyServe) onHttpsConnect(host string, ctx *goproxy.ProxyCtx) (*gopr
 
 func (ser *ProxyServe) onRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
 	//	log.Println("RemoteAddr:",req.RemoteAddr,req.Header.Get("X-Wap-Proxy-Cookie"))
-	req_dump_debug, _ := httputil.DumpRequest(req, false)
-	log.Println("req_dump_debug:\n", req.URL.String(), "\n", string(req_dump_debug), "\n\n")
-	reqCtx := NewRequestCtx(req)
+	reqCtx := NewRequestCtx(ser, req)
 	reqCtx.SessionId = ctx.Session
 	ser.regirestReq(req, reqCtx)
 
@@ -107,7 +105,7 @@ func (ser *ProxyServe) saveRequestData(req *http.Request, reqCtx *requestCtx) {
 
 		logdata["rewrite"] = rewrite
 
-		err := ser.mydb.RequestTable.InsertRecovery(reqCtx.Docid, logdata)
+		err := ser.mydb.RequestTable.Set(reqCtx.Docid, logdata)
 		if err != nil {
 			log.Println("save req failed:", err)
 		}
@@ -185,7 +183,7 @@ func (ser *ProxyServe) logResponse(res *http.Response, ctx *goproxy.ProxyCtx) {
 	}
 	data["body"] = base64.StdEncoding.EncodeToString(body)
 
-	err := ser.mydb.ResponseTable.InsertRecovery(reqCtx.Docid, data)
+	err := ser.mydb.ResponseTable.Set(reqCtx.Docid, data)
 
 	log.Println("save_res", ctx.Session, "docid=", reqCtx.Docid, "body_len=", len(data["body"].(string)), err)
 }

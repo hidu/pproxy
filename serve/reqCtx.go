@@ -10,7 +10,7 @@ import (
 type requestCtx struct {
 	RemoteAddr    string
 	User          *User
-	Docid         uint64
+	Docid         int
 	IsReDo        bool
 	SessionId     int64
 	HasBroadcast  bool
@@ -21,7 +21,7 @@ type requestCtx struct {
 	Msg           string
 }
 
-func NewRequestCtx(req *http.Request) *requestCtx {
+func NewRequestCtx(ser *ProxyServe, req *http.Request) *requestCtx {
 	ctx := new(requestCtx)
 	ctx.LogData = make(map[string]interface{})
 	ctx.FormPost = &url.Values{}
@@ -39,7 +39,7 @@ func NewRequestCtx(req *http.Request) *requestCtx {
 		if _redo_user := req.Header.Get(REDO_USER_NAME); _redo_user != "" {
 			ctx.User = &User{Name: _redo_user, SkipCheckPsw: true}
 		}
-		ctx.Docid = NextUid()
+		ctx.Docid = ser.GetNewDocid()
 	}
 
 	return ctx

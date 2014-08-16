@@ -18,6 +18,7 @@ import (
 	"net/url"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -46,6 +47,7 @@ type ProxyServe struct {
 
 	Users        map[string]*User
 	ProxyClients map[string]*clientSession
+	reqNum       int64
 }
 
 type kvType map[string]interface{}
@@ -58,6 +60,8 @@ func (ser *ProxyServe) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		log.Println("bad request,err", err)
 		return
 	}
+	atomic.AddInt64(&ser.reqNum, 1)
+
 	if req.Host == "p.info" || req.Host == "proxy.info" {
 		ser.handleUserInfo(w, req)
 		return
@@ -79,7 +83,7 @@ func (ser *ProxyServe) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		if isWebSocket {
 			ser.wsproxy.ServeHTTP(w, req)
 		} else {
-			if !req.URL.IsAbs() {
+			if req.Method != "CONNECT" && !req.URL.IsAbs() {
 				urlOrigin := req.URL.String()
 				urlStr := "http://" + req.Host + req.URL.Path
 				if req.URL.RawQuery != "" {
@@ -113,18 +117,28 @@ func (ser *ProxyServe) Start() {
 	fmt.Println(err)
 }
 
-func (ser *ProxyServe) GetResponseByDocid(docid uint64) (res_data kvType) {
-	id, err := ser.mydb.ResponseTable.Read(docid, &res_data)
+func (ser *ProxyServe) GetNewDocid() int {
+	id_str := fmt.Sprintf("%s%d", time.Now().Format("200601021504"), ser.reqNum)
+	id, err := parseDocId(id_str)
+	if err == nil {
+		return id
+	}
+	log.Println("GetNewDocid failed", id_str, err)
+	return int(time.Now().UnixNano() + ser.reqNum)
+}
+
+func (ser *ProxyServe) GetResponseByDocid(docid int) (res_data kvType) {
+	res_data, err := ser.mydb.ResponseTable.GetByKey(docid)
 	if err != nil {
-		log.Println("read res by docid failed,docid=", docid, "id=", id, err)
+		log.Println("read res by docid failed,docid=", docid, err)
 	}
 	//  fmt.Println(docid,res_data)
 	return res_data
 }
-func (ser *ProxyServe) GetRequestByDocid(docid uint64) (req_data kvType) {
-	id, err := ser.mydb.RequestTable.Read(docid, &req_data)
+func (ser *ProxyServe) GetRequestByDocid(docid int) (req_data kvType) {
+	req_data, err := ser.mydb.RequestTable.GetByKey(docid)
 	if err != nil {
-		log.Println("read req by docid failed,docid=", docid, "id=", id, err)
+		log.Println("read req by docid failed,docid=", docid, err)
 	}
 	return req_data
 }

@@ -9,7 +9,6 @@ import (
 	"log"
 	"net"
 	"net/http"
-	"strconv"
 	"strings"
 	"text/template"
 	"time"
@@ -134,8 +133,7 @@ func (ser *ProxyServe) handleLogin(w http.ResponseWriter, req *http.Request) {
 }
 
 func (ser *ProxyServe) web_showResponseById(w http.ResponseWriter, req *http.Request) {
-	id := req.FormValue("id")
-	docid, uint_parse_err := strconv.ParseUint(id, 10, 64)
+	docid, uint_parse_err := parseDocId(req.FormValue("id"))
 	if uint_parse_err == nil {
 		responseData := ser.GetResponseByDocid(docid)
 		if responseData == nil {
