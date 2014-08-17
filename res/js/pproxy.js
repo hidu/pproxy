@@ -34,7 +34,7 @@ socket.on("req", function(dataStr64) {
     }
     html+=">" 
     + "<td>" + data["sid"] + "</td>"
-    + "<td>" + data["host"] + "</td>" +
+    + "<td><div class='oneline' title='"+h(data["host"])+"'>" + data["host"] + "</div></td>" +
     "<td><div class='oneline' title='"+h(data["url"])+"'>" +data["method"]+"&nbsp;"+ h(data["path"])+ "</div></td>" + 
     "</tr>";
     $("#tb_network tbody").prepend(html);

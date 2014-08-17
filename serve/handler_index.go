@@ -41,6 +41,7 @@ func (ser *ProxyServe) handleLocalReq(w http.ResponseWriter, req *http.Request) 
 		ser.ws.ServeHTTP(w, req)
 		return
 	}
+	
 	values := make(map[string]interface{})
 	values["title"] = ser.conf.Title
 	values["subTitle"] = ""

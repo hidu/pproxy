@@ -40,6 +40,9 @@ func (ser *ProxyServe) ws_init() {
 			delete(ser.wsClients, ns.Id())
 		}
 	})
+	ser.ws.On("error", func(ns socketio.Socket, err error) {
+		log.Println("ws error:", err)
+	})
 	ser.ws.On("get_response", ser.ws_get_response)
 	ser.ws.On("client_filter", ser.ws_save_filter)
 }
@@ -98,7 +101,7 @@ func (ser *ProxyServe) ws_save_filter(ns socketio.Socket, form_data string) {
 func send_req(client *wsClient, data map[string]interface{}) {
 	defer func() {
 		if e := recover(); e != nil {
-			fmt.Println(e)
+			log.Println(e)
 		}
 	}()
 	err := client.ns.Emit("req", gob_encode(data))
