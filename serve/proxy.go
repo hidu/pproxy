@@ -26,6 +26,14 @@ func (ser *ProxyServe) onHttpsConnect(host string, ctx *goproxy.ProxyCtx) (*gopr
 	return goproxy.OkConnect, host
 }
 
+func removeHeader(req *http.Request){
+	for k := range req.Header {
+		if len(k) > 5 && k[:6] == "Proxy-" {
+			req.Header.Del(k)
+		}
+	}
+}
+
 func (ser *ProxyServe) onRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
 	//	log.Println("RemoteAddr:",req.RemoteAddr,req.Header.Get("X-Wap-Proxy-Cookie"))
 	reqCtx := NewRequestCtx(ser, req)
@@ -33,12 +41,8 @@ func (ser *ProxyServe) onRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*htt
 	ser.regirestReq(req, reqCtx)
 
 	defer reqCtx.PrintLog()
+	removeHeader(req)
 
-	for k := range req.Header {
-		if len(k) > 5 && k[:6] == "Proxy-" {
-			req.Header.Del(k)
-		}
-	}
 
 	if ser.conf.AuthType != AuthType_NO && !ser.checkHttpAuth(req, reqCtx) {
 		reqCtx.LogData["status"] = "login required"
@@ -75,7 +79,8 @@ func (ser *ProxyServe) saveRequestData(req *http.Request, reqCtx *requestCtx) {
 		logdata["host"] = req.Host
 		logdata["schema"] = req.URL.Scheme
 		logdata["header"] = map[string][]string(req.Header)
-		logdata["url"] = reqCtx.OriginUrl
+		logdata["url"] = req.URL.String()
+		logdata["url_origin"] = reqCtx.OriginUrl
 		logdata["path"] = req.URL.Path
 		logdata["cookies"] = req.Cookies()
 		logdata["now"] = time.Now().Unix()
@@ -95,16 +100,7 @@ func (ser *ProxyServe) saveRequestData(req *http.Request, reqCtx *requestCtx) {
 		logdata["dump"] = base64.StdEncoding.EncodeToString(req_dump)
 
 		logdata["form_post"] = reqCtx.FormPost
-
-		rewrite := make(map[string]string)
-		url_new := req.URL.String()
-
-		if url_new != logdata["url"] {
-			rewrite["url"] = url_new
-		}
-
-		logdata["rewrite"] = rewrite
-
+		
 		err := ser.mydb.RequestTable.Set(reqCtx.Docid, logdata)
 		if err != nil {
 			log.Println("save req failed:", err)

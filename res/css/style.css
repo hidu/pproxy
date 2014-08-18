@@ -76,6 +76,8 @@ table {border-collapse: collapse;border-spacing: 0;}
  #tb_network td{overflow: auto;cursor: pointer;}
 #right_content{margin-top:5px}
  #right_content table th,#right_content table td{font-size:11px;vertical-align: top}
+ #right_content pre{border:none}
+ 
  #div_tb_network_list {overflow:auto;max-height: 600px;min-height:450px}
  tr.selected{background: #ccffee;}
  .right{float: right}

@@ -44,6 +44,13 @@ func NewWsProxy(ser *ProxyServe) *WebsocketProxy {
 	return &WebsocketProxy{ser: ser}
 }
 
+var wsProxyIgnoreHeader map[string]int=map[string]int{
+   "upgrade":1,
+   "connection":1,
+   "sec-websocket-version":1,
+   "sec-websocket-key":1,
+   "host":1,
+}
 // ServeHTTP implements the http.Handler that proxies WebSocket connections.
 func (w *WebsocketProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	// Connect to the backend URL, also pass the headers we get from the requst
@@ -53,6 +60,8 @@ func (w *WebsocketProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	// optional:
 	// http://tools.ietf.org/html/draft-ietf-hybi-websocket-multiplexing-01
 	req.URL.Scheme = "ws" + req.URL.Scheme[4:]
+	
+	removeHeader(req)
 
 	reqCtx := NewRequestCtx(w.ser, req)
 	w.ser.regirestReq(req, reqCtx)
@@ -81,17 +90,17 @@ func (w *WebsocketProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		showErrorRes("websocket rewrite failed")
 		return
 	}
-	if rewrite_code == 200 {
+	hasOrigin:=req.Header.Get("Origin")!=""
+	if rewrite_code == 200 && hasOrigin{
 		req.Header.Set("Origin", "http://"+req.Host)
 	}
 	requestHeader := http.Header{}
-	requestHeader.Add("Origin", req.Header.Get("Origin"))
-	for _, prot := range req.Header[http.CanonicalHeaderKey("Sec-WebSocket-Protocol")] {
-		requestHeader.Add("Sec-WebSocket-Protocol", prot)
+	for k,v:=range req.Header{
+	   if _,has:=wsProxyIgnoreHeader[strings.ToLower(k)];!has{
+	     requestHeader[k]=v
+	   }
 	}
-	for _, cookie := range req.Header[http.CanonicalHeaderKey("Cookie")] {
-		requestHeader.Add("Cookie", cookie)
-	}
+	
 	if w.ser.Debug {
 		req_dump_debug, _ := httputil.DumpRequest(req, true)
 		log.Println("rewrite_code:\n", rewrite_code)
