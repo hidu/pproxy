@@ -26,7 +26,7 @@ func (ser *ProxyServe) onHttpsConnect(host string, ctx *goproxy.ProxyCtx) (*gopr
 	return goproxy.OkConnect, host
 }
 
-func removeHeader(req *http.Request){
+func removeHeader(req *http.Request) {
 	for k := range req.Header {
 		if len(k) > 5 && k[:6] == "Proxy-" {
 			req.Header.Del(k)
@@ -42,7 +42,6 @@ func (ser *ProxyServe) onRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*htt
 
 	defer reqCtx.PrintLog()
 	removeHeader(req)
-
 
 	if ser.conf.AuthType != AuthType_NO && !ser.checkHttpAuth(req, reqCtx) {
 		reqCtx.LogData["status"] = "login required"
@@ -100,7 +99,7 @@ func (ser *ProxyServe) saveRequestData(req *http.Request, reqCtx *requestCtx) {
 		logdata["dump"] = base64.StdEncoding.EncodeToString(req_dump)
 
 		logdata["form_post"] = reqCtx.FormPost
-		
+
 		err := ser.mydb.RequestTable.Set(reqCtx.Docid, logdata)
 		if err != nil {
 			log.Println("save req failed:", err)

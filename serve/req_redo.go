@@ -60,6 +60,8 @@ func (ser *ProxyServe) req_redoPost(w http.ResponseWriter, req *http.Request, va
 	method := strings.TrimSpace(strings.ToUpper(req.FormValue("basic_method")))
 	basic["method"] = method
 
+	host := strings.TrimSpace(req.FormValue("basic_host"))
+
 	basic_remoteAddr := req.FormValue("basic_RemoteAddr")
 	basic_user := req.FormValue("basic_user")
 
@@ -114,7 +116,9 @@ func (ser *ProxyServe) req_redoPost(w http.ResponseWriter, req *http.Request, va
 			w.Write([]byte("build request failed\n" + err.Error()))
 			return
 		}
-
+		if host != "" {
+			redo_req.Host = host
+		}
 		redo_req.Header.Set(REDO_FLAG, "redo")
 
 		redo_req.Header.Set(REDO_REMOTEADDR, basic_remoteAddr)

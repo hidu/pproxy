@@ -34,17 +34,21 @@ func (ser *ProxyServe) ws_init() {
 	})
 	ser.ws.On("disconnection", func(ns socketio.Socket) {
 		log.Println("ws disconnect", ns.Request().RemoteAddr, ns.Id())
-		ser.mu.Lock()
-		defer ser.mu.Unlock()
-		if _, has := ser.wsClients[ns.Id()]; has {
-			delete(ser.wsClients, ns.Id())
-		}
+		ser.ws_remove(ns.Id())
 	})
 	ser.ws.On("error", func(ns socketio.Socket, err error) {
 		log.Println("ws error:", err)
 	})
 	ser.ws.On("get_response", ser.ws_get_response)
 	ser.ws.On("client_filter", ser.ws_save_filter)
+}
+
+func (ser *ProxyServe) ws_remove(id string) {
+	ser.mu.Lock()
+	defer ser.mu.Unlock()
+	if _, has := ser.wsClients[id]; has {
+		delete(ser.wsClients, id)
+	}
 }
 
 /**
@@ -67,11 +71,7 @@ func (ser *ProxyServe) ws_get_response(ns socketio.Socket, docid_str string) {
 	data := make(map[string]interface{})
 	data["req"] = req
 	data["res"] = res
-
-	err := ns.Emit("res", gob_encode(data))
-	if err != nil {
-		log.Println("ns error:", err)
-	}
+	ser.ws_send(ns, "res", data, true)
 }
 
 func (ser *ProxyServe) ws_save_filter(ns socketio.Socket, form_data string) {
@@ -98,14 +98,20 @@ func (ser *ProxyServe) ws_save_filter(ns socketio.Socket, form_data string) {
 	}
 }
 
-func send_req(client *wsClient, data map[string]interface{}) {
-	defer func() {
+func (ser *ProxyServe) ws_send(ns socketio.Socket, msg_name string, data interface{}, encode bool) {
+	defer func(ns socketio.Socket) {
 		if e := recover(); e != nil {
-			log.Println(e)
+			log.Println("ws_send failed", e)
+			ser.ws_remove(ns.Id())
 		}
-	}()
-	err := client.ns.Emit("req", gob_encode(data))
+	}(ns)
+	var err error
+	if encode {
+		err = ns.Emit(msg_name, gob_encode(data))
+	} else {
+		err = ns.Emit(msg_name, data)
+	}
 	if err != nil {
-		log.Println("emit req failed", err)
+		log.Println("emit ", msg_name, " failed", err)
 	}
 }

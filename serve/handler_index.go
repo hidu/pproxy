@@ -41,14 +41,14 @@ func (ser *ProxyServe) handleLocalReq(w http.ResponseWriter, req *http.Request) 
 		ser.ws.ServeHTTP(w, req)
 		return
 	}
-	
+
 	values := make(map[string]interface{})
 	values["title"] = ser.conf.Title
 	values["subTitle"] = ""
 	values["version"] = PproxyVersion
 	values["notice"] = ser.conf.Notice
 	values["port"] = fmt.Sprintf("%d", ser.conf.Port)
-	values["userOnlineTotal"] = len(ser.wsClients) + 1
+	values["userOnlineTotal"] = len(ser.ProxyClients)
 	_host, _port, _ := getHostPortFromReq(req)
 	values["pproxy_host"] = _host
 	values["pproxy_port"] = _port

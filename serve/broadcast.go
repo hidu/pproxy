@@ -38,7 +38,7 @@ func (ser *ProxyServe) Broadcast_Req(req *http.Request, reqCtx *requestCtx) bool
 		}
 
 		if checkFilter(req, client, reqCtx) {
-			go send_req(client, data)
+			go ser.ws_send(client.ns, "req", data, true)
 			hasSend = true
 		}
 	}

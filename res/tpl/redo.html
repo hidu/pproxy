@@ -6,7 +6,8 @@
 <legend>basic</legend>
 <table>
 <tr><th>action url:</th><td><input type="text" name="basic_action_url" value="{{.action_url}}" class="form-control"></td></tr>
-<tr><th>method:</th><td><input type="text" name="basic_method" value="{{.req.method}}" class="form-control"></td></tr>
+<tr><th>method:</th><td><input type="text" name="basic_method" value="{{.req.method}}" class="form-control" ></td></tr>
+<tr><th>Host:</th><td><input type="text" name="basic_host" value="{{.req.host}}" class="form-control"></td></tr>
 </table>
 <input type="hidden" name="basic_RemoteAddr" value="{{.req.client_ip}}">
 <input type="hidden" name="basic_user" value="{{.req.user}}">
