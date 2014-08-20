@@ -17,19 +17,20 @@
 	  <th width="60px">user:</th>
 	  <td width="40%"><input type="text" name="user" class="form-control" style="width:95%" placeholder="basic auth uname" title=""></td>
 	  </tr>
-	  <tr><th>exclude:</th>
+	  <tr>
+	  <th>exclude:</th>
 	  <td>
-		  <label><input type="checkbox" name="hide" value='image'>image</label>
-		  <label><input type="checkbox" name="hide" value='js'>js</label>
-		  <label><input type="checkbox" name="hide" value='css'>css</label>
+		  <label><input type="checkbox" name="hide" value='image' checked="checked">image</label>
+		  <label><input type="checkbox" name="hide" value='js' checked="checked">js</label>
+		  <label><input type="checkbox" name="hide" value='css' checked="checked">css</label>
       </td>
-      <td></td>		  
+      <td></td>
 	   <td> <input type="text" name="hide_url" value='' class="form-control" style="width:95%" placeholder="any part of url"></td>
-	  </td>
 	  </tr>
 	  <tr>
-	  <th nowrap>url:</th><td colspan=4><input type="text" name="url_match" class="form-control" style="width:98%" placeholder="any part of url">
-	  </td></tr>
+	  <th nowrap>url:</th>
+	  <td colspan=4><input type="text" name="url_match" class="form-control" style="width:98%" placeholder="any part of url"></td>
+	  </tr>
   </table>
   </fieldset>
 </form>
@@ -39,7 +40,7 @@
 	 <table id='tb_network' class="tb_1">
 	  <thead>
 	     <tr><th width="30px">#</th>
-	         <th width="120px">host</th>
+	         <th width="35%">host</th>
 	         <th>path
 	         <div class='right'><a  onclick="$('#tb_network tbody').empty()" href="javascript:;">clean</a></div>
 	         </th>

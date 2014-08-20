@@ -99,6 +99,9 @@ func (ser *ProxyServe) ws_save_filter(ns socketio.Socket, form_data string) {
 }
 
 func (ser *ProxyServe) ws_send(ns socketio.Socket, msg_name string, data interface{}, encode bool) {
+	ser.wsMu.Lock()
+	defer ser.wsMu.Unlock()
+
 	defer func(ns socketio.Socket) {
 		if e := recover(); e != nil {
 			log.Println("ws_send failed", e)

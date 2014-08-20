@@ -63,7 +63,6 @@ func (w *WebsocketProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	req.URL.Scheme = "ws" + req.URL.Scheme[4:]
 
 	removeHeader(req)
-
 	reqCtx := NewRequestCtx(w.ser, req)
 	w.ser.regirestReq(req, reqCtx)
 

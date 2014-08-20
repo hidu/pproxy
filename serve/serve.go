@@ -25,11 +25,14 @@ import (
 var js *otto.Otto
 
 type ProxyServe struct {
-	goproxy   *goproxy.ProxyHttpServer
-	wsproxy   *WebsocketProxy
-	mydb      *TieDb
+	goproxy *goproxy.ProxyHttpServer
+	wsproxy *WebsocketProxy
+	mydb    *TieDb
+
 	ws        *socketio.Server
 	wsClients map[string]*wsClient
+	wsMu      sync.RWMutex
+
 	startTime time.Time
 
 	MaxResSaveLength int64

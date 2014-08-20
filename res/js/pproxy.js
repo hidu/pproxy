@@ -57,7 +57,7 @@ socket.on("res",
             	html += "<tr><th>msg</th><td><span style='color:red'>" + h(req["msg"])+"</span></td></tr>";
             }
             html += "<tr><th>proxy_urer</th>" +
-            		"<td><b>ip : </b>&nbsp;" +req["client_ip"] + "&nbsp;&nbsp;<b> docid : </b>&nbsp;"+ req["id"] + 
+            		"<td><b>remote_addr : </b>&nbsp;" +req["client_ip"] + "&nbsp;&nbsp;<b> docid : </b>&nbsp;"+ req["id"] + 
             		"</td></tr>";
             html += pproxy_tr_sub_table(req["form_get"], "get_params");
             html += pproxy_tr_sub_table(req["form_post"], "post_params");
