@@ -2,9 +2,7 @@ package serve
 
 import (
 	"fmt"
-	"github.com/googollee/go-socket.io"
 	"github.com/hidu/goproxy"
-
 	"github.com/hidu/goutils"
 	"github.com/robertkrimen/otto"
 	"io/ioutil"
@@ -29,9 +27,7 @@ type ProxyServe struct {
 	wsproxy *WebsocketProxy
 	mydb    *TieDb
 
-	ws        *socketio.Server
-	wsClients map[string]*wsClient
-	wsMu      sync.RWMutex
+	wsSer *wsServer
 
 	startTime time.Time
 
