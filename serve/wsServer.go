@@ -3,6 +3,7 @@ package serve
 import (
 	"fmt"
 	"github.com/googollee/go-socket.io"
+	"github.com/hidu/goutils"
 	"log"
 	"net/http"
 	"net/url"
@@ -50,6 +51,10 @@ func (wsSer *wsServer) init() {
 	})
 	wsSer.server.On("get_response", wsSer.get_response)
 	wsSer.server.On("client_filter", wsSer.save_filter)
+
+	utils.SetInterval(func() {
+		wsSer.broadcastHello()
+	}, 120)
 }
 
 func (wsSer *wsServer) remove(id string) {
@@ -107,11 +112,13 @@ func (wsSer *wsServer) save_filter(ns socketio.Socket, form_data string) {
 	}
 }
 
+var nnnn int = 0
+
 func (wsSer *wsServer) send(ns socketio.Socket, msg_name string, data interface{}, encode bool) {
 	wsSer.mu.Lock()
-	defer wsSer.mu.Unlock()
 
 	defer func(ns socketio.Socket) {
+		wsSer.mu.Unlock()
 		if e := recover(); e != nil {
 			log.Println("ws_send failed", e)
 			wsSer.remove(ns.Id())
@@ -125,6 +132,12 @@ func (wsSer *wsServer) send(ns socketio.Socket, msg_name string, data interface{
 	}
 	if err != nil {
 		log.Println("emit ", msg_name, " failed", err)
+	}
+}
+
+func (wsSer *wsServer) broadcastHello() {
+	for _, client := range wsSer.clients {
+		wsSer.send(client.ns, "hello", "hidu", false)
 	}
 }
 

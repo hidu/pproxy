@@ -1,5 +1,8 @@
 var socket = io();
 var connectNum=0;
+var pproxy_colors=["#FFFFFF","#CCFFFF","#FFCCCC","#99CCCC","996699","#CC9999","#0099CC","#FFFF66","#336633","#99CC00"]
+
+var ip_colors={} 
 
 function pproxy_log(msg){
 	$("#log_div").append("<div>"+(new Date().toString())+":"+msg+"</div>");
@@ -21,7 +24,27 @@ socket.on("disconnect", function() {
     $("#connect_status").html("<font color=pink>offline</font>");
 });
 
+socket.on("hello",function(data){
+	console && console.log(new Date().toString(),data)
+});
 
+function pproxy_getColor(addr){
+	var info=addr.split(":")
+	if(info.length!=2){
+		return "#FFFFFF"
+	}
+	var ip=info[0];
+	var color=ip_colors[ip]
+	if(!color){
+		var l=0;
+		for(var _t in ip_colors){
+			l++
+		}
+		color=pproxy_colors[l% pproxy_colors.length]
+		ip_colors[ip]=color
+	}
+	return color
+}
 
 socket.on("req", function(dataStr64) {
     var dataStr=Base64.decode(dataStr64);
@@ -33,7 +56,7 @@ socket.on("req", function(dataStr64) {
     	html+="class='redo' ";
     }
     html+=">" 
-    + "<td>" + data["sid"] + "</td>"
+    + "<td bgcolor='"+pproxy_getColor(data["client_ip"])+"'>" + data["sid"] + "</td>"
     + "<td><div class='oneline' title='"+h(data["host"])+"'>" + data["host"] + "</div></td>" +
     "<td><div class='oneline' title='"+h(data["url"])+"'>" +data["method"]+"&nbsp;"+ h(data["path"])+ "</div></td>" + 
     "</tr>";

@@ -2,16 +2,15 @@ package serve
 
 import (
 	"bytes"
+	"compress/gzip"
+	"encoding/base64"
 	"encoding/binary"
+	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
 	"net"
-	//	"github.com/vmihailenco/msgpack"
-	"compress/gzip"
-	"encoding/base64"
-	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -54,10 +53,6 @@ func forgetRead(reader *io.ReadCloser) *bytes.Buffer {
 }
 
 func gob_encode(data interface{}) string {
-	//   var bf bytes.Buffer
-	//	enc := gob.NewEncoder(&bf)
-	//	err := enc.Encode(data)
-	//	 bf, err := msgpack.Marshal(data)
 	bf, err := json.Marshal(data)
 	if err != nil {
 		log.Println("gob encode err", err)
