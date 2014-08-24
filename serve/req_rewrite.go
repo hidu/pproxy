@@ -3,7 +3,6 @@ package serve
 import (
 	"bytes"
 	"fmt"
-	"github.com/hidu/goutils"
 	"io"
 	"io/ioutil"
 	"log"
@@ -12,24 +11,8 @@ import (
 	"strings"
 )
 
-//var rewriteJsTpl = "function pproxy_rewrite(req){\n%s\nreturn req;\n}"
-var rewriteJsTpl = string(utils.DefaultResource.Load("res/sjs/req_rewrite.js"))
-
-func (ser *ProxyServe) parseAndSaveRewriteJs(jsStr string) error {
-	rewriteJs := strings.Replace(rewriteJsTpl, "CUSTOM_JS", jsStr, 1)
-	js.Run(rewriteJs)
-	jsFn, err := js.Get("pproxy_rewrite")
-	if err == nil {
-		ser.RewriteJs = jsStr
-		ser.RewriteJsFn = jsFn
-	} else {
-		log.Println("rewrite js init error:", err)
-	}
-	return err
-}
-
 func (ser *ProxyServe) reqRewriteByjs(req *http.Request, reqCtx *requestCtx) int {
-	if ser.RewriteJs == "" {
+	if !ser.reqMod.CanMod() {
 		return 304
 	}
 	schema := req.URL.Scheme
@@ -64,30 +47,10 @@ func (ser *ProxyServe) reqRewriteByjs(req *http.Request, reqCtx *requestCtx) int
 	rewriteData["get"] = origin_get_query
 	rewriteData["post"] = *reqCtx.FormPost
 
-	reqJsObj, _ := js.Object(`req={}`)
-	reqJsObj.Set("origin", rewriteData)
-
-	///===================================
-
-	js_ret, err_js := ser.RewriteJsFn.Call(ser.RewriteJsFn, reqJsObj)
-
-	if err_js != nil {
-		log.Println("js filter err:", err_js, js_ret)
-		return 502
+	reqObjNew, rErr := ser.reqMod.rewrite(rewriteData)
+	if rErr != nil {
+		log.Println("rewrite failed:", rErr)
 	}
-	if !js_ret.IsObject() {
-		log.Println("wrong req_rewirte return value")
-		return 502
-	}
-	obj, export_err := js_ret.Export()
-
-	if export_err != nil {
-		log.Println("js filter result wrong", js_ret.String())
-		return 502
-	}
-	//================================================================================
-
-	reqObjNew := obj.(map[string]interface{})
 
 	headerKvNew := make(map[string]string)
 	isHeaderChange := false
@@ -169,7 +132,6 @@ func (ser *ProxyServe) reqRewriteByjs(req *http.Request, reqCtx *requestCtx) int
 			log.Println("DEBUG req_rewrite,url_new:", url_base, "req_new:", req.URL)
 		}
 		if url_err != nil {
-			log.Println("js filter err:", js_ret, url_err)
 			return 502
 		}
 

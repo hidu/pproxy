@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"github.com/hidu/goproxy"
 	"github.com/hidu/goutils"
-	"github.com/robertkrimen/otto"
-	"io/ioutil"
 	"log"
 	"math/rand"
 	"net/http"
@@ -20,8 +18,6 @@ import (
 	"time"
 )
 
-var js *otto.Otto
-
 type ProxyServe struct {
 	goproxy *goproxy.ProxyHttpServer
 	wsproxy *WebsocketProxy
@@ -33,10 +29,7 @@ type ProxyServe struct {
 
 	MaxResSaveLength int64
 
-	RewriteJs string
-
-	RewriteJsFn otto.Value
-	mu          sync.RWMutex
+	mu sync.RWMutex
 
 	Debug bool
 
@@ -47,6 +40,8 @@ type ProxyServe struct {
 	Users        map[string]*User
 	ProxyClients map[string]*clientSession
 	reqNum       int64
+
+	reqMod *requestModifier
 }
 
 type kvType map[string]interface{}
@@ -181,19 +176,13 @@ func NewProxyServe(confPath string, port int) (*ProxyServe, error) {
 
 	proxy.conf = conf
 
-	js = otto.New()
 	jsPath := proxy.GetRewriteJsPath()
-
-	if utils.File_exists(jsPath) {
-		script, err := ioutil.ReadFile(jsPath)
-		if err == nil {
-			err = proxy.parseAndSaveRewriteJs(string(script))
-			if err != nil {
-				fmt.Println("load rewrite js failed:", err)
-				return nil, err
-			}
-		}
+	proxy.reqMod = NewRequestModifier(jsPath)
+	err = proxy.reqMod.tryLoadJs()
+	if err != nil {
+		return nil, err
 	}
+
 	setupLog(conf.DataDir, conf.Port)
 
 	proxy.loadHosts()
