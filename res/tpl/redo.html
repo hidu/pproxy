@@ -20,7 +20,9 @@
 </legend>
 <table id="tb_header" style="display:none">
 {{range $k,$v:=.req.header}}
-<tr><th>{{$k}}:</th><td>
+<tr>
+<th>{{$k}}:</th>
+<td>
   {{range $index,$_v:=$v}}
     <div><input type="text" name="header_{{$k}}" value="{{$_v|html}}" class="form-control"></div>
  {{end}}
@@ -115,7 +117,7 @@ function add_tr(obj,pre){
    <td><input type='text' disabled=disabled class='form-control' placeholder='param value'></td>\
    <td class='last'><a href='#' onclick='$(this).parents(\"tr\").remove();return flase;'>del</a></td>\
    </tr>";
-   if(typeof obj=="Object"){
+   if(typeof obj=="object"){
     $(obj).parents("tr").after(html);
    }else{
 	   $(obj).prepend(html)
