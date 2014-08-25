@@ -57,6 +57,7 @@ func (ctx *requestCtx) PrintLog() {
 	}
 	log.Println(
 		"session_id:", ctx.SessionId,
+		"remote:", ctx.RemoteAddr,
 		"reqNum:", reqNum,
 		"docid:", ctx.Docid,
 		"uname:", ctx.User.Name,

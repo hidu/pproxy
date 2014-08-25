@@ -41,12 +41,13 @@ func (ser *ProxyServe) onRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*htt
 	ser.regirestReq(req, reqCtx)
 
 	defer reqCtx.PrintLog()
-	removeHeader(req)
 
-	if ser.conf.AuthType != AuthType_NO && !ser.checkHttpAuth(req, reqCtx) {
+	if !ser.checkHttpAuth(req, reqCtx) {
 		reqCtx.LogData["status"] = "login required"
 		return nil, auth.BasicUnauthorized(req, "pproxy auth need")
 	}
+
+	removeHeader(req)
 
 	post_vs := getPostData(req)
 	reqCtx.FormPost = post_vs

@@ -73,7 +73,7 @@ func LoadConfig(confPath string) (*Config, error) {
 	config.DataDir = gconf.MustValue(goconfig.DEFAULT_SECTION, "dataDir")
 
 	_authType := strings.ToLower(gconf.MustValue(goconfig.DEFAULT_SECTION, "authType", "none"))
-	authTypes := map[string]int{"none": 0, "basic": 1, "try_basic": 2}
+	authTypes := map[string]int{"none": 0, "basic": 1, "basic_any": 2, "basic_try": 3}
 
 	hasError := false
 	if authType, has := authTypes[_authType]; has {

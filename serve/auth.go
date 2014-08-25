@@ -44,6 +44,8 @@ func (ser *ProxyServe) checkUserLogin(userInfo *User) bool {
 //(ser.conf.AuthType == AuthType_Basic && !ser.CheckUserLogin(reqCtx.User))
 func (ser *ProxyServe) checkHttpAuth(req *http.Request, reqCtx *requestCtx) bool {
 	switch ser.conf.AuthType {
+	case AuthType_NO:
+		return true
 	case AuthType_Basic:
 		return ser.checkUserLogin(reqCtx.User)
 	case AuthType_Basic_WithAny:
