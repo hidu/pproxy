@@ -16,6 +16,7 @@ type Config struct {
 	DataDir      string `json:"dataDir"`
 	ResponseSave int    `json:"responseSave"`
 	SessionView  int    `json:"sessionView"`
+	DataStoreDay int    `json:"dataStoreDay"`
 }
 
 const (
@@ -68,6 +69,12 @@ func LoadConfig(confPath string) (*Config, error) {
 	}
 	config := new(Config)
 	config.Port = gconf.MustInt(goconfig.DEFAULT_SECTION, "port", 8080)
+	config.DataStoreDay = gconf.MustInt(goconfig.DEFAULT_SECTION, "dataStoreDay", 0)
+	if config.DataStoreDay < 0 {
+		log.Println("wrong DataStoreDay,skip")
+		config.DataStoreDay = 0
+	}
+
 	config.Title = gconf.MustValue(goconfig.DEFAULT_SECTION, "title")
 	config.Notice = gconf.MustValue(goconfig.DEFAULT_SECTION, "notice")
 	config.DataDir = gconf.MustValue(goconfig.DEFAULT_SECTION, "dataDir")

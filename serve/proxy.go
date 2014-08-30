@@ -75,7 +75,7 @@ func (ser *ProxyServe) onRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*htt
 
 func (ser *ProxyServe) saveRequestData(req *http.Request, reqCtx *requestCtx) {
 	if ser.conf.ResponseSave == ResponseSave_All || (ser.conf.ResponseSave == ResponseSave_HasBroad && reqCtx.HasBroadcast) {
-		logdata := kvType{}
+		logdata := KvType{}
 		logdata["host"] = req.Host
 		logdata["schema"] = req.URL.Scheme
 		logdata["header"] = map[string][]string(req.Header)
@@ -153,7 +153,7 @@ func (ser *ProxyServe) logResponse(res *http.Response, ctx *goproxy.ProxyCtx) {
 	if reqCtx.Docid < 1 {
 		return
 	}
-	data := kvType{}
+	data := KvType{}
 	data["session_id"] = ctx.Session
 	data["now"] = time.Now().Unix()
 	data["header"] = map[string][]string(res.Header)

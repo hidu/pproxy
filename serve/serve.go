@@ -44,7 +44,7 @@ type ProxyServe struct {
 	reqMod *requestModifier
 }
 
-type kvType map[string]interface{}
+type KvType map[string]interface{}
 
 func (ser *ProxyServe) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	host, port_int, err := getHostPortFromReq(req)
@@ -120,7 +120,7 @@ func (ser *ProxyServe) GetNewDocid() int {
 	return int(time.Now().UnixNano() + ser.reqNum)
 }
 
-func (ser *ProxyServe) GetResponseByDocid(docid int) (res_data kvType) {
+func (ser *ProxyServe) GetResponseByDocid(docid int) (res_data KvType) {
 	res_data, err := ser.mydb.ResponseTable.GetByKey(docid)
 	if err != nil {
 		log.Println("read res by docid failed,docid=", docid, err)
@@ -128,7 +128,7 @@ func (ser *ProxyServe) GetResponseByDocid(docid int) (res_data kvType) {
 	//  fmt.Println(docid,res_data)
 	return res_data
 }
-func (ser *ProxyServe) GetRequestByDocid(docid int) (req_data kvType) {
+func (ser *ProxyServe) GetRequestByDocid(docid int) (req_data KvType) {
 	req_data, err := ser.mydb.RequestTable.GetByKey(docid)
 	if err != nil {
 		log.Println("read req by docid failed,docid=", docid, err)
@@ -187,7 +187,7 @@ func NewProxyServe(confPath string, port int) (*ProxyServe, error) {
 
 	proxy.loadHosts()
 
-	proxy.mydb = NewTieDb(fmt.Sprintf("%s/%d/", conf.DataDir, conf.Port))
+	proxy.mydb = NewTieDb(fmt.Sprintf("%s/%d/", conf.DataDir, conf.Port), conf.DataStoreDay)
 	proxy.startTime = time.Now()
 	proxy.MaxResSaveLength = 2 * 1024 * 1024
 
