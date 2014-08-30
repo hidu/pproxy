@@ -62,6 +62,9 @@ socket.on("req", function(dataStr64) {
     "</tr>";
     $("#tb_network tbody").prepend(html);
 })
+socket.on("user_num", function(data) {
+	$("#user_num_online").html(data);
+})
 socket.on("res",
         function(dataStr64) {
 	        var dataStr=Base64.decode(dataStr64);

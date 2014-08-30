@@ -26,12 +26,12 @@
           <ul>
             <li  class="border_first">{{.notice}}</li>
             <li><span id="connect_status">&nbsp;</span></li>
-            <li>{{.userOnlineTotal}} user</li>
+            <li><span id="user_num_online">{{.userOnlineTotal}}</span> user</li>
             {{if .isLogin}}
               <li>{{.user.Name}}</li> 
-              <li><a href="/logout">logout</a></li> 
+              <li><a href="/logout">logout</a></li>
              {{else}}
-              <li><a href="/login">login</a></li> 
+              <li><a href="/login">login</a></li>
             {{end}}
          </ul> 
          </div>

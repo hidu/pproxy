@@ -2,7 +2,6 @@ package serve
 
 import (
 	"fmt"
-	"github.com/hidu/goproxy"
 	"github.com/hidu/goutils"
 	"log"
 	"math/rand"
@@ -19,7 +18,7 @@ import (
 )
 
 type ProxyServe struct {
-	goproxy *goproxy.ProxyHttpServer
+	httpProxy *HttpProxy
 	wsproxy *WebsocketProxy
 	mydb    *TieDb
 
@@ -89,19 +88,15 @@ func (ser *ProxyServe) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 					return
 				}
 			}
-			ser.goproxy.ServeHTTP(w, req)
+			ser.httpProxy.ServeHTTP(w, req)
 		}
 	}
 }
 
 func (ser *ProxyServe) Start() {
-	ser.goproxy = goproxy.NewProxyHttpServer()
-	ser.goproxy.OnRequest().HandleConnectFunc(ser.onHttpsConnect)
-	ser.goproxy.OnRequest().DoFunc(ser.onRequest)
-	ser.goproxy.OnResponse().DoFunc(ser.onResponse)
-
+	ser.httpProxy=NewHttpProxy(ser)
 	ser.wsproxy = NewWsProxy(ser)
-
+	
 	addr := fmt.Sprintf("%s:%d", "", ser.conf.Port)
 	fmt.Println("proxy listen at ", addr)
 	ser.ws_init()

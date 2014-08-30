@@ -21,7 +21,8 @@ func (ser *ProxyServe) regirestReq(req *http.Request, reqCtx *requestCtx) {
 	ser.mu.Lock()
 	defer ser.mu.Unlock()
 	var session *clientSession
-	if client, has := ser.ProxyClients[ip]; has {
+	client, has := ser.ProxyClients[ip]
+	if has {
 		session = client
 	} else {
 		session = &clientSession{
@@ -45,6 +46,10 @@ func (ser *ProxyServe) regirestReq(req *http.Request, reqCtx *requestCtx) {
 	ser.ProxyClients[ip] = session
 
 	reqCtx.ClientSession = session
+	
+	if(!has){
+		ser.wsSer.broadProxyClientNum()
+	}
 }
 
 func (ser *ProxyServe) cleanExpiredSession() {
@@ -62,4 +67,5 @@ func (ser *ProxyServe) cleanExpiredSession() {
 		delete(ser.ProxyClients, ip)
 		log.Println("session expired:ip=", ip)
 	}
+	ser.wsSer.broadProxyClientNum()
 }

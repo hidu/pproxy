@@ -74,7 +74,7 @@ func (w *WebsocketProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		if hasSave {
 			return
 		}
-		w.ser.saveRequestData(req, reqCtx)
+		w.ser.httpProxy.saveRequestData(req, reqCtx)
 		reqCtx.PrintLog()
 		hasSave = true
 	}
