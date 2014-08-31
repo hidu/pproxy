@@ -54,8 +54,8 @@ func (wsSer *wsServer) init() {
 	wsSer.server.On("client_filter", wsSer.save_filter)
 
 	utils.SetInterval(func() {
-		wsSer.broadcastHello()
-	}, 120)
+		wsSer.broadcast("hello","hello",false)
+	}, 5)
 }
 
 func (wsSer *wsServer) remove(id string) {
@@ -125,7 +125,7 @@ func (wsSer *wsServer) send(ns socketio.Socket, msg_name string, data interface{
 	defer func(ns socketio.Socket) {
 		wsSer.mu.Unlock()
 		if e := recover(); e != nil {
-			log.Println("ws_send failed", e)
+			log.Println("ws_send failed", e,ns.Request().RemoteAddr)
 			wsSer.remove(ns.Id())
 		}
 	}(ns)
@@ -140,13 +140,10 @@ func (wsSer *wsServer) send(ns socketio.Socket, msg_name string, data interface{
 	}
 }
 
-func (wsSer *wsServer) broadcastHello() {
-	for _, client := range wsSer.clients {
-		wsSer.send(client.ns, "hello", "hidu", false)
-	}
-}
-
 func (wsSer *wsServer) broadcastReq(req *http.Request, reqCtx *requestCtx, data interface{}) bool {
+	wsSer.mu.RLock()
+	defer wsSer.mu.RUnlock()
+	
 	hasSend := false
 	for _, client := range wsSer.clients {
 		if wsSer.proxySer.conf.SessionView == SessionView_IP_OR_USER && len(client.filter_ip) == 0 && len(client.filter_user) == 0 {
