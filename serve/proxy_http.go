@@ -12,23 +12,23 @@ import (
 	"time"
 )
 
-type HttpProxy struct{
-  GoProxy *goproxy.ProxyHttpServer
-  ser *ProxyServe
+type HttpProxy struct {
+	GoProxy *goproxy.ProxyHttpServer
+	ser     *ProxyServe
 }
 
-func NewHttpProxy(ser *ProxyServe) *HttpProxy{
-    proxy:=new(HttpProxy)
-    proxy.ser=ser
-	proxy.GoProxy= goproxy.NewProxyHttpServer()
+func NewHttpProxy(ser *ProxyServe) *HttpProxy {
+	proxy := new(HttpProxy)
+	proxy.ser = ser
+	proxy.GoProxy = goproxy.NewProxyHttpServer()
 	proxy.GoProxy.OnRequest().HandleConnectFunc(proxy.onHttpsConnect)
 	proxy.GoProxy.OnRequest().DoFunc(proxy.onRequest)
 	proxy.GoProxy.OnResponse().DoFunc(proxy.onResponse)
 	return proxy
 }
 
-func (proxy *HttpProxy)ServeHTTP(rw http.ResponseWriter, req *http.Request){
-  proxy.GoProxy.ServeHTTP(rw,req)
+func (proxy *HttpProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
+	proxy.GoProxy.ServeHTTP(rw, req)
 }
 
 //@todo now not work

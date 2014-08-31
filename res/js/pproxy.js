@@ -3,10 +3,46 @@ var connectNum=0;
 var pproxy_colors=["#FFFFFF","#CCFFFF","#FFCCCC","#99CCCC","996699","#CC9999","#0099CC","#FFFF66","#336633","#99CC00"]
 
 var ip_colors={} 
+var pproxy_session_max_len=0;
+
+var pproxy_req_list=[];
+
+if(window.localStorage){
+	pproxy_req_list=$.parseJSON(window.localStorage["reqs"]||"[]")
+	pproxy_session_max_len=1000;
+}
+
+function pproxy_show_reqs_from_local(){
+	for(var i=0;i<pproxy_req_list.length;i++){
+		pproxy_show_req(pproxy_req_list[i])
+	}
+}
+
+window.onbeforeunload=function(){
+	if(pproxy_session_max_len>0){
+		window.localStorage["reqs"]=JSON.stringify(pproxy_req_list)
+	}
+}
+
+function pproxy_save_req_local(dataStr64){
+	if(pproxy_session_max_len<1){
+		return;
+	}
+	var n=pproxy_req_list.push(dataStr64)
+	if(n>pproxy_session_max_len){
+		pproxy_req_list.shift();
+	}
+}
+
+function pporxy_session_clean(){
+	pproxy_req_list=[]
+	$('#tb_network tbody').empty();
+}
 
 function pproxy_log(msg){
 	$("#log_div").append("<div>"+(new Date().toString())+":"+msg+"</div>");
 }
+
 
 socket.on('connect', function() {
 	connectNum++
@@ -46,7 +82,8 @@ function pproxy_getColor(addr){
 	return color
 }
 
-socket.on("req", function(dataStr64) {
+
+function pproxy_show_req(dataStr64) {
     var dataStr=Base64.decode(dataStr64);
 	var data=$.parseJSON(dataStr)
 	
@@ -61,10 +98,19 @@ socket.on("req", function(dataStr64) {
     "<td><div class='oneline' title='"+h(data["url"])+"'>" +data["method"]+"&nbsp;"+ h(data["path"])+ "</div></td>" + 
     "</tr>";
     $("#tb_network tbody").prepend(html);
-})
+}
+
+
+socket.on("req",function(dataStr64){
+	pproxy_save_req_local(dataStr64)
+	pproxy_show_req(dataStr64)
+});
+
+
 socket.on("user_num", function(data) {
 	$("#user_num_online").html(data);
-})
+});
+
 socket.on("res",
         function(dataStr64) {
 	        var dataStr=Base64.decode(dataStr64);
@@ -268,6 +314,8 @@ $().ready(function() {
         	}
         })(docid),500);
     }
+    
+    setTimeout(pproxy_show_reqs_from_local,0);
 });
 
 function pproxy_local_save(target,id){

@@ -46,8 +46,8 @@ func (ser *ProxyServe) regirestReq(req *http.Request, reqCtx *requestCtx) {
 	ser.ProxyClients[ip] = session
 
 	reqCtx.ClientSession = session
-	
-	if(!has){
+
+	if !has {
 		ser.wsSer.broadProxyClientNum()
 	}
 }

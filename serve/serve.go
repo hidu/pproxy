@@ -19,8 +19,8 @@ import (
 
 type ProxyServe struct {
 	httpProxy *HttpProxy
-	wsproxy *WebsocketProxy
-	mydb    *TieDb
+	wsproxy   *WebsocketProxy
+	mydb      *TieDb
 
 	wsSer *wsServer
 
@@ -94,9 +94,9 @@ func (ser *ProxyServe) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 }
 
 func (ser *ProxyServe) Start() {
-	ser.httpProxy=NewHttpProxy(ser)
+	ser.httpProxy = NewHttpProxy(ser)
 	ser.wsproxy = NewWsProxy(ser)
-	
+
 	addr := fmt.Sprintf("%s:%d", "", ser.conf.Port)
 	fmt.Println("proxy listen at ", addr)
 	ser.ws_init()
@@ -171,8 +171,7 @@ func NewProxyServe(confPath string, port int) (*ProxyServe, error) {
 
 	proxy.conf = conf
 
-	jsPath := proxy.GetRewriteJsPath()
-	proxy.reqMod = NewRequestModifier(jsPath)
+	proxy.reqMod = NewRequestModifier(proxy)
 	err = proxy.reqMod.tryLoadJs()
 	if err != nil {
 		return nil, err

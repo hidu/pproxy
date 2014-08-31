@@ -39,7 +39,7 @@ func (tb *KvTable) GetByKey(id int) (data KvType, err error) {
 }
 func (tb *KvTable) Scrub() {
 	tb.tdb.Scrub(tb.name)
-	tb.col=tb.tdb.Use(tb.name)
+	tb.col = tb.tdb.Use(tb.name)
 }
 
 func (tb *KvTable) Set(id int, data KvType) error {
@@ -71,7 +71,7 @@ func (tb *KvTable) Gc(max_time_unix int64) int {
 			deleteIds = append(deleteIds, id)
 			return true
 		}
-		_,hasNow:=doc["now"];
+		_, hasNow := doc["now"]
 		if (hasNow && int64(doc["now"].(float64)) < max_time_unix) || !hasNow {
 			deleteIds = append(deleteIds, id)
 		}

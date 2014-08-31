@@ -17,12 +17,15 @@ type requestModifier struct {
 	jsStr  string
 	jsFn   otto.Value
 	canMod bool
+	ser    *ProxyServe
 }
 
-func NewRequestModifier(jsPath string) *requestModifier {
+func NewRequestModifier(ser *ProxyServe) *requestModifier {
+	jsPath := ser.GetRewriteJsPath()
 	reqMod := &requestModifier{
 		jsVm:   otto.New(),
 		jsPath: jsPath,
+		ser:    ser,
 	}
 	return reqMod
 }

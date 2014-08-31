@@ -40,12 +40,12 @@ func (wsSer *wsServer) init() {
 		wsSer.mu.Lock()
 		defer wsSer.mu.Unlock()
 		wsSer.clients[ns.Id()] = &wsClient{ns: ns, user: "guest"}
-		
-		log.Println("ws connected", ns.Request().RemoteAddr, ns.Id(),"ws_client_num:",len(wsSer.clients))
+
+		log.Println("ws connected", ns.Request().RemoteAddr, ns.Id(), "ws_client_num:", len(wsSer.clients))
 	})
 	wsSer.server.On("disconnection", func(ns socketio.Socket) {
 		wsSer.remove(ns.Id())
-		log.Println("ws disconnect", ns.Request().RemoteAddr, ns.Id(),"ws_client_num:",len(wsSer.clients))
+		log.Println("ws disconnect", ns.Request().RemoteAddr, ns.Id(), "ws_client_num:", len(wsSer.clients))
 	})
 	wsSer.server.On("error", func(ns socketio.Socket, err error) {
 		log.Println("ws error:", err)
@@ -66,10 +66,9 @@ func (wsSer *wsServer) remove(id string) {
 	}
 }
 
-func (wsSer *wsServer)broadProxyClientNum(){
-	wsSer.broadcast("user_num",len(wsSer.proxySer.ProxyClients),false)
+func (wsSer *wsServer) broadProxyClientNum() {
+	wsSer.broadcast("user_num", len(wsSer.proxySer.ProxyClients), false)
 }
-
 
 /**
 *https://github.com/googollee/go-socket.io
@@ -166,7 +165,7 @@ func (wsSer *wsServer) broadcastReq(req *http.Request, reqCtx *requestCtx, data 
 	return hasSend
 }
 
-func (wsSer *wsServer) broadcast(name string,data interface{},encode bool) {
+func (wsSer *wsServer) broadcast(name string, data interface{}, encode bool) {
 	wsSer.mu.RLock()
 	defer wsSer.mu.RUnlock()
 	for _, client := range wsSer.clients {

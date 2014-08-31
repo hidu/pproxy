@@ -41,8 +41,8 @@ func (ser *ProxyServe) handleLocalReq(w http.ResponseWriter, req *http.Request) 
 		ser.wsSer.server.ServeHTTP(w, req)
 		return
 	}
-	log.Println("web_access",req.Method,req.URL.String(),req.RemoteAddr,"refer:",req.Referer())
-	
+	log.Println("web_access", req.Method, req.URL.String(), req.RemoteAddr, "refer:", req.Referer())
+
 	values := make(map[string]interface{})
 	values["title"] = ser.conf.Title
 	values["subTitle"] = ""
