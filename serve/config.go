@@ -34,13 +34,18 @@ const (
 
 type User struct {
 	Name         string
-	Psw          string //md5 encode
+	Psw          string
+	PswMd5       string
 	IsAdmin      bool
 	SkipCheckPsw bool
 }
 
 func (u *User) String() string {
 	return fmt.Sprintf("Name:%s,Psw:%s,isAdmin:%v,SkipCheckPsw:%v", u.Name, u.Psw, u.IsAdmin, u.SkipCheckPsw)
+}
+
+func (u *User) ConfigString() string {
+	return fmt.Sprintf("name:%s\tpsw:%s\tis_admin:%v\tpsw_md5:%s", u.Name, u.Psw, u.IsAdmin, u.PswMd5)
 }
 
 const (
@@ -58,7 +63,7 @@ func GetDemoConf() string {
 }
 
 func (u *User) isPswEq(psw string) bool {
-	return u.Psw == utils.StrMd5(psw)
+	return u.PswMd5 == utils.StrMd5(psw)
 }
 
 func LoadConfig(confPath string) (*Config, error) {
@@ -150,24 +155,33 @@ func loadUsers(confPath string) (users map[string]*User, err error) {
 		log.Println("load user file failed:", confPath, err)
 		return
 	}
-	lines := utils.LoadText2Slice(string(userInfo_byte))
+	lines := utils.LoadText2SliceMap(string(userInfo_byte))
 	for _, line := range lines {
-		if len(line) < 2 {
-			log.Println("skip user file,line:", line)
+		name, has := line["name"]
+		if !has || name == "" {
 			continue
 		}
-		isAdmin := len(line) > 2 && line[2] == "admin"
-		psw := line[1]
-		if strings.HasSuffix(psw, ":md5") {
-			if len(psw) == 36 {
-				psw = psw[:32]
-			} else {
-				log.Println("user config wrong", line)
-			}
-		} else {
-			psw = utils.StrMd5(psw)
+		if _, has := users[name]; has {
+			log.Println("dup name in users:", name, line)
+			continue
 		}
-		users[line[0]] = &User{Name: line[0], Psw: psw, IsAdmin: isAdmin}
+
+		user := new(User)
+		user.Name = name
+		if val, has := line["is_admin"]; has && (val == "admin" || val == "true") {
+			user.IsAdmin = true
+		}
+		if val, has := line["psw_md5"]; has {
+			user.PswMd5 = val
+		}
+
+		if user.PswMd5 == "" {
+			if val, has := line["psw"]; has {
+				user.Psw = val
+				user.PswMd5 = utils.StrMd5(val)
+			}
+		}
+		users[user.Name] = user
 	}
 	return
 }

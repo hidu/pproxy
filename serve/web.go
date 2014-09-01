@@ -29,7 +29,7 @@ func (ser *ProxyServe) web_checkLogin(req *http.Request) (user *User, isLogin bo
 		return
 	}
 	if user, has := ser.Users[info[0]]; has {
-		if user.Psw == info[1] {
+		if user.PswMd5 == info[1] {
 			return user, true
 		}
 	}
@@ -118,7 +118,7 @@ func (ser *ProxyServe) handleLogin(w http.ResponseWriter, req *http.Request) {
 			log.Println("login suc,name=", name)
 			cookie := &http.Cookie{
 				Name:    CookieName,
-				Value:   fmt.Sprintf("%s:%s", name, user.Psw),
+				Value:   fmt.Sprintf("%s:%s", name, user.PswMd5),
 				Path:    "/",
 				Expires: time.Now().Add(86400 * time.Second),
 			}

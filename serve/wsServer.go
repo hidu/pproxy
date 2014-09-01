@@ -54,8 +54,8 @@ func (wsSer *wsServer) init() {
 	wsSer.server.On("client_filter", wsSer.save_filter)
 
 	utils.SetInterval(func() {
-		wsSer.broadcast("hello","hello",false)
-	}, 5)
+		wsSer.broadcast("hello", "hello", false)
+	}, 120)
 }
 
 func (wsSer *wsServer) remove(id string) {
@@ -79,7 +79,7 @@ func (wsSer *wsServer) get_response(ns socketio.Socket, docid_str string) {
 		log.Println("parse str2int failed", docid_str, uint_parse_err)
 		return
 	}
-	log.Println("receive docid", docid)
+	log.Println("receive docid", docid, ns.Request().RemoteAddr)
 	req := wsSer.proxySer.GetRequestByDocid(docid)
 	res := wsSer.proxySer.GetResponseByDocid(docid)
 	if wsSer.proxySer.Debug {
@@ -125,7 +125,7 @@ func (wsSer *wsServer) send(ns socketio.Socket, msg_name string, data interface{
 	defer func(ns socketio.Socket) {
 		wsSer.mu.Unlock()
 		if e := recover(); e != nil {
-			log.Println("ws_send failed", e,ns.Request().RemoteAddr)
+			log.Println("ws_send failed", e, ns.Request().RemoteAddr)
 			wsSer.remove(ns.Id())
 		}
 	}(ns)
@@ -143,7 +143,7 @@ func (wsSer *wsServer) send(ns socketio.Socket, msg_name string, data interface{
 func (wsSer *wsServer) broadcastReq(req *http.Request, reqCtx *requestCtx, data interface{}) bool {
 	wsSer.mu.RLock()
 	defer wsSer.mu.RUnlock()
-	
+
 	hasSend := false
 	for _, client := range wsSer.clients {
 		if wsSer.proxySer.conf.SessionView == SessionView_IP_OR_USER && len(client.filter_ip) == 0 && len(client.filter_user) == 0 {

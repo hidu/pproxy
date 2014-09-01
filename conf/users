@@ -1,2 +1,1 @@
-#name psw isAdmin
-admin psw admin
+name:admin psw:psw is_admin:admin
