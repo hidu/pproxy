@@ -1,35 +1,41 @@
 <div id="bd0">
 <br/>
-<p class="h4">使用说明</p>
-简单的介绍下如何使用该程序抓取分析http协议
-<p class="h6">1.客户端（如手机）</p>
+<p class="h4">Useage</p>
+<p class="h6">1.Client（eg:phone）</p>
 <pre>
-找到wifi网络设置项
-设置代理为 <b>手动</b>
-主机地址 ： <b>{{.pproxy_host}}</b>
-主机端口 ： <b>{{.pproxy_port}}</b>
+set wifi http proxy:
+proxy host ： <b>{{.pproxy_host}}</b>
+proxy port ： <b>{{.pproxy_port}}</b>
 
 </pre>
-<small>推荐android 用户使用类似 proxyDroid 这样的应用来管理多个代理</small>
+<small>android users can use <b>proxyDroid</b> to manager proxys</small>
 
-<p class="h6">2.服务端-前端</p>
+<p class="h6">2.Server:user interface</p>
 <pre>
-进入<a href="/">首页的session列表</a>查看所有http会话。
-输入客户端的ip地址 或者http basic认证的用户名来过滤查看对应的会话信息。
-所有的输入框都可以使用<font color=red>|</font>来输入多个条件(或)。如user:<input type="text" value="a|b" style="width:40px">表示过滤出用户为a或b的。
-redo 功能可以很方便的让我们重发请求。
+visit <a href="/">Session List Page</a> to view all the http request through this proxy.
+in the session filter form, all text input can use<font color=red>|</font> to enter multiple conditions.
+eg user:<input type="text" value="a|b" style="width:40px">,it mean user is a or b.
+you can use <b>redo</b> to playback a request.
 </pre>
 
-<p class="h6">3.改写请求</p>
+<p class="h6">3.Modify Requests</p>
+<div>you can modify http request.GET、POST paramas and http headers.</div>
+<div>pproxy use javascript to achieve it:</div>
 <pre>
-即对request进行修改。(支持普通http get、post请求以及<b>websocket</b>)
-pproxy使用js代码来进行配置，大致如下 
 function rewrite(req){
-    //here you code
+    //you code start<span style="color:blue">
+    if(req.host=="www.baidu.com"){
+	   req.host="www.163.com"
+	   req.host_addr="127.0.0.0:81" // send req to 127.0.0.1:81
+	   form_get.add("a","a")
+	   //form_post.set("d","a")
+	}</span>
+    // you code end
     return req
 }
-url : http://www.example.com/album/list?cid=126
-req对象有如下一下属性：
+</pre>
+<div><b>req object has these attributes</b>(url=http://www.example.com/album/list?cid=126)：</div>
+<pre>
 schema : http
 host : www.example.com
 port : 80
@@ -42,19 +48,17 @@ method: GET
 form_get  : {add:function(k,v){},set:function(k,v){},get:function(k){},len:function(){}} 
 form_post : {add:function(k,v){},set:function(k,v){},get:function(k){},len:function(){}}
 
-host_addr: #修改该请求的host是使用，如 127.0.0.1:3218
-
-#注意 get 和post的值是二维数组，如上cid参数
-#form_get 用于更方便的操作  get参数对象
-#form_post 用于更方便的操作 post参数对象
+host_addr: #the real host you wish，eg 127.0.0.1:3218
 </pre>
 
-<p class="h6">4.改写Hosts</p>
+<p class="h6">4.Modify Hosts</p>
 <pre>
+#all port
 news.baidu.com 127.0.0.1
 
-news.163.com 127.0.0.1:8080
-
-#只修改指定端口的hosts
+#only 81 port match
 news.baidu.com:81 127.0.0.1:82
+
+news.163.com 127.0.0.1:8080
 </pre>
+</div>
