@@ -5,18 +5,21 @@ import (
 	"github.com/Unknwon/goconfig"
 	"github.com/hidu/goutils"
 	"log"
+	"net/http"
+	"net/url"
 	"strings"
 )
 
 type Config struct {
-	Port         int    `json:"port"`
-	Title        string `json:"title"`
-	Notice       string `json:"notice"`
-	AuthType     int    `json:"authType"`
-	DataDir      string `json:"dataDir"`
-	ResponseSave int    `json:"responseSave"`
-	SessionView  int    `json:"sessionView"`
-	DataStoreDay int    `json:"dataStoreDay"`
+	Port         int
+	Title        string
+	Notice       string
+	AuthType     int
+	DataDir      string
+	ResponseSave int
+	SessionView  int
+	DataStoreDay int
+	ParentProxy  *url.URL
 }
 
 const (
@@ -115,6 +118,17 @@ func LoadConfig(confPath string) (*Config, error) {
 		log.Println("conf error,unknow value responseSave:", _authType)
 	}
 
+	parentProxy := gconf.MustValue(goconfig.DEFAULT_SECTION, "parentProxy", "")
+	if parentProxy != "" {
+		_urlObj, err := url.Parse(parentProxy)
+		if err != nil || _urlObj.Scheme != "http" {
+			hasError = true
+			log.Println("parentProxy wrong,must http proxy")
+		} else {
+			config.ParentProxy = _urlObj
+		}
+	}
+
 	if hasError {
 		return config, fmt.Errorf("config error")
 	}
@@ -184,4 +198,16 @@ func loadUsers(confPath string) (users map[string]*User, err error) {
 		users[user.Name] = user
 	}
 	return
+}
+
+func (config *Config) getTransport() *http.Transport {
+	if config.ParentProxy == nil {
+		return nil
+	}
+	tr := &http.Transport{
+		Proxy: func(req *http.Request) (*url.URL, error) {
+			return config.ParentProxy, nil
+		},
+	}
+	return tr
 }

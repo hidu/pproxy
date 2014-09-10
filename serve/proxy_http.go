@@ -21,6 +21,11 @@ func NewHttpProxy(ser *ProxyServe) *HttpProxy {
 	proxy := new(HttpProxy)
 	proxy.ser = ser
 	proxy.GoProxy = goproxy.NewProxyHttpServer()
+	tr := ser.conf.getTransport()
+	if tr != nil {
+		proxy.GoProxy.Tr = tr
+	}
+
 	proxy.GoProxy.OnRequest().HandleConnectFunc(proxy.onHttpsConnect)
 	proxy.GoProxy.OnRequest().DoFunc(proxy.onRequest)
 	proxy.GoProxy.OnResponse().DoFunc(proxy.onResponse)

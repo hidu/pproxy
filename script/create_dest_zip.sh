@@ -16,6 +16,7 @@ if [ -d conf ];then
   rm -rf conf
 fi
 
+rm -rf data/*
 mkdir conf
 cp ../res/conf/demo.conf conf/pproxy.conf
 echo -e "#name psw isAdmin\nadmin psw admin">conf/users
