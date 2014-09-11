@@ -19,7 +19,7 @@ fi
 rm -rf data/*
 mkdir conf
 cp ../res/conf/demo.conf conf/pproxy.conf
-echo -e "#name psw isAdmin\nadmin psw admin">conf/users
+echo -e "name:admin psw:psw is_admin:admin">conf/users
 cp ../conf/req_rewrite_8080.js conf/
 echo -e "news.baidu.com 127.0.0.1\nnews.163.com 127.0.0.1:81">conf/hosts_8080
 
