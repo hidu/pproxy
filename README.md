@@ -98,7 +98,7 @@ users配置:
 name:admin psw:psw is_admin:admin
 
 #密码也可以存储为md5值，使用  psw_md5：32位md密码
-name:admin psw_md5:7bb483729b5a8e26f73e1831cde5b842 is_admin:admin
+name:admin_sec psw_md5:7bb483729b5a8e26f73e1831cde5b842 is_admin:admin
 ```
 可以在线修改配置时必须使用管理员帐号登录
 
