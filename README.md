@@ -30,6 +30,9 @@ http抓包代理程序,http协议调试工具。
    
 6.redo功能
    可以修改request的参数（get、post、header）
+
+7.父级代理
+  
 </pre>
 
 使用javascript来配置重定向功能，如
@@ -91,13 +94,17 @@ conf/
 
 users配置:
 ```
-#name psw isAdmin
-admin e10adc3949ba59abbe56e057f20f883e:md5 admin   #帐号 admin，密码 是 md5(123456),是管理员帐号
+#帐号 admin，密码 是 psw,是管理员帐号
+name:admin psw:psw is_admin:admin
+
+#密码也可以存储为md5值，使用  psw_md5：32位md密码
+name:admin psw_md5:7bb483729b5a8e26f73e1831cde5b842 is_admin:admin
 ```
 可以在线修改配置时必须使用管理员帐号登录
 
 配置文件示例:
 ```
+
 port : 8080
 
 title : demo
@@ -106,16 +113,22 @@ notice :notice notice
 #数据存放目录，相对于当前配置的路径
 dataDir : ../data/
 
+#数据存放天数，0为永久存储（目前只在重启的时候会进行数据清理）
+dataStoreDay : 15
+
 #代理服务认证方式
+#options:{none : 无认证,basic:http basic ,basic_try:尝试httpBasic认证 ,basic_any:任意帐号}
 authType : none
-#options:{none : 无认证     basic : http basic  try_basic : 尝试httpBasic认证 }
 
 #那些request和response数据进行存储
-responseSave : all
 #options:{ all : 所有   only_broadcast : 发送到session list的才存储}
+responseSave : only_broadcast
 
 #session列表查看数据
-sessionView : all
 # options :{ all:所有人可见 ip_or_user : 输入正确的ip或者user后可见}
+sessionView : all
 
+#父级代理
+#eg http://10.10.2.2:3128 or http://name:psw@10.10.2.2:3128
+parentProxy:
 ```
