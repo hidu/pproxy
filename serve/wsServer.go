@@ -2,8 +2,8 @@ package serve
 
 import (
 	"fmt"
-	"github.com/googollee/go-socket.io"
 	"github.com/hidu/goutils"
+	"gopkg.in/hidu/go-socket.io.v1"
 	"log"
 	"net/http"
 	"net/url"
@@ -12,7 +12,7 @@ import (
 
 type wsServer struct {
 	clients  map[string]*wsClient
-	server   *socketio.Server
+	server   *socketio.SocketIOServer
 	mu       sync.RWMutex
 	proxySer *ProxyServe
 }
@@ -27,7 +27,7 @@ func newWsServer(ser *ProxyServe) *wsServer {
 		proxySer: ser,
 	}
 	var err error
-	wsSer.server, err = socketio.NewServer(nil)
+	wsSer.server = socketio.NewSocketIOServer(&socketio.Config{})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -36,18 +36,18 @@ func newWsServer(ser *ProxyServe) *wsServer {
 }
 
 func (wsSer *wsServer) init() {
-	wsSer.server.On("connection", func(ns socketio.Socket) {
+	wsSer.server.On("connect", func(ns *socketio.NameSpace) {
 		wsSer.mu.Lock()
 		defer wsSer.mu.Unlock()
 		wsSer.clients[ns.Id()] = &wsClient{ns: ns, user: "guest"}
 
-		log.Println("ws connected", ns.Request().RemoteAddr, ns.Id(), "ws_client_num:", len(wsSer.clients))
+		log.Println("ws connected", ns.Session.Request.RemoteAddr, ns.Id(), "ws_client_num:", len(wsSer.clients))
 	})
-	wsSer.server.On("disconnection", func(ns socketio.Socket) {
+	wsSer.server.On("disconnect", func(ns *socketio.NameSpace) {
 		wsSer.remove(ns.Id())
-		log.Println("ws disconnect", ns.Request().RemoteAddr, ns.Id(), "ws_client_num:", len(wsSer.clients))
+		log.Println("ws disconnect", ns.Session.Request.RemoteAddr, ns.Id(), "ws_client_num:", len(wsSer.clients))
 	})
-	wsSer.server.On("error", func(ns socketio.Socket, err error) {
+	wsSer.server.On("error", func(ns *socketio.NameSpace, err error) {
 		log.Println("ws error:", err)
 	})
 	wsSer.server.On("get_response", wsSer.get_response)
@@ -73,13 +73,13 @@ func (wsSer *wsServer) broadProxyClientNum() {
 /**
 *https://github.com/googollee/go-socket.io
  */
-func (wsSer *wsServer) get_response(ns socketio.Socket, docid_str string) {
+func (wsSer *wsServer) get_response(ns *socketio.NameSpace, docid_str string) {
 	docid, uint_parse_err := parseDocId(docid_str)
 	if uint_parse_err != nil {
 		log.Println("parse str2int failed", docid_str, uint_parse_err)
 		return
 	}
-	log.Println("receive docid", docid, ns.Request().RemoteAddr)
+	log.Println("receive docid", docid, ns.Session.Request.RemoteAddr)
 	req := wsSer.proxySer.GetRequestByDocid(docid)
 	res := wsSer.proxySer.GetResponseByDocid(docid)
 	if wsSer.proxySer.Debug {
@@ -93,7 +93,7 @@ func (wsSer *wsServer) get_response(ns socketio.Socket, docid_str string) {
 	wsSer.send(ns, "res", data, true)
 }
 
-func (wsSer *wsServer) save_filter(ns socketio.Socket, form_data string) {
+func (wsSer *wsServer) save_filter(ns *socketio.NameSpace, form_data string) {
 	m, err := url.ParseQuery(form_data)
 	if err != nil {
 		log.Println("parse filter data err", err)
@@ -108,7 +108,7 @@ func (wsSer *wsServer) save_filter(ns socketio.Socket, form_data string) {
 		nsClient.filter_url_hide = parseUrlInputAsSlice(m.Get("hide_url"))
 		nsClient.filter_user = parseUrlInputAsSlice(m.Get("user"))
 
-		loginUser, isLogin := wsSer.proxySer.web_checkLogin(ns.Request())
+		loginUser, isLogin := wsSer.proxySer.web_checkLogin(ns.Session.Request)
 		if isLogin {
 			nsClient.LoginUser = loginUser
 		}
@@ -119,13 +119,13 @@ func (wsSer *wsServer) save_filter(ns socketio.Socket, form_data string) {
 
 var nnnn int = 0
 
-func (wsSer *wsServer) send(ns socketio.Socket, msg_name string, data interface{}, encode bool) {
+func (wsSer *wsServer) send(ns *socketio.NameSpace, msg_name string, data interface{}, encode bool) {
 	wsSer.mu.Lock()
 
-	defer func(ns socketio.Socket) {
+	defer func(ns *socketio.NameSpace) {
 		wsSer.mu.Unlock()
 		if e := recover(); e != nil {
-			log.Println("ws_send failed", e, ns.Request().RemoteAddr)
+			log.Println("ws_send failed", e, ns.Session.Request.RemoteAddr, "msg_name:", msg_name, "client:", len(wsSer.clients))
 			wsSer.remove(ns.Id())
 		}
 	}(ns)

@@ -1,4 +1,4 @@
-var socket = io();
+var socket = io.connect();
 var connectNum=0;
 var pproxy_colors=["#FFFFFF","#CCFFFF","#FFCCCC","#99CCCC","996699","#CC9999","#0099CC","#FFFF66","#336633","#99CC00"]
 

@@ -1,3 +1,6 @@
+2014-09-14
+    downgrade the socket.io lib
+    
 2014-08-14
    1.emit data with base64encode
    2.fix some url has no schema

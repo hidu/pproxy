@@ -1,14 +1,14 @@
 package serve
 
 import (
-	"github.com/googollee/go-socket.io"
+	"gopkg.in/hidu/go-socket.io.v1"
 	"net/http"
 	"path/filepath"
 	"strings"
 )
 
 type wsClient struct {
-	ns              socketio.Socket
+	ns              *socketio.NameSpace
 	user            string
 	filter_user     []string
 	filter_ip       []string

@@ -7,9 +7,8 @@ http抓包代理程序,http协议调试工具。
 
 下载编译好的可执行文件: <http://pan.baidu.com/s/1i3pAe7V>  
 
-
+功能特性：
 <pre>
-支持：
 1.url重定向
    如把 http://www.baidu.com/s?wd=pproxy 修改为 http://m.baidu.com/s?wd=pproxy
    或者把 ws://www.test.com/a 重定向到 ws://www.example.com/b
