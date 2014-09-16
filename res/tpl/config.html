@@ -1,23 +1,29 @@
 <style>
 #configTable form{padding:10px;margin-right: 20px}
 </style>
+<br/>
 <div id="bd0">
 <table width="100%" id="configTable">
 <tr>
-<td valign="top" style="width:61.8%">
-<b>req rewrite</b>&nbsp; file is:<font color=gray>[req_rewrite_{{.port}}.js]</font>
+<td>
+<span class="h6">req rewrite</span><font color=gray>[req_rewrite_{{.port}}.js]</font>
 <form  method="post" action="/config" autocomplete="off" target="ifr_form">
 function rewrite(req){
 <textarea style="width:100%;height:{{.jsHeight}}px" name="js">{{.rewriteJs}}</textarea>
 return req;<br/>
 }
 <input type="hidden" name="type" value="js">
-<div style="text-align:right"><input type="submit" class="btn btn-primary" value="save"></div>
+<div style="text-align:center">
+<input type="submit" class="btn btn-primary" value="save">
+</div>
 </form>
 </td>
-<td valign="top">
-<pre>
-<b>req demo:</b>
+</tr>
+
+<tr>
+<td>
+<b>req demo:</b><a href="javascript:;" onclick="$('#pre_req_demo').toggle()">show/hide</a>
+<pre id="pre_req_demo" style="display:none">
 url : http://www.example.com/album/list?cid=126
 schema : http
 host : www.example.com
@@ -37,23 +43,25 @@ if(req.host=="www.baidu.com"){
    //form_post.set("d","a")
 }
 </pre>
+<hr/><br/>
 </td>
 </tr>
-
-
 <tr>
-<td width="50%" valign="top">
-<div><b>hosts</b>&nbsp;file is:<font color=gray>[hosts_{{.port}}]</font></div>
+<td>
+<div><span class="h6">hosts</span><font color=gray>[hosts_{{.port}}]</font></div>
 <form  method="post" action="/config" autocomplete="off" target="ifr_form">
 <textarea style="width:100%;height:100px" name="hosts">{{.hosts}}</textarea>
 <input type="hidden" name="type" value="hosts">
-<div style="text-align:right"><input type="submit" class="btn btn-primary" value="save"></div>
+<div style="text-align:center">
+<input type="submit" class="btn btn-primary" value="save">
+</div>
 </form>
 </td>
-<td valign="top">
-<br/><br/>
-<pre>
+</tr>
+<tr>
+<td>
 example:
+<pre>
 www.baidu.com 127.0.0.1
 www.baidu.com:81 10.0.2.2:8080
 </pre>
