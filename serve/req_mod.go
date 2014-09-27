@@ -42,7 +42,22 @@ func (reqMod *requestModifier) tryLoadJs(name string) (err error) {
 	if jsContent != "" && err == nil {
 		err = reqMod.parseJs(jsContent, name, false)
 		if err != nil {
-			fmt.Println("load rewrite js failed:", err)
+			log.Println("load rewrite js failed:", err)
+			return err
+		}
+		log.Println("load rewrite js[", name, "] suc")
+	}
+	return nil
+}
+
+func (reqMod *requestModifier) loadAllJs() error {
+	names := []string{""}
+	for _, user := range reqMod.ser.Users {
+		names = append(names, user.Name)
+	}
+	for _, name := range names {
+		err := reqMod.tryLoadJs(name)
+		if err != nil {
 			return err
 		}
 	}
@@ -69,6 +84,8 @@ func (reqMod *requestModifier) CanMod() bool {
 func (reqMod *requestModifier) parseJs(jsStr string, name string, save2File bool) error {
 	jsStr = strings.TrimSpace(jsStr)
 	rewriteJs := strings.Replace(rewriteJsTpl, "CUSTOM_JS", jsStr, 1)
+	rewriteJs = strings.Replace(rewriteJs, "PPROXY_HOST", fmt.Sprintf("127.0.0.1:%d", reqMod.ser.conf.Port), 1)
+
 	reqMod.jsVm.Run(rewriteJs)
 	jsFn, err := reqMod.jsVm.Get("pproxy_rewrite")
 	if err != nil {
@@ -82,8 +99,10 @@ func (reqMod *requestModifier) parseJs(jsStr string, name string, save2File bool
 		if _, has := reqMod.jsFns[name]; has {
 			delete(reqMod.jsFns, name)
 		}
+		log.Println("req_mod [", name, "] ignore")
 	} else {
 		reqMod.jsFns[name] = &jsFn
+		log.Println("req_mod [", name, "] register suc")
 	}
 	reqMod.canMod = true
 	if save2File {

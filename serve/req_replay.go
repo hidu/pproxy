@@ -8,14 +8,14 @@ import (
 )
 
 const (
-	REDO_FLAG       = "Proxy-pproxy_redo"
-	REDO_REMOTEADDR = "Proxy-pproxy_remoteaddr"
-	REDO_USER_NAME  = "Proxy-pproxy_user"
+	REPLAY_FLAG       = "Proxy-pproxy_replay"
+	REPLAY_REMOTEADDR = "Proxy-pproxy_remoteaddr"
+	REPLAY_USER_NAME  = "Proxy-pproxy_user"
 )
 
-func (ser *ProxyServe) req_redo(w http.ResponseWriter, req *http.Request, values map[string]interface{}) {
+func (ser *ProxyServe) req_replay(w http.ResponseWriter, req *http.Request, values map[string]interface{}) {
 	if req.Method == "POST" {
-		ser.req_redoPost(w, req, values)
+		ser.req_replayPost(w, req, values)
 		return
 	}
 	docid_str := strings.TrimSpace(req.FormValue("id"))
@@ -46,15 +46,15 @@ func (ser *ProxyServe) req_redo(w http.ResponseWriter, req *http.Request, values
 	u.RawQuery = ""
 	values["req"] = req_doc
 	values["action_url"] = u.String()
-	values["subTitle"] = "redo|" + u.String() + "|"
-	html := render_html("redo.html", values, true)
+	values["subTitle"] = "replay|" + u.String() + "|"
+	html := render_html("replay.html", values, true)
 	w.Write([]byte(html))
 }
 
-var redo_skip_headers = map[string]int{"Content-Length": 1}
+var replay_skip_headers = map[string]int{"Content-Length": 1}
 
-func (ser *ProxyServe) req_redoPost(w http.ResponseWriter, req *http.Request, values map[string]interface{}) {
-	redo := req.FormValue("redo")
+func (ser *ProxyServe) req_replayPost(w http.ResponseWriter, req *http.Request, values map[string]interface{}) {
+	replay := req.FormValue("replay")
 	basic := make(map[string]string)
 	basic["action_url"] = strings.TrimSpace(req.FormValue("basic_action_url"))
 	method := strings.TrimSpace(strings.ToUpper(req.FormValue("basic_method")))
@@ -77,8 +77,8 @@ func (ser *ProxyServe) req_redoPost(w http.ResponseWriter, req *http.Request, va
 	formData["post"] = post
 
 	values["form"] = formData
-	if redo == "direct" {
-		html := render_html("redo_direct.html", values, true)
+	if replay == "direct" {
+		html := render_html("replay_direct.html", values, true)
 		w.Write([]byte(html))
 		return
 	} else {
@@ -111,25 +111,25 @@ func (ser *ProxyServe) req_redoPost(w http.ResponseWriter, req *http.Request, va
 			req_bd = form_values.Encode()
 		}
 
-		redo_req, err := http.NewRequest(method, _url, strings.NewReader(req_bd))
+		replay_req, err := http.NewRequest(method, _url, strings.NewReader(req_bd))
 		if err != nil {
 			w.Write([]byte("build request failed\n" + err.Error()))
 			return
 		}
 		if host != "" {
-			redo_req.Host = host
+			replay_req.Host = host
 		}
-		redo_req.Header.Set(REDO_FLAG, "redo")
+		replay_req.Header.Set(REPLAY_FLAG, "replay")
 
-		redo_req.Header.Set(REDO_REMOTEADDR, basic_remoteAddr)
-		redo_req.Header.Set(REDO_USER_NAME, basic_user)
+		replay_req.Header.Set(REPLAY_REMOTEADDR, basic_remoteAddr)
+		replay_req.Header.Set(REPLAY_USER_NAME, basic_user)
 
 		for k, v := range header {
-			if _, has := redo_skip_headers[k]; has {
+			if _, has := replay_skip_headers[k]; has {
 				continue
 			}
-			redo_req.Header.Set(k, strings.Join(v, ";"))
+			replay_req.Header.Set(k, strings.Join(v, ";"))
 		}
-		ser.httpProxy.ServeHTTP(w, redo_req)
+		ser.httpProxy.ServeHTTP(w, replay_req)
 	}
 }

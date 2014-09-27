@@ -27,7 +27,7 @@ http抓包代理程序,http协议调试工具。
 5.登录认证支持
    支持httpBasic认证
    
-6.redo功能
+6.replay功能
    可以修改request的参数（get、post、header）
 
 7.父级代理
@@ -81,6 +81,7 @@ www.baidu.com:81 10.0.2.2:8080
 忽略禁用req_rewrite.js  
 在js文件的第一行内容写入 ```//ignore```
 
+req_rewrite.js支持不同用户设置不同的规则。默认使用当前验证使用用户名的规则，若无则使用默认的。  
 
 配置文件：
 ```
@@ -131,5 +132,6 @@ sessionView : all
 
 #父级代理
 #eg http://10.10.2.2:3128 or http://name:psw@10.10.2.2:3128
+# http://pass:pass@10.10.2.2:3128 the user and psw will pass through to the parent proxy
 parentProxy:
 ```

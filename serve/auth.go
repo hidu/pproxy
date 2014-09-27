@@ -23,7 +23,7 @@ func getAuthorInfo(req *http.Request) *User {
 	if len(userpass) != 2 {
 		return defaultInfo
 	}
-	return &User{Name: userpass[0], PswMd5: utils.StrMd5(userpass[1])}
+	return &User{Name: userpass[0], PswMd5: utils.StrMd5(userpass[1]), Psw: userpass[1]}
 }
 
 func (ser *ProxyServe) checkUserLogin(userInfo *User) bool {

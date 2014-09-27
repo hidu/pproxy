@@ -25,7 +25,6 @@ func NewHttpProxy(ser *ProxyServe) *HttpProxy {
 	if tr != nil {
 		proxy.GoProxy.Tr = tr
 	}
-
 	proxy.GoProxy.OnRequest().HandleConnectFunc(proxy.onHttpsConnect)
 	proxy.GoProxy.OnRequest().DoFunc(proxy.onRequest)
 	proxy.GoProxy.OnResponse().DoFunc(proxy.onResponse)
@@ -113,7 +112,7 @@ func (proxy *HttpProxy) saveRequestData(req *http.Request, reqCtx *requestCtx) {
 		logdata["client_ip"] = reqCtx.RemoteAddr
 		logdata["method"] = req.Method
 		logdata["form_get"] = req.URL.Query()
-		logdata["redo"] = reqCtx.IsReDo
+		logdata["replay"] = reqCtx.IsRePlay
 		logdata["msg"] = reqCtx.Msg
 
 		req_dump, err_dump := httputil.DumpRequest(req, true)

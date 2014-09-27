@@ -21,7 +21,7 @@ func (ser *ProxyServe) Broadcast_Req(req *http.Request, reqCtx *requestCtx) bool
 		data["path"] = "https req,unknow path"
 	}
 	data["method"] = req.Method
-	data["redo"] = reqCtx.IsReDo
+	data["replay"] = reqCtx.IsRePlay
 
 	hasSend := ser.wsSer.broadcastReq(req, reqCtx, data)
 	return hasSend

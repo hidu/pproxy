@@ -32,6 +32,7 @@ target_linux="pproxy_${version}_linux_$t.tar.gz"
 
 
 mkdir -p linux/data
+mkdir -p linux/file/
 
 cp pproxy ../script/pproxy_control.sh linux/
 cp -r conf linux/conf
@@ -49,6 +50,7 @@ target_windows="pproxy_${version}_windows_$t.zip"
 
 
 mkdir -p windows/data
+mkdir -p windows/file/
 
 cp pproxy.exe windows
 cp ../script/windows_run.bat windows/start.bat 

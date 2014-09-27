@@ -160,6 +160,7 @@ func NewProxyServe(confPath string, port int) (*ProxyServe, error) {
 	}
 	GetVersion()
 	os.Chdir(filepath.Dir(absPath))
+	setupLog(conf.DataDir, conf.Port)
 
 	proxy := new(ProxyServe)
 	proxy.configDir = filepath.Dir(absPath)
@@ -168,12 +169,10 @@ func NewProxyServe(confPath string, port int) (*ProxyServe, error) {
 	proxy.conf = conf
 
 	proxy.reqMod = NewRequestModifier(proxy)
-	err = proxy.reqMod.tryLoadJs("")
+	err = proxy.reqMod.loadAllJs()
 	if err != nil {
 		return nil, err
 	}
-
-	setupLog(conf.DataDir, conf.Port)
 
 	proxy.loadHosts()
 

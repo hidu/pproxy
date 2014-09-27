@@ -126,8 +126,8 @@ function pproxy_show_req(dataStr64) {
     console && console.log("req", data)
     var html="<tr onclick=\"get_response(this,'" + data['docid'] + "')\" ";
 	var cls=[]
-    if(data["redo"]){
-    	cls.push("redo");
+    if(data["replay"]){
+    	cls.push("replay");
     }
 	if(!pproxy_net_local_filter(data["host"],data["path"])){
 		cls.push("hide");
@@ -171,7 +171,7 @@ socket.on("res",
             var res = data["res"];
             var html="";
             if(req){
-	            var re_do_str=req["schema"]=="http"?("&nbsp;<a target='_blank' href='/redo?id="+req["id"]+"'>redo</a>"):"";
+	            var re_do_str=req["schema"]=="http"?("&nbsp;<a target='_blank' href='/replay?id="+req["id"]+"'>replay</a>"):"";
 	            
 	            html += "<div><table class='tb_1'><caption>Request"+re_do_str+"</caption>";
 	            html += "<tr><th width='80px'>url</th><td>" + h(req["url"]) + "&nbsp;&nbsp;<a href='"+h(req["url"])+"' target='_blank'>view</a></td></tr>"

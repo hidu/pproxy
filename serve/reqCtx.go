@@ -11,7 +11,7 @@ type requestCtx struct {
 	RemoteAddr    string
 	User          *User
 	Docid         int
-	IsReDo        bool
+	IsRePlay      bool
 	SessionId     int64
 	HasBroadcast  bool
 	FormPost      *url.Values
@@ -28,16 +28,16 @@ func NewRequestCtx(ser *ProxyServe, req *http.Request) *requestCtx {
 	if req != nil {
 		ctx.User = getAuthorInfo(req)
 		ctx.OriginUrl = req.URL.String()
-		ctx.IsReDo = len(req.Header.Get(REDO_FLAG)) > 0
+		ctx.IsRePlay = len(req.Header.Get(REPLAY_FLAG)) > 0
 		ctx.LogData["url"] = req.URL.String()
 
 		ctx.RemoteAddr = req.RemoteAddr
 
-		if _redo_addr := req.Header.Get(REDO_REMOTEADDR); _redo_addr != "" {
-			ctx.RemoteAddr = _redo_addr
+		if _replay_addr := req.Header.Get(REPLAY_REMOTEADDR); _replay_addr != "" {
+			ctx.RemoteAddr = _replay_addr
 		}
-		if _redo_user := req.Header.Get(REDO_USER_NAME); _redo_user != "" {
-			ctx.User = &User{Name: _redo_user, SkipCheckPsw: true}
+		if _replay_user := req.Header.Get(REPLAY_USER_NAME); _replay_user != "" {
+			ctx.User = &User{Name: _replay_user, SkipCheckPsw: true}
 		}
 		ctx.Docid = ser.GetNewDocid()
 	}

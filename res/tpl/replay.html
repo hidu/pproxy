@@ -1,7 +1,7 @@
 <div id="bd">
 
-<form action="/redo" method="post" id="redo_form" target="_blank" class="form_0" autocomplete="off">
-<div class="h2">redo</div>
+<form action="/replay" method="post" id="replay_form" target="_blank" class="form_0" autocomplete="off">
+<div class="h2">replay</div>
 <fieldset>
 <legend>basic</legend>
 <table>
@@ -15,7 +15,7 @@
 
 <fieldset>
 <legend>header 
-<font color=gray>(only use these redo with pproxy)</font> &nbsp;
+<font color=gray>(only use these replay with pproxy)</font> &nbsp;
 <a href="#" onclick="$('#tb_header').toggle()">show/hide</a>
 </legend>
 <table id="tb_header" style="display:none">
@@ -88,10 +88,10 @@
 {{end}}
 <br/>
 <div style="text-align:center;">
-<input type="hidden" name="redo" id="redo" value="pproxy">
-<input type="submit"  class="btn btn-primary"  value="redo with pproxy" onclick="$('#redo').val('pproxy')">
+<input type="hidden" name="replay" id="replay" value="pproxy">
+<input type="submit"  class="btn btn-primary"  value="replay with pproxy" onclick="$('#replay').val('pproxy')">
 <span style="margin-left:100px"></span>
-<input type="submit"  class="btn btn-primary" value="redo direct" onclick="$('#redo').val('direct')">
+<input type="submit"  class="btn btn-primary" value="replay direct" onclick="$('#replay').val('direct')">
 </div>
 </form>
 <br/>

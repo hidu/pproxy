@@ -37,11 +37,21 @@ func (ser *ProxyServe) web_checkLogin(req *http.Request) (user *User, isLogin bo
 }
 
 func (ser *ProxyServe) handleLocalReq(w http.ResponseWriter, req *http.Request) {
+	accessLogStr := "web_access " + req.Method + " " + req.URL.String() + " " + req.RemoteAddr + " refer:" + req.Referer()
+	defer (func() {
+		log.Println(accessLogStr)
+	})()
+
 	if strings.HasPrefix(req.URL.Path, "/socket.io/") {
 		ser.wsSer.server.ServeHTTP(w, req)
 		return
 	}
-	log.Println("web_access", req.Method, req.URL.String(), req.RemoteAddr, "refer:", req.Referer())
+
+	if strings.HasPrefix(req.URL.Path, "/f/") {
+		req.URL.Path = req.URL.Path[3:]
+		http.FileServer(http.Dir(ser.conf.FileDir)).ServeHTTP(w, req)
+		return
+	}
 
 	values := make(map[string]interface{})
 	values["title"] = ser.conf.Title
@@ -115,8 +125,8 @@ func (ser *ProxyServe) handleLocalReq(w http.ResponseWriter, req *http.Request) 
 		}
 	} else if req.URL.Path == "/response" {
 		ser.web_showResponseById(w, req)
-	} else if req.URL.Path == "/redo" {
-		ser.req_redo(w, req, values)
+	} else if req.URL.Path == "/replay" {
+		ser.req_replay(w, req, values)
 	} else if req.URL.Path == "/logout" {
 		cookie := &http.Cookie{Name: CookieName, Value: "", Path: "/"}
 		http.SetCookie(w, cookie)

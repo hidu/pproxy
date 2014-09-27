@@ -55,11 +55,26 @@ func (ser *ProxyServe) reqRewriteByjs(req *http.Request, reqCtx *requestCtx) int
 	headerKvNew := make(map[string]string)
 	isHeaderChange := false
 
-	for k, v := range headerKv {
-		_newVal := getMapValStr(reqObjNew, k)
-		headerKvNew[k] = _newVal
-		if _newVal != v {
-			isHeaderChange = true
+	skipHeader := false
+	var err error
+
+	urlStrNew := getMapValStr(reqObjNew, "url")
+	if urlStrNew != "" {
+		req.URL, err = url.Parse(urlStrNew)
+		if err != nil || req.URL.Scheme != "http" {
+			log.Println("new url wrong!url is:", urlStrNew, err)
+			return 500
+		}
+		req.Host = req.URL.Host
+		skipHeader = true
+	}
+	if !skipHeader {
+		for k, v := range headerKv {
+			_newVal := getMapValStr(reqObjNew, k)
+			headerKvNew[k] = _newVal
+			if _newVal != v {
+				isHeaderChange = true
+			}
 		}
 	}
 	//-------------------------------------------------------

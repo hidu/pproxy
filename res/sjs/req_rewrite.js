@@ -11,6 +11,11 @@ function pproxy_rewrite(req){
 	var form_get=pproxy_obj_helper(req.get);
 	var form_post=pproxy_obj_helper(req.post);
 	
+	var use_file=function(filePath){
+		filePath=filePath+""
+		req.url=filePath.substr(0,7)=="http://"?filePath:("http://PPROXY_HOST"+"/f/"+filePath)
+	}
+	
 	CUSTOM_JS
 	return req;
 }

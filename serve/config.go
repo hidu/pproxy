@@ -16,6 +16,7 @@ type Config struct {
 	Notice       string
 	AuthType     int
 	DataDir      string
+	FileDir      string
 	ResponseSave int
 	SessionView  int
 	DataStoreDay int
@@ -87,8 +88,10 @@ func LoadConfig(confPath string) (*Config, error) {
 	config.Notice = gconf.MustValue(goconfig.DEFAULT_SECTION, "notice")
 	config.DataDir = gconf.MustValue(goconfig.DEFAULT_SECTION, "dataDir")
 
+	config.FileDir = gconf.MustValue(goconfig.DEFAULT_SECTION, "fileDir")
+
 	_authType := strings.ToLower(gconf.MustValue(goconfig.DEFAULT_SECTION, "authType", "none"))
-	authTypes := map[string]int{"none": 0, "basic": 1, "basic_any": 2, "basic_try": 3}
+	authTypes := map[string]int{"none": 0, "basic": 1, "basic_any": 2, "basic_try": 3, "try_basic": 3}
 
 	hasError := false
 	if authType, has := authTypes[_authType]; has {
@@ -206,7 +209,18 @@ func (config *Config) getTransport() *http.Transport {
 	}
 	tr := &http.Transport{
 		Proxy: func(req *http.Request) (*url.URL, error) {
-			return config.ParentProxy, nil
+
+			if config.ParentProxy.User.Username() == "pass" {
+				user := getAuthorInfo(req)
+				urlTmp, err := url.Parse(config.ParentProxy.String())
+				if err != nil {
+					return nil, err
+				}
+				urlTmp.User = url.UserPassword(user.Name, user.Psw)
+				return urlTmp, nil
+			} else {
+				return config.ParentProxy, nil
+			}
 		},
 	}
 	return tr

@@ -1,7 +1,7 @@
 <div id="bd">
 <br/>
 <br/>
-<form action="{{.form.basic.action_url}}" method="{{.form.basic.method}}" class="form_0" id="form_redo_direct">
+<form action="{{.form.basic.action_url}}" method="{{.form.basic.method}}" class="form_0" id="form_replay_direct">
 <table>
 <caption>{{.form.basic.method}} &nbsp;{{.form.basic.action_url}}</caption>
 {{range $k,$v:=.form.get}}
@@ -20,7 +20,7 @@
 </form>
 
 <script>
-$("#form_redo_direct").submit();
+$("#form_replay_direct").submit();
 </script>
 
 </div>
