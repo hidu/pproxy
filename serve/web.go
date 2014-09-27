@@ -74,8 +74,27 @@ func (ser *ProxyServe) handleLocalReq(w http.ResponseWriter, req *http.Request) 
 	} else if req.URL.Path == "/config" {
 		values["subTitle"] = "config|"
 		if req.Method == "GET" {
-			values["rewriteJs"] = html.EscapeString(ser.reqMod.jsStr)
-			values["jsHeight"] = getTextAreaHeightByString(ser.reqMod.jsStr, 100)
+			_jsDataArr := make([]interface{}, 0, 2)
+			jsDefault := make(map[string]interface{})
+
+			jsStr, _ := ser.reqMod.getJsContent("")
+			jsDefault["title"] = "global config"
+			jsDefault["name"] = ""
+			jsDefault["rewriteJs"] = html.EscapeString(jsStr)
+			jsDefault["jsHeight"] = getTextAreaHeightByString(jsStr, 100)
+			_jsDataArr = append(_jsDataArr, jsDefault)
+
+			if isLogin {
+				jsUser := make(map[string]interface{})
+				jsStr, _ := ser.reqMod.getJsContent(user.Name)
+				jsUser["title"] = fmt.Sprintf("user's config-[%s]", user.Name)
+				jsUser["name"] = user.Name
+				jsUser["rewriteJs"] = html.EscapeString(jsStr)
+				jsUser["jsHeight"] = getTextAreaHeightByString(jsStr, 100)
+				_jsDataArr = append(_jsDataArr, jsUser)
+			}
+
+			values["jss"] = _jsDataArr
 
 			hosts_byte, _ := utils.File_get_contents(ser.GetHostsFilePath())
 			values["hosts"] = html.EscapeString(string(hosts_byte))
@@ -183,16 +202,25 @@ func (ser *ProxyServe) web_showResponseById(w http.ResponseWriter, req *http.Req
 
 func (ser *ProxyServe) web_handleConfig(w http.ResponseWriter, req *http.Request) {
 	user, isLogin := ser.web_checkLogin(req)
-	if !isLogin || !user.IsAdmin {
-		w.Write([]byte("<script>alert('you are not admin')</script>"))
+	if !isLogin {
+		w.Write([]byte("<script>alert('login first')</script>"))
 		return
 	}
 	do := req.PostFormValue("type")
 	var err error
 	if do == "js" {
+		name := strings.TrimSpace(req.PostFormValue("name"))
+		if !user.IsAdmin && name != user.Name {
+			w.Write([]byte("<script>alert('you are not admin')</script>"))
+			return
+		}
 		jsStr := strings.TrimSpace(req.PostFormValue("js"))
-		err = ser.reqMod.parseJs(jsStr, true)
+		err = ser.reqMod.parseJs(jsStr, name, true)
 	} else if do == "hosts" {
+		if !user.IsAdmin {
+			w.Write([]byte("<script>alert('you are not admin')</script>"))
+			return
+		}
 		hosts := strings.TrimSpace(req.PostFormValue("hosts"))
 		log.Println("hosts_update", hosts)
 		err = utils.File_put_contents(ser.GetHostsFilePath(), []byte(hosts))

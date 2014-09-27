@@ -1,4 +1,4 @@
-pproxy 0.4.4
+pproxy 0.4.5
 ======
 http抓包代理程序,http协议调试工具。  
 采用golang编写，采用bs模式(s-代理程序，b-会话查看、配置管理等功能)  
@@ -78,6 +78,8 @@ www.baidu.com 127.0.0.1
 www.baidu.com:81 10.0.2.2:8080
 ```
 
+忽略禁用req_rewrite.js  
+在js文件的第一行内容写入 ```//ignore```
 
 
 配置文件：

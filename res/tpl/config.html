@@ -1,3 +1,4 @@
+<script src="/res/js/default.js"></script>
 <style>
 #configTable form{padding:10px;margin-right: 20px}
 </style>
@@ -6,22 +7,38 @@
 <table width="100%" id="configTable">
 <tr>
 <td>
-<span class="h6">req rewrite</span><font color=gray>[req_rewrite_{{.port}}.js]</font>
+<span class="h6">req rewrite</span>
+
+{{range $i,$js:=.jss}}
 <form  method="post" action="/config" autocomplete="off" target="ifr_form">
+<fieldset>
+<legend>{{$js.title}}</legend>
 function rewrite(req){
-<textarea style="width:100%;height:{{.jsHeight}}px" name="js">{{.rewriteJs}}</textarea>
+<textarea style="width:95%;height:{{$js.jsHeight}}px" name="js">{{$js.rewriteJs}}</textarea>
 return req;<br/>
 }
 <input type="hidden" name="type" value="js">
+<input type="hidden" name="name" value="{{$js.name}}">
 <div style="text-align:center">
 <input type="submit" class="btn btn-primary" value="save">
 </div>
+</fieldset>
 </form>
+
+{{end}}
+
 </td>
 </tr>
 
 <tr>
 <td>
+<div style="color:gray">
+note:
+<ol>
+<li>put <font color=blue>//ignore</font> at the first line to ignore the js</li>
+<li>user's js is default,or the global</li>
+</ol>
+</div>
 <b>req demo:</b><a href="javascript:;" onclick="$('#pre_req_demo').toggle()">show/hide</a>
 <pre id="pre_req_demo" style="display:none">
 url : http://www.example.com/album/list?cid=126
@@ -71,3 +88,7 @@ www.baidu.com:81 10.0.2.2:8080
 
 <iframe name="ifr_form" style="display:none;"></iframe>  
 </div>
+
+<script>
+pproxy_tab_sup("#bd0")
+</script>

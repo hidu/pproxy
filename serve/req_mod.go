@@ -7,47 +7,67 @@ import (
 	"io/ioutil"
 	"log"
 	"strings"
+	"sync"
 )
 
 var rewriteJsTpl = string(utils.DefaultResource.Load("res/sjs/req_rewrite.js"))
 
 type requestModifier struct {
+	mu     sync.RWMutex
 	jsVm   *otto.Otto
-	jsPath string
-	jsStr  string
-	jsFn   otto.Value
+	jsFns  map[string]*otto.Value
 	canMod bool
 	ser    *ProxyServe
 }
 
 func NewRequestModifier(ser *ProxyServe) *requestModifier {
-	jsPath := ser.GetRewriteJsPath()
 	reqMod := &requestModifier{
-		jsVm:   otto.New(),
-		jsPath: jsPath,
-		ser:    ser,
+		jsVm:  otto.New(),
+		jsFns: make(map[string]*otto.Value),
+		ser:   ser,
 	}
 	return reqMod
 }
+func (reqMod *requestModifier) getJsPath(name string) string {
+	baseName := fmt.Sprintf("%s/req_rewrite_%d", reqMod.ser.configDir, reqMod.ser.conf.Port)
+	if name == "" {
+		return fmt.Sprintf("%s.js", baseName)
+	} else {
+		return fmt.Sprintf("%s_%s.js", baseName, name)
+	}
+}
 
-func (reqMod *requestModifier) tryLoadJs() (err error) {
-	if utils.File_exists(reqMod.jsPath) {
-		script, jsErr := ioutil.ReadFile(reqMod.jsPath)
-		if jsErr == nil {
-			jsErr = reqMod.parseJs(string(script), false)
-			if jsErr != nil {
-				fmt.Println("load rewrite js failed:", jsErr)
-				return jsErr
-			}
+func (reqMod *requestModifier) tryLoadJs(name string) (err error) {
+	jsContent, err := reqMod.getJsContent(name)
+	if jsContent != "" && err == nil {
+		err = reqMod.parseJs(jsContent, name, false)
+		if err != nil {
+			fmt.Println("load rewrite js failed:", err)
+			return err
 		}
 	}
 	return nil
 }
+
+func (reqMod *requestModifier) getJsContent(name string) (content string, err error) {
+	jsPath := reqMod.getJsPath(name)
+	if utils.File_exists(jsPath) {
+		script, err := ioutil.ReadFile(jsPath)
+		if err == nil {
+			return string(script), nil
+		} else {
+			return "", err
+		}
+	}
+	return "", nil
+}
+
 func (reqMod *requestModifier) CanMod() bool {
 	return reqMod.canMod
 }
 
-func (reqMod *requestModifier) parseJs(jsStr string, save2File bool) error {
+func (reqMod *requestModifier) parseJs(jsStr string, name string, save2File bool) error {
+	jsStr = strings.TrimSpace(jsStr)
 	rewriteJs := strings.Replace(rewriteJsTpl, "CUSTOM_JS", jsStr, 1)
 	reqMod.jsVm.Run(rewriteJs)
 	jsFn, err := reqMod.jsVm.Get("pproxy_rewrite")
@@ -55,20 +75,44 @@ func (reqMod *requestModifier) parseJs(jsStr string, save2File bool) error {
 		log.Println("rewrite js init error:", err)
 		return err
 	}
-	reqMod.jsStr = jsStr
-	reqMod.jsFn = jsFn
+	reqMod.mu.Lock()
+	defer reqMod.mu.Unlock()
+
+	if strings.HasPrefix(jsStr, "//ignore") {
+		if _, has := reqMod.jsFns[name]; has {
+			delete(reqMod.jsFns, name)
+		}
+	} else {
+		reqMod.jsFns[name] = &jsFn
+	}
 	reqMod.canMod = true
 	if save2File {
-		err = utils.File_put_contents(reqMod.jsPath, []byte(jsStr))
-		log.Println("save rewritejs ", reqMod.jsPath, err)
+		jsPath := reqMod.getJsPath(name)
+		err = utils.File_put_contents(jsPath, []byte(jsStr))
+		log.Println("save rewritejs ", jsPath, err)
 	}
 	return err
 }
+func (reqMod *requestModifier) getJsFnByName(name string) (*otto.Value, error) {
+	names := []string{name, ""}
+	for _, name := range names {
+		if jsFn, has := reqMod.jsFns[name]; has {
+			return jsFn, nil
+		}
+	}
+	return nil, fmt.Errorf("no rewrite rules")
+}
 
-func (reqMod *requestModifier) rewrite(data map[string]interface{}) (map[string]interface{}, error) {
+func (reqMod *requestModifier) rewrite(data map[string]interface{}, name string) (map[string]interface{}, error) {
 	reqJsObj, _ := reqMod.jsVm.Object(`req={}`)
 	reqJsObj.Set("origin", data)
-	js_ret, err_js := reqMod.jsFn.Call(reqMod.jsFn, reqJsObj)
+
+	jsFn, err := reqMod.getJsFnByName(name)
+
+	if err != nil {
+		return nil, err
+	}
+	js_ret, err_js := (*jsFn).Call(*jsFn, reqJsObj)
 
 	if err_js != nil {
 		return nil, err_js

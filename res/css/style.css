@@ -73,7 +73,7 @@ table {border-collapse: collapse;border-spacing: 0;}
 .panel_1{background: #e5e2eb;padding:4px}
 #network_filter_form fieldset{padding-right:3px}
 
- #tb_network{font-size: 11px}
+ #tb_network{font-size: 11px;margin-top: -8px;}
  #tb_network td{overflow: auto;cursor: pointer;}
 #right_content{margin-top:5px}
  #right_content table th,#right_content table td{font-size:11px;vertical-align: top}

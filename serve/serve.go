@@ -131,10 +131,6 @@ func (ser *ProxyServe) GetRequestByDocid(docid int) (req_data KvType) {
 	return req_data
 }
 
-func (ser *ProxyServe) GetRewriteJsPath() string {
-	return fmt.Sprintf("%s/req_rewrite_%d.js", ser.configDir, ser.conf.Port)
-}
-
 func (ser *ProxyServe) GetHostsFilePath() string {
 	return fmt.Sprintf("%s/hosts_%d", ser.configDir, ser.conf.Port)
 }
@@ -172,7 +168,7 @@ func NewProxyServe(confPath string, port int) (*ProxyServe, error) {
 	proxy.conf = conf
 
 	proxy.reqMod = NewRequestModifier(proxy)
-	err = proxy.reqMod.tryLoadJs()
+	err = proxy.reqMod.tryLoadJs("")
 	if err != nil {
 		return nil, err
 	}

@@ -47,7 +47,7 @@ func (ser *ProxyServe) reqRewriteByjs(req *http.Request, reqCtx *requestCtx) int
 	rewriteData["get"] = origin_get_query
 	rewriteData["post"] = *reqCtx.FormPost
 
-	reqObjNew, rErr := ser.reqMod.rewrite(rewriteData)
+	reqObjNew, rErr := ser.reqMod.rewrite(rewriteData, reqCtx.User.Name)
 	if rErr != nil {
 		log.Println("rewrite failed:", rErr)
 	}

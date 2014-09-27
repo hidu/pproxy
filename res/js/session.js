@@ -4,6 +4,8 @@ var pproxy_colors=["#FFFFFF","#CCFFFF","#FFCCCC","#99CCCC","996699","#CC9999","#
 
 var ip_colors={} 
 var pproxy_session_max_len=0;
+var pproxy_table_max_row=2000;
+
 
 var pproxy_req_list=[];
 
@@ -139,7 +141,14 @@ function pproxy_show_req(dataStr64) {
     + "<td><div class='oneline' title='"+h(data["host"])+"'>" + data["host"] + "</div></td>" +
     "<td><div class='oneline' title='"+h(data["url"])+"'>" +data["method"]+"&nbsp;"+ h(data["path"])+ "</div></td>" + 
     "</tr>";
-    $("#tb_network tbody").prepend(html);
+    var tb=$("#tb_network tbody");
+    tb.prepend(html);
+    
+    if(Math.random()*100>95 && tb.find("tr").size()>pproxy_table_max_row*1.5){
+    	tb.find("tr:gt("+pproxy_table_max_row+")").each(function(){
+    		$(this).remove()
+    	});
+    }
 }
 
 
