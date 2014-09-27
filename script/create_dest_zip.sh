@@ -39,6 +39,10 @@ cp -r conf linux/conf
 
 
 dir_new="pproxy_${version}"
+if [ -d $dir_new ];then
+  rm -rf $dir_new
+fi
+
 mv linux $dir_new
 tar -czvf $target_linux $dir_new
 
