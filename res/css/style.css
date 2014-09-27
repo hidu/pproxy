@@ -70,6 +70,7 @@ table {border-collapse: collapse;border-spacing: 0;}
 .t_r{text-align: right !important;}
 .t_l{text-align: left !important;}
 
+.panel_1{background: #e5e2eb;padding:4px}
 #network_filter_form fieldset{padding-right:3px}
 
  #tb_network{font-size: 11px}
@@ -78,11 +79,12 @@ table {border-collapse: collapse;border-spacing: 0;}
  #right_content table th,#right_content table td{font-size:11px;vertical-align: top}
  #right_content pre{border:none}
  
- #div_tb_network_list {overflow:auto;max-height: 800px;min-height:450px}
+ #div_tb_network_list {overflow:auto;max-height: 1000px;min-height:450px}
  tr.selected{background: #ccffee;}
  .right{float: right}
  .left{float:left}
  .c{clear: both}
+ .hide{display:none}
 #network_list_div tbody th{text-align: right;}
 .td_ul{list-style: none inside;padding: 0;margin: 0}
 .td_ul li{list-style: none inside;}
@@ -103,6 +105,10 @@ tr.redo{
 .res_td_body{
 	max-height: 120px;
 	overflow: scroll;
+}
+
+.div_b_i{
+	display: inline-block;
 }
 
 .login-screen {

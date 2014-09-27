@@ -44,6 +44,40 @@ function pproxy_log(msg){
 }
 
 
+function pproxy_net_local_filter(host,path){
+	if(!_pproxy_filter(host,$("#net_local_host").val())){
+		return false
+	}
+	if(!_pproxy_filter(path,$("#net_local_path").val())){
+		return false
+	}
+	return true;
+}
+
+function _pproxy_filter(kw,kwstr){
+	if(kwstr==""){
+		return true
+	}
+	var kws=(kwstr+"").split("|")
+	kw+=""
+	var tmp=[]	
+	for(var i in kws){
+		var _kw=$.trim(kws[i]+"");
+		if(_kw!=""){
+			tmp.push(_kw);
+		}
+	}
+	if(tmp.length==0){
+		return true;
+	}
+	for (var i in tmp){
+		if(kw.indexOf(tmp[i])!=-1){
+			return true
+		}
+	}
+	return false;
+}
+
 socket.on('connect', function() {
 	connectNum++
 	if(connectNum>1){
@@ -89,10 +123,18 @@ function pproxy_show_req(dataStr64) {
 	
     console && console.log("req", data)
     var html="<tr onclick=\"get_response(this,'" + data['docid'] + "')\" ";
+	var cls=[]
     if(data["redo"]){
-    	html+="class='redo' ";
+    	cls.push("redo");
     }
-    html+=">" 
+	if(!pproxy_net_local_filter(data["host"],data["path"])){
+		cls.push("hide");
+	}
+	
+	if(cls.length>0){
+    	html+="class='"+cls.join(" ")+"' ";
+	}
+    html+=" data-ip='"+data["client_ip"]+"' data-host='"+h(data["host"])+"' data-path='"+h(data["path"])+"'>" 
     + "<td bgcolor='"+pproxy_getColor(data["client_ip"])+"'>" + data["sid"] + "</td>"
     + "<td><div class='oneline' title='"+h(data["host"])+"'>" + data["host"] + "</div></td>" +
     "<td><div class='oneline' title='"+h(data["url"])+"'>" +data["method"]+"&nbsp;"+ h(data["path"])+ "</div></td>" + 
@@ -123,7 +165,7 @@ socket.on("res",
 	            var re_do_str=req["schema"]=="http"?("&nbsp;<a target='_blank' href='/redo?id="+req["id"]+"'>redo</a>"):"";
 	            
 	            html += "<div><table class='tb_1'><caption>Request"+re_do_str+"</caption>";
-	            html += "<tr><th width='80px'>url</th><td>" + h(req["url"]) + "</td></tr>"
+	            html += "<tr><th width='80px'>url</th><td>" + h(req["url"]) + "&nbsp;&nbsp;<a href='"+h(req["url"])+"' target='_blank'>view</a></td></tr>"
 	            if (req["url_origin"]!=req["url"]) {
 	                html += "<tr><th>origin</th><td><span style='color:blue'>" + h(req["url_origin"]) + "</span></td></tr>";
 	            }
@@ -316,6 +358,17 @@ $().ready(function() {
     }
     
     setTimeout(pproxy_show_reqs_from_local,0);
+    
+    
+    $("#net_local_host,#net_local_path").bind("keyup change",function(){
+    	$('#tb_network tbody tr').each(function(){
+    		if(pproxy_net_local_filter($(this).data("host"),$(this).data("path"))){
+    			$(this).removeClass("hide");
+    		}else{
+    			$(this).addClass("hide");
+    		}
+    	});
+    });
 });
 
 function pproxy_local_save(target,id){
