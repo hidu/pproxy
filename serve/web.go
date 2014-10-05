@@ -14,7 +14,80 @@ import (
 	"time"
 )
 
+type webRequestCtx struct {
+	values  map[string]interface{}
+	user    *User
+	isLogin bool
+	isAdmin bool
+	req     *http.Request
+	w       http.ResponseWriter
+	ser     *ProxyServe
+}
+
 var CookieName = "pproxy"
+
+func (ser *ProxyServe) handleLocalReq(w http.ResponseWriter, req *http.Request) {
+	accessLogStr := "web_access " + req.Method + " " + req.URL.String() + " " + req.RemoteAddr + " refer:" + req.Referer()
+	defer (func() {
+		log.Println(accessLogStr)
+	})()
+
+	if strings.HasPrefix(req.URL.Path, "/socket.io/") {
+		ser.wsSer.server.ServeHTTP(w, req)
+		return
+	}
+
+	if strings.HasPrefix(req.URL.Path, "/f/") {
+		req.URL.Path = req.URL.Path[3:]
+		http.FileServer(http.Dir(ser.conf.FileDir)).ServeHTTP(w, req)
+		return
+	}
+
+	if strings.HasPrefix(req.URL.Path, "/res/") {
+		utils.DefaultResource.HandleStatic(w, req, req.URL.Path)
+		return
+	}
+
+	values := make(map[string]interface{})
+	values["title"] = ser.conf.Title
+	values["subTitle"] = ""
+	values["version"] = PproxyVersion
+	values["notice"] = ser.conf.Notice
+	values["port"] = fmt.Sprintf("%d", ser.conf.Port)
+	values["userOnlineTotal"] = len(ser.ProxyClients)
+	_host, _port, _ := getHostPortFromReq(req)
+	values["pproxy_host"] = _host
+	values["pproxy_port"] = _port
+
+	ctx := &webRequestCtx{
+		values: values,
+		w:      w,
+		req:    req,
+		ser:    ser,
+	}
+	ctx.checkLogin()
+	values["isLogin"] = ctx.isLogin
+	values["user"] = ctx.user
+
+	funcMap := make(map[string]func())
+	funcMap["/"] = ctx.handel_index
+	funcMap["/about"] = ctx.handel_about
+	funcMap["/config"] = ctx.handel_config
+	funcMap["/useage"] = ctx.handel_useage
+	funcMap["/replay"] = ctx.handel_replay
+	funcMap["/login"] = ctx.handel_login
+	funcMap["/logout"] = ctx.handel_logout
+	funcMap["/response"] = ctx.handel_response
+
+	if fn, has := funcMap[req.URL.Path]; has {
+		if len(req.URL.Path) > 1 {
+			ctx.values["subTitle"] = req.URL.Path[1:] + " |"
+		}
+		fn()
+	} else {
+		http.NotFound(w, req)
+	}
+}
 
 func (ser *ProxyServe) web_checkLogin(req *http.Request) (user *User, isLogin bool) {
 	if req == nil {
@@ -36,139 +109,95 @@ func (ser *ProxyServe) web_checkLogin(req *http.Request) (user *User, isLogin bo
 	return
 }
 
-func (ser *ProxyServe) handleLocalReq(w http.ResponseWriter, req *http.Request) {
-	accessLogStr := "web_access " + req.Method + " " + req.URL.String() + " " + req.RemoteAddr + " refer:" + req.Referer()
-	defer (func() {
-		log.Println(accessLogStr)
-	})()
-
-	if strings.HasPrefix(req.URL.Path, "/socket.io/") {
-		ser.wsSer.server.ServeHTTP(w, req)
-		return
-	}
-
-	if strings.HasPrefix(req.URL.Path, "/f/") {
-		req.URL.Path = req.URL.Path[3:]
-		http.FileServer(http.Dir(ser.conf.FileDir)).ServeHTTP(w, req)
-		return
-	}
-
-	values := make(map[string]interface{})
-	values["title"] = ser.conf.Title
-	values["subTitle"] = ""
-	values["version"] = PproxyVersion
-	values["notice"] = ser.conf.Notice
-	values["port"] = fmt.Sprintf("%d", ser.conf.Port)
-	values["userOnlineTotal"] = len(ser.ProxyClients)
-	_host, _port, _ := getHostPortFromReq(req)
-	values["pproxy_host"] = _host
-	values["pproxy_port"] = _port
-
-	user, isLogin := ser.web_checkLogin(req)
-	values["isLogin"] = isLogin
-	values["user"] = user
-
-	if strings.HasPrefix(req.URL.Path, "/res/") {
-		utils.DefaultResource.HandleStatic(w, req, req.URL.Path)
-	} else if req.URL.Path == "/" {
-		html := render_html("network.html", values, true)
-		w.Write([]byte(html))
-	} else if req.URL.Path == "/about" {
-		values["subTitle"] = "about|"
-		html := render_html("about.html", values, true)
-		w.Write([]byte(html))
-	} else if req.URL.Path == "/useage" {
-		values["subTitle"] = "useage|"
-		html := render_html("useage.html", values, true)
-		w.Write([]byte(html))
-	} else if req.URL.Path == "/config" {
-		values["subTitle"] = "config|"
-		if req.Method == "GET" {
-			_jsDataArr := make([]interface{}, 0, 2)
-			jsDefault := make(map[string]interface{})
-
-			jsStr, _ := ser.reqMod.getJsContent("")
-			jsDefault["title"] = "global config"
-			jsDefault["name"] = ""
-			jsDefault["rewriteJs"] = html.EscapeString(jsStr)
-			jsDefault["jsHeight"] = getTextAreaHeightByString(jsStr, 100)
-			_jsDataArr = append(_jsDataArr, jsDefault)
-
-			if isLogin {
-				jsUser := make(map[string]interface{})
-				jsStr, _ := ser.reqMod.getJsContent(user.Name)
-				jsUser["title"] = fmt.Sprintf("user's config-[%s]", user.Name)
-				jsUser["name"] = user.Name
-				jsUser["rewriteJs"] = html.EscapeString(jsStr)
-				jsUser["jsHeight"] = getTextAreaHeightByString(jsStr, 100)
-				_jsDataArr = append(_jsDataArr, jsUser)
-			}
-
-			values["jss"] = _jsDataArr
-
-			hosts_byte, _ := utils.File_get_contents(ser.GetHostsFilePath())
-			values["hosts"] = html.EscapeString(string(hosts_byte))
-			values["hostsHeight"] = getTextAreaHeightByString("", 100)
-
-			html := render_html("config.html", values, true)
-			w.Write([]byte(html))
-		} else if req.Method == "POST" {
-			ser.web_handleConfig(w, req)
-		}
-	} else if req.URL.Path == "/login" {
-		if req.Method == "GET" {
-			values["subTitle"] = "login|"
-			html := render_html("login.html", values, true)
-			w.Write([]byte(html))
-		} else {
-			ser.handleLogin(w, req)
-		}
-	} else if req.URL.Path == "/response" {
-		ser.web_showResponseById(w, req)
-	} else if req.URL.Path == "/replay" {
-		ser.req_replay(w, req, values)
-	} else if req.URL.Path == "/logout" {
-		cookie := &http.Cookie{Name: CookieName, Value: "", Path: "/"}
-		http.SetCookie(w, cookie)
-		http.Redirect(w, req, "/", 302)
-	} else {
-		http.NotFound(w, req)
+func (ctx *webRequestCtx) checkLogin() {
+	user, isLogin := ctx.ser.web_checkLogin(ctx.req)
+	if isLogin {
+		ctx.user = user
+		ctx.isLogin = true
+		ctx.isAdmin = user.IsAdmin
 	}
 }
-func (ser *ProxyServe) handleLogin(w http.ResponseWriter, req *http.Request) {
-	name := strings.TrimSpace(req.FormValue("name"))
-	psw := strings.TrimSpace(req.FormValue("psw"))
-	if name == "" {
-		w.Write([]byte("<script>alert('empty name!')</script>"))
-		return
-	}
-	if user, has := ser.Users[name]; has {
-		if user.isPswEq(psw) {
-			log.Println("login suc,name=", name)
-			cookie := &http.Cookie{
-				Name:    CookieName,
-				Value:   fmt.Sprintf("%s:%s", name, user.PswMd5),
-				Path:    "/",
-				Expires: time.Now().Add(86400 * time.Second),
-			}
-			http.SetCookie(w, cookie)
-			w.Write([]byte("<script>parent.location.href='/'</script>"))
-		} else {
-			log.Println("login failed psw incorrect,name=", name, "psw=", psw)
-			w.Write([]byte("<script>alert('password incorrect')</script>"))
-		}
-		return
-	}
-	log.Println("login failed not exists,name=", name, "psw=", psw)
-	w.Write([]byte("<script>alert('user not exists')</script>"))
+
+func (ctx *webRequestCtx) render(name string, layout bool) {
+	html := render_html(name, ctx.values, layout)
+	ctx.w.Write([]byte(html))
 }
 
-func (ser *ProxyServe) web_showResponseById(w http.ResponseWriter, req *http.Request) {
-	docid, uint_parse_err := parseDocId(req.FormValue("id"))
+func (ctx *webRequestCtx) handel_index() {
+	ctx.render("network.html", true)
+}
+
+func (ctx *webRequestCtx) handel_useage() {
+	ctx.render("useage.html", true)
+}
+func (ctx *webRequestCtx) handel_config() {
+	if ctx.req.Method == "GET" {
+		_jsDataArr := make([]interface{}, 0, 2)
+		jsDefault := make(map[string]interface{})
+
+		jsStr, _ := ctx.ser.reqMod.getJsContent("")
+		jsDefault["title"] = "global config"
+		jsDefault["name"] = ""
+		jsDefault["rewriteJs"] = html.EscapeString(jsStr)
+		jsDefault["jsHeight"] = getTextAreaHeightByString(jsStr, 100)
+		_jsDataArr = append(_jsDataArr, jsDefault)
+
+		if ctx.isLogin {
+			jsUser := make(map[string]interface{})
+			jsStr, _ := ctx.ser.reqMod.getJsContent(ctx.user.Name)
+			jsUser["title"] = fmt.Sprintf("user's config-[%s]", ctx.user.Name)
+			jsUser["name"] = ctx.user.Name
+			jsUser["rewriteJs"] = html.EscapeString(jsStr)
+			jsUser["jsHeight"] = getTextAreaHeightByString(jsStr, 100)
+			_jsDataArr = append(_jsDataArr, jsUser)
+		}
+
+		ctx.values["jss"] = _jsDataArr
+
+		hosts_byte, _ := utils.File_get_contents(ctx.ser.GetHostsFilePath())
+		ctx.values["hosts"] = html.EscapeString(string(hosts_byte))
+		ctx.values["hostsHeight"] = getTextAreaHeightByString("", 100)
+
+		ctx.render("config.html", true)
+	} else if ctx.req.Method == "POST" {
+		if !ctx.isLogin {
+			ctx.jsAlert("login first")
+			return
+		}
+		do := ctx.req.PostFormValue("type")
+		var err error
+		if do == "js" {
+			name := strings.TrimSpace(ctx.req.PostFormValue("name"))
+			if !ctx.isAdmin && name != ctx.user.Name {
+				ctx.jsAlert("you are not admin")
+				return
+			}
+			jsStr := strings.TrimSpace(ctx.req.PostFormValue("js"))
+			err = ctx.ser.reqMod.parseJs(jsStr, name, true)
+		} else if do == "hosts" {
+			if !ctx.isAdmin {
+				ctx.jsAlert("you are not admin")
+				return
+			}
+			hosts := strings.TrimSpace(ctx.req.PostFormValue("hosts"))
+			log.Println("hosts_update", hosts)
+			err = utils.File_put_contents(ctx.ser.GetHostsFilePath(), []byte(hosts))
+			ctx.ser.loadHosts()
+		}
+		if err != nil {
+			ctx.jsAlert("save failed,err:" + err.Error())
+		} else {
+			ctx.w.Write([]byte("<script>alert('save success');top.location.href='/config'</script>"))
+		}
+	}
+
+}
+func (ctx *webRequestCtx) handel_response() {
+	docid, uint_parse_err := parseDocId(ctx.req.FormValue("id"))
 	if uint_parse_err == nil {
-		responseData := ser.GetResponseByDocid(docid)
+		responseData := ctx.ser.GetResponseByDocid(docid)
 		if responseData == nil {
-			w.Write([]byte("response not found"))
+			ctx.w.Write([]byte("response not found"))
 		} else {
 			walker := utils.NewInterfaceWalker(map[string]interface{}(responseData))
 			content_type := ""
@@ -176,7 +205,7 @@ func (ser *ProxyServe) web_showResponseById(w http.ResponseWriter, req *http.Req
 				content_type = strings.Join(type_header, ";")
 			}
 
-			custom_content_type := req.FormValue("type")
+			custom_content_type := ctx.req.FormValue("type")
 			//set custom content type
 			if custom_content_type != "" {
 				switch custom_content_type {
@@ -189,59 +218,71 @@ func (ser *ProxyServe) web_showResponseById(w http.ResponseWriter, req *http.Req
 				}
 			}
 			if content_type != "" {
-				w.Header().Set("Content-Type", content_type)
+				ctx.w.Header().Set("Content-Type", content_type)
 			}
 			if statusCode, has := walker.GetInt("/status"); has {
-				w.WriteHeader(statusCode)
+				ctx.w.WriteHeader(statusCode)
 			}
 			if body_str, has := walker.GetString("/body"); has {
 				body_byte, err := base64.StdEncoding.DecodeString(body_str)
 				if err == nil {
-					w.Write(body_byte)
+					ctx.w.Write(body_byte)
 				} else {
 					log.Println("decode body failed", err)
 				}
 			} else {
-				w.Write([]byte("response body not found"))
+				ctx.w.Write([]byte("response body not found"))
 			}
 		}
 	} else {
-		w.Write([]byte("param err"))
+		ctx.w.Write([]byte("param err"))
 	}
 }
 
-func (ser *ProxyServe) web_handleConfig(w http.ResponseWriter, req *http.Request) {
-	user, isLogin := ser.web_checkLogin(req)
-	if !isLogin {
-		w.Write([]byte("<script>alert('login first')</script>"))
-		return
-	}
-	do := req.PostFormValue("type")
-	var err error
-	if do == "js" {
-		name := strings.TrimSpace(req.PostFormValue("name"))
-		if !user.IsAdmin && name != user.Name {
-			w.Write([]byte("<script>alert('you are not admin')</script>"))
-			return
-		}
-		jsStr := strings.TrimSpace(req.PostFormValue("js"))
-		err = ser.reqMod.parseJs(jsStr, name, true)
-	} else if do == "hosts" {
-		if !user.IsAdmin {
-			w.Write([]byte("<script>alert('you are not admin')</script>"))
-			return
-		}
-		hosts := strings.TrimSpace(req.PostFormValue("hosts"))
-		log.Println("hosts_update", hosts)
-		err = utils.File_put_contents(ser.GetHostsFilePath(), []byte(hosts))
-		ser.loadHosts()
-	}
-	if err != nil {
-		w.Write([]byte("<script>alert('save failed,err:" + html.EscapeString(err.Error()) + ")"))
-	} else {
-		w.Write([]byte("<script>alert('save success');top.location.href='/config'</script>"))
-	}
+func (ctx *webRequestCtx) jsAlert(msg string) {
+	ctx.w.Write([]byte(fmt.Sprintf("<script>alert('%s')</script>", html.EscapeString(msg))))
+}
 
+func (ctx *webRequestCtx) handel_about() {
+	ctx.render("about.html", true)
+}
+
+func (ctx *webRequestCtx) handel_logout() {
+	cookie := &http.Cookie{Name: CookieName, Value: "", Path: "/"}
+	http.SetCookie(ctx.w, cookie)
+	http.Redirect(ctx.w, ctx.req, "/", 302)
+}
+
+func (ctx *webRequestCtx) handel_login() {
+	if ctx.req.Method == "GET" {
+		ctx.render("login.html", true)
+	} else {
+		name := strings.TrimSpace(ctx.req.FormValue("name"))
+		psw := strings.TrimSpace(ctx.req.FormValue("psw"))
+		if name == "" {
+			ctx.jsAlert("empty name")
+			return
+		}
+		if user, has := ctx.ser.Users[name]; has {
+			if user.isPswEq(psw) {
+				log.Println("login suc,name=", name)
+				cookie := &http.Cookie{
+					Name:    CookieName,
+					Value:   fmt.Sprintf("%s:%s", name, user.PswMd5),
+					Path:    "/",
+					Expires: time.Now().Add(86400 * time.Second),
+				}
+				http.SetCookie(ctx.w, cookie)
+				ctx.w.Write([]byte("<script>parent.location.href='/'</script>"))
+			} else {
+				log.Println("login failed psw incorrect,name=", name, "psw=", psw)
+				ctx.jsAlert("password incorrect")
+			}
+			return
+		}
+		log.Println("login failed not exists,name=", name, "psw=", psw)
+		ctx.jsAlert("user not exists")
+	}
 }
 
 func render_html(fileName string, values map[string]interface{}, layout bool) string {
