@@ -13,7 +13,7 @@ const (
 	REPLAY_USER_NAME  = "Proxy-pproxy_user"
 )
 
-func (ctx *webRequestCtx) handel_replay() {
+func (ctx *webRequestCtx) handle_replay() {
 	if ctx.req.Method == "POST" {
 		ctx.req_replayPost()
 		return

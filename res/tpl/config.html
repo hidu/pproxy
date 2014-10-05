@@ -20,7 +20,11 @@ return req;<br/>
 <input type="hidden" name="type" value="js">
 <input type="hidden" name="name" value="{{$js.name}}">
 <div style="text-align:center">
+{{if .isLogin}}
 <input type="submit" class="btn btn-primary" value="save">
+{{else}}
+ <div class="text-info">login for submit</div>
+{{end}}
 </div>
 </fieldset>
 </form>
@@ -37,6 +41,9 @@ note:
 <ol>
 <li>put <font color=blue>//ignore</font> at the first line to ignore the js</li>
 <li>user's js is default,or the global</li>
+{{if not .isLogin}}
+<li><a href="/login">login</a> to edit your custom profile</li>
+{{end}}
 </ol>
 </div>
 <b>req demo:</b><a href="javascript:;" onclick="$('#pre_req_demo').toggle()">show/hide</a>
@@ -78,7 +85,11 @@ if(req.host=="www.hao123.com"){
 <textarea style="width:100%;height:100px" name="hosts">{{.hosts}}</textarea>
 <input type="hidden" name="type" value="hosts">
 <div style="text-align:center">
+{{if .isAdmin}}
 <input type="submit" class="btn btn-primary" value="save">
+{{else}}
+  <div class="text-info">admin can submit it</div>
+{{end}}
 </div>
 </form>
 </td>

@@ -68,16 +68,21 @@ func (ser *ProxyServe) handleLocalReq(w http.ResponseWriter, req *http.Request) 
 	ctx.checkLogin()
 	values["isLogin"] = ctx.isLogin
 	values["user"] = ctx.user
+	if ctx.isLogin {
+		values["isAdmin"] = ctx.user.IsAdmin
+	} else {
+		values["isAdmin"] = false
+	}
 
 	funcMap := make(map[string]func())
-	funcMap["/"] = ctx.handel_index
-	funcMap["/about"] = ctx.handel_about
-	funcMap["/config"] = ctx.handel_config
-	funcMap["/useage"] = ctx.handel_useage
-	funcMap["/replay"] = ctx.handel_replay
-	funcMap["/login"] = ctx.handel_login
-	funcMap["/logout"] = ctx.handel_logout
-	funcMap["/response"] = ctx.handel_response
+	funcMap["/"] = ctx.handle_index
+	funcMap["/about"] = ctx.handle_about
+	funcMap["/config"] = ctx.handle_config
+	funcMap["/useage"] = ctx.handle_useage
+	funcMap["/replay"] = ctx.handle_replay
+	funcMap["/login"] = ctx.handle_login
+	funcMap["/logout"] = ctx.handle_logout
+	funcMap["/response"] = ctx.handle_response
 
 	if fn, has := funcMap[req.URL.Path]; has {
 		if len(req.URL.Path) > 1 {
@@ -123,14 +128,14 @@ func (ctx *webRequestCtx) render(name string, layout bool) {
 	ctx.w.Write([]byte(html))
 }
 
-func (ctx *webRequestCtx) handel_index() {
+func (ctx *webRequestCtx) handle_index() {
 	ctx.render("network.html", true)
 }
 
-func (ctx *webRequestCtx) handel_useage() {
+func (ctx *webRequestCtx) handle_useage() {
 	ctx.render("useage.html", true)
 }
-func (ctx *webRequestCtx) handel_config() {
+func (ctx *webRequestCtx) handle_config() {
 	if ctx.req.Method == "GET" {
 		_jsDataArr := make([]interface{}, 0, 2)
 		jsDefault := make(map[string]interface{})
@@ -192,7 +197,7 @@ func (ctx *webRequestCtx) handel_config() {
 	}
 
 }
-func (ctx *webRequestCtx) handel_response() {
+func (ctx *webRequestCtx) handle_response() {
 	docid, uint_parse_err := parseDocId(ctx.req.FormValue("id"))
 	if uint_parse_err == nil {
 		responseData := ctx.ser.GetResponseByDocid(docid)
@@ -243,17 +248,17 @@ func (ctx *webRequestCtx) jsAlert(msg string) {
 	ctx.w.Write([]byte(fmt.Sprintf("<script>alert('%s')</script>", html.EscapeString(msg))))
 }
 
-func (ctx *webRequestCtx) handel_about() {
+func (ctx *webRequestCtx) handle_about() {
 	ctx.render("about.html", true)
 }
 
-func (ctx *webRequestCtx) handel_logout() {
+func (ctx *webRequestCtx) handle_logout() {
 	cookie := &http.Cookie{Name: CookieName, Value: "", Path: "/"}
 	http.SetCookie(ctx.w, cookie)
 	http.Redirect(ctx.w, ctx.req, "/", 302)
 }
 
-func (ctx *webRequestCtx) handel_login() {
+func (ctx *webRequestCtx) handle_login() {
 	if ctx.req.Method == "GET" {
 		ctx.render("login.html", true)
 	} else {
