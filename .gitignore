@@ -26,3 +26,4 @@ data/
 dest/
 hosts_*
 conf/*
+file/

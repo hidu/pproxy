@@ -120,7 +120,8 @@ tr.replay{
 
 #bd{
 	margin: 0 auto;
-	width:80%
+	width:80%;
+	padding-top: 30px;
 }
 
 .form_0 table{width: 100%}

@@ -86,9 +86,9 @@ func LoadConfig(confPath string) (*Config, error) {
 
 	config.Title = gconf.MustValue(goconfig.DEFAULT_SECTION, "title")
 	config.Notice = gconf.MustValue(goconfig.DEFAULT_SECTION, "notice")
-	config.DataDir = gconf.MustValue(goconfig.DEFAULT_SECTION, "dataDir")
+	config.DataDir = gconf.MustValue(goconfig.DEFAULT_SECTION, "dataDir", "../data/")
 
-	config.FileDir = gconf.MustValue(goconfig.DEFAULT_SECTION, "fileDir")
+	config.FileDir = gconf.MustValue(goconfig.DEFAULT_SECTION, "fileDir", "../file/")
 
 	_authType := strings.ToLower(gconf.MustValue(goconfig.DEFAULT_SECTION, "authType", "none"))
 	authTypes := map[string]int{"none": 0, "basic": 1, "basic_any": 2, "basic_try": 3, "try_basic": 3}

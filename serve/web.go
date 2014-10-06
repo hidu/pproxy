@@ -76,6 +76,7 @@ func (ser *ProxyServe) handleLocalReq(w http.ResponseWriter, req *http.Request) 
 	funcMap["/login"] = ctx.handle_login
 	funcMap["/logout"] = ctx.handle_logout
 	funcMap["/response"] = ctx.handle_response
+	funcMap["/file"] = ctx.handle_file
 
 	if fn, has := funcMap[req.URL.Path]; has {
 		if len(req.URL.Path) > 1 {
@@ -83,7 +84,7 @@ func (ser *ProxyServe) handleLocalReq(w http.ResponseWriter, req *http.Request) 
 		}
 		fn()
 	} else {
-		http.NotFound(w, req)
+		ctx.showError("404")
 	}
 }
 
@@ -117,9 +118,7 @@ func (ctx *webRequestCtx) checkLogin() {
 	ctx.values["isLogin"] = ctx.isLogin
 	ctx.values["user"] = ctx.user
 	ctx.values["isAdmin"] = ctx.isAdmin
-	fmt.Println(ctx.values)
 }
-
 
 func (ctx *webRequestCtx) handle_index() {
 	ctx.render("network.html", true)
@@ -195,7 +194,7 @@ func (ctx *webRequestCtx) handle_response() {
 	if uint_parse_err == nil {
 		responseData := ctx.ser.GetResponseByDocid(docid)
 		if responseData == nil {
-			ctx.w.Write([]byte("response not found"))
+			ctx.showError("response not found")
 		} else {
 			walker := utils.NewInterfaceWalker(map[string]interface{}(responseData))
 			content_type := ""
@@ -229,16 +228,19 @@ func (ctx *webRequestCtx) handle_response() {
 					log.Println("decode body failed", err)
 				}
 			} else {
-				ctx.w.Write([]byte("response body not found"))
+				ctx.showError("response body not found")
 			}
 		}
 	} else {
-		ctx.w.Write([]byte("param err"))
+		ctx.showError("param err")
 	}
 }
 
 func (ctx *webRequestCtx) jsAlert(msg string) {
 	ctx.w.Write([]byte(fmt.Sprintf("<script>alert('%s')</script>", html.EscapeString(msg))))
+}
+func (ctx *webRequestCtx) jsAlertJump(msg string, urlStr string) {
+	ctx.w.Write([]byte(fmt.Sprintf("<script>alert('%s');top.location.href='%s'</script>", html.EscapeString(msg), urlStr)))
 }
 
 func (ctx *webRequestCtx) handle_about() {
@@ -286,6 +288,20 @@ func (ctx *webRequestCtx) handle_login() {
 func (ctx *webRequestCtx) render(name string, layout bool) {
 	html := render_html(name, ctx.values, layout)
 	ctx.w.Write([]byte(html))
+}
+
+func (ctx *webRequestCtx) showError(msg string) {
+	ctx.values["error"] = msg
+	ctx.values["subTitle"] = "Error Page |"
+	ctx.render("error.html", true)
+}
+
+func (ctx *webRequestCtx) showErrorOrAlert(msg string) {
+	if ctx.req.Method == "POST" {
+		ctx.jsAlert(msg)
+	} else {
+		ctx.showError(msg)
+	}
 }
 
 func render_html(fileName string, values map[string]interface{}, layout bool) string {

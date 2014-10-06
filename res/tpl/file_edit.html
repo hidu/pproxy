@@ -1,0 +1,30 @@
+<div id="bd">
+
+<form method="post" action="/file" target="ifr_form">
+<input type="hidden" name="op" value="save">
+
+<input type="hidden" name="nameOrigin" value="{{.file.Name}}">
+
+
+<label>fileName:</label>
+<input type="text" name="name" value="{{.file.Name}}" class="form-control">
+
+<span>&nbsp;<a href="/file?name={{.file.Name}}/..">go File List</a></span>
+<div>
+<textarea style="width:95%;" rows="{{.fileContentRows}}"  name="content">{{.fileContent}}</textarea>
+</div>
+<pre>
+js req write:
+<code>use_file("{{.file.Name}}")</code>
+</pre>
+<center><input type="submit" value="save it" class="btn btn-primary"></center>
+</form>
+
+
+</div>
+<script src="/res/js/default.js"></script>
+<script>
+pproxy_tab_sup("#bd")
+</script>
+
+<iframe name="ifr_form" style="display:none;"></iframe>  

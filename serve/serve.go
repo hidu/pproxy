@@ -166,6 +166,8 @@ func NewProxyServe(confPath string, port int) (*ProxyServe, error) {
 	proxy.configDir = filepath.Dir(absPath)
 	proxy.Users, _ = loadUsers(proxy.configDir + "/users")
 
+	conf.FileDir, _ = filepath.Abs(conf.FileDir)
+
 	proxy.conf = conf
 
 	proxy.reqMod = NewRequestModifier(proxy)
