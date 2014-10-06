@@ -66,13 +66,6 @@ func (ser *ProxyServe) handleLocalReq(w http.ResponseWriter, req *http.Request) 
 		ser:    ser,
 	}
 	ctx.checkLogin()
-	values["isLogin"] = ctx.isLogin
-	values["user"] = ctx.user
-	if ctx.isLogin {
-		values["isAdmin"] = ctx.user.IsAdmin
-	} else {
-		values["isAdmin"] = false
-	}
 
 	funcMap := make(map[string]func())
 	funcMap["/"] = ctx.handle_index
@@ -121,12 +114,12 @@ func (ctx *webRequestCtx) checkLogin() {
 		ctx.isLogin = true
 		ctx.isAdmin = user.IsAdmin
 	}
+	ctx.values["isLogin"] = ctx.isLogin
+	ctx.values["user"] = ctx.user
+	ctx.values["isAdmin"] = ctx.isAdmin
+	fmt.Println(ctx.values)
 }
 
-func (ctx *webRequestCtx) render(name string, layout bool) {
-	html := render_html(name, ctx.values, layout)
-	ctx.w.Write([]byte(html))
-}
 
 func (ctx *webRequestCtx) handle_index() {
 	ctx.render("network.html", true)
@@ -288,6 +281,11 @@ func (ctx *webRequestCtx) handle_login() {
 		log.Println("login failed not exists,name=", name, "psw=", psw)
 		ctx.jsAlert("user not exists")
 	}
+}
+
+func (ctx *webRequestCtx) render(name string, layout bool) {
+	html := render_html(name, ctx.values, layout)
+	ctx.w.Write([]byte(html))
 }
 
 func render_html(fileName string, values map[string]interface{}, layout bool) string {
