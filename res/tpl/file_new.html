@@ -1,14 +1,15 @@
 <div id="bd">
 
+<div class="h6">new file</div>
 <form method="post" action="/file" target="ifr_form">
 <input type="hidden" name="op" value="new">
 
 <input type="hidden" name="dir" value="{{.dir}}">
 
 <label>fileName:</label>
-{{.dir}}/<input type="text" name="name" value="" class="form-control">
+{{.dir}}/<input type="text" name="name" value="" class="form-control" style="width:300px">
 
-<div></div>
+<div><label>file content:</label></div>
 <div>
 <textarea style="width:95%;" rows="10"  name="content"></textarea>
 </div>

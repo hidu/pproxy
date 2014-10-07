@@ -1,5 +1,5 @@
 <div id="bd">
-
+<div class="h6">edit file</div>
 <form method="post" action="/file" target="ifr_form">
 <input type="hidden" name="op" value="save">
 
@@ -7,9 +7,12 @@
 
 
 <label>fileName:</label>
-<input type="text" name="name" value="{{.file.Name}}" class="form-control">
+<input type="text" name="name" value="{{.file.Name}}" class="form-control" style="width:300px">
+&nbsp;&nbsp;
+<a href="/file?name={{.file.Name}}/.."><img src="/res/img/list.png">go File List</a>
+&nbsp;&nbsp;
+<a href="/f/{{.file.Name}}" target="_blank"><img src="/res/img/view.png">view</a>
 
-<span>&nbsp;<a href="/file?name={{.file.Name}}/..">go File List</a></span>
 <div>
 <textarea style="width:95%;" rows="{{.fileContentRows}}"  name="content">{{.fileContent}}</textarea>
 </div>
