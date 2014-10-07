@@ -1,15 +1,18 @@
 <div id="bd">
 <table class="tb_1">
 <caption>
-File List( {{.currentDir}} 
-<a href="/file?op=new&dir={{.currentDir}}"><img src="/res/img/list-add.png">new</a>
-)</caption>
+<div class="left">
+&nbsp;
+/f/{{.currentDir}}/ &nbsp;
+<a href="/file?op=new&dir={{.currentDir}}"><img src="/res/img/list-add.png"></a>
+</div>
+</caption>
 <thead>
  <tr>
   <th width="50px">no</th>
   <th>
   {{if .isSubDir}}
-  <span class="left"><a href="/file?name={{.currentDir}}/../">../</a></span>
+  <span class="left"><a href="/file?name={{.currentDir|escape}}/../">../</a></span>
   {{end}}
   Name
   </th>
@@ -27,7 +30,7 @@ File List( {{.currentDir}}
     </a>
     &nbsp;
     {{if $file.IsDir}}
-         <a href="/file?op=new&dir={{$file.Name}}"> <img src="/res/img/list-add.png"></a>
+         <a href="/file?op=new&dir={{$file.Name|escape}}"> <img src="/res/img/list-add.png"></a>
     {{else}}
          <a href="/f/{{$file.Name}}" target="_blank"><img src="/res/img/view.png"></a>
     {{end}}

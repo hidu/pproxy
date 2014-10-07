@@ -7,7 +7,7 @@
 <input type="hidden" name="dir" value="{{.dir}}">
 
 <label>fileName:</label>
-{{.dir}}/<input type="text" name="name" value="" class="form-control" style="width:300px">
+{{.dir}}/<input type="text" name="name" value="" class="form-control" style="width:300px" pattern="[\w\-\/\.]{1,15}" placeholder="eg:123.txt or 201408/a.json" required autofocus title="must mutch [\w\-\/\.]{1,15}">
 
 <div><label>file content:</label></div>
 <div>

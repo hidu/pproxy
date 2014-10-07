@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 )
 
@@ -106,7 +107,12 @@ func (ser *ProxyServe) getWebFilePath(name string) (fullPath string, nameNew str
 	if !strings.HasPrefix(fullPath, rootDir) {
 		return "", "", fmt.Errorf("unsafe path:%s", name)
 	}
-	return fullPath, fullPath[len(rootDir):], nil
+	nameNew = fullPath[len(rootDir):]
+	re := regexp.MustCompile(`^[\w/\-\.]+$`)
+	if !re.MatchString(nameNew) {
+		err = fmt.Errorf("illegal path:%s", nameNew)
+	}
+	return fullPath, nameNew, err
 }
 
 func (ctx *webRequestCtx) handle_file() {
@@ -204,12 +210,22 @@ func (ctx *webRequestCtx) handle_file_new() {
 		}
 		ctx.render("file_new.html", true)
 	} else if ctx.req.Method == "POST" {
+		name := strings.TrimSpace(ctx.req.FormValue("name"))
+		if name == "" {
+			ctx.jsAlert("empty filename")
+			return
+		}
 		fpath := ctx.req.FormValue("dir") + "/" + ctx.req.FormValue("name")
 
 		fileFullPath, fileName, err := ctx.ser.getWebFilePath(fpath)
 
 		if err != nil {
 			ctx.jsAlert("wrong fileName")
+			return
+		}
+
+		if fileName == "" || strings.HasSuffix(fileName, "/") {
+			ctx.jsAlert("wrong file name")
 			return
 		}
 
@@ -251,13 +267,18 @@ func (ctx *webRequestCtx) handle_file_save() {
 	name := ctx.req.PostFormValue("name")
 	content := ctx.req.PostFormValue("content")
 
-	fullPath, _, err := ctx.ser.getWebFilePath(name)
+	fullPath, nameFix, err := ctx.ser.getWebFilePath(name)
 	if err != nil {
 		ctx.jsAlert("file path wrong:" + err.Error())
 		return
 	}
+	if name == "" || nameFix == "" || strings.HasSuffix(nameFix, "/") {
+		ctx.jsAlert("wrong file name")
+		return
+	}
 	fullPathOrigin, _, err := ctx.ser.getWebFilePath(nameOrigin)
-	if err != nil {
+
+	if fullPathOrigin == "" && err != nil {
 		ctx.jsAlert("origin file path wrong:" + err.Error())
 		return
 	}

@@ -9,6 +9,8 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"net/url"
+	"regexp"
 	"strings"
 	"text/template"
 	"time"
@@ -127,29 +129,66 @@ func (ctx *webRequestCtx) handle_index() {
 func (ctx *webRequestCtx) handle_useage() {
 	ctx.render("useage.html", true)
 }
+
+func (ctx *webRequestCtx) getRewriteJsInfo(name string, title string) map[string]interface{} {
+	info := make(map[string]interface{})
+	jsStr, _ := ctx.ser.reqMod.getJsContent(name)
+
+	re := regexp.MustCompile(`use_file\(["'](.+)["']\)`)
+	matches := re.FindAllStringSubmatch(jsStr, -1)
+
+	//	fmt.Println(matches)
+
+	use_file := make([]map[string]interface{}, 0)
+	tmpNames := make(map[string]int)
+
+	for _, subMatch := range matches {
+		if len(subMatch) != 2 {
+			continue
+		}
+		use := make(map[string]interface{})
+		fileName := strings.TrimSpace(subMatch[1])
+		use["name"] = subMatch[0]
+		use["file"] = fileName
+
+		if _, has := tmpNames[fileName]; has {
+			continue
+		}
+		tmpNames[fileName] = 1
+
+		isUrl := strings.HasPrefix(fileName, "http://")
+		use["isUrl"] = isUrl
+		if isUrl {
+			use["url"] = subMatch[1]
+		} else {
+			webFile, err := newWebFileInfo(ctx.ser.conf.FileDir, fileName)
+			if err != nil {
+				continue
+			}
+			use["url"] = webFile.link()
+			defer webFile.Close()
+		}
+		use_file = append(use_file, use)
+	}
+
+	info["name"] = name
+	info["use_file"] = use_file
+	info["title"] = title
+	info["rewriteJs"] = html.EscapeString(jsStr)
+	info["jsHeight"] = getTextAreaHeightByString(jsStr, 100)
+	return info
+}
+
 func (ctx *webRequestCtx) handle_config() {
 	if ctx.req.Method == "GET" {
-		_jsDataArr := make([]interface{}, 0, 2)
-		jsDefault := make(map[string]interface{})
-
-		jsStr, _ := ctx.ser.reqMod.getJsContent("")
-		jsDefault["title"] = "global config"
-		jsDefault["name"] = ""
-		jsDefault["rewriteJs"] = html.EscapeString(jsStr)
-		jsDefault["jsHeight"] = getTextAreaHeightByString(jsStr, 100)
-		_jsDataArr = append(_jsDataArr, jsDefault)
+		jsDataArr := make([]interface{}, 0, 2)
+		jsDataArr = append(jsDataArr, ctx.getRewriteJsInfo("", "global config"))
 
 		if ctx.isLogin {
-			jsUser := make(map[string]interface{})
-			jsStr, _ := ctx.ser.reqMod.getJsContent(ctx.user.Name)
-			jsUser["title"] = fmt.Sprintf("user's config-[%s]", ctx.user.Name)
-			jsUser["name"] = ctx.user.Name
-			jsUser["rewriteJs"] = html.EscapeString(jsStr)
-			jsUser["jsHeight"] = getTextAreaHeightByString(jsStr, 100)
-			_jsDataArr = append(_jsDataArr, jsUser)
+			jsDataArr = append(jsDataArr, ctx.getRewriteJsInfo(ctx.user.Name, ctx.user.Name+"'s config"))
 		}
 
-		ctx.values["jss"] = _jsDataArr
+		ctx.values["jss"] = jsDataArr
 
 		hosts_byte, _ := utils.File_get_contents(ctx.ser.GetHostsFilePath())
 		ctx.values["hosts"] = html.EscapeString(string(hosts_byte))
@@ -306,7 +345,12 @@ func (ctx *webRequestCtx) showErrorOrAlert(msg string) {
 
 func render_html(fileName string, values map[string]interface{}, layout bool) string {
 	html := utils.DefaultResource.Load("/res/tpl/" + fileName)
-	tpl, _ := template.New("page").Parse(string(html))
+	funcs := template.FuncMap{
+		"escape": func(str string) string {
+			return url.QueryEscape(str)
+		},
+	}
+	tpl, _ := template.New("page").Funcs(funcs).Parse(string(html))
 	var bf []byte
 	w := bytes.NewBuffer(bf)
 	tpl.Execute(w, values)

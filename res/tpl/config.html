@@ -26,8 +26,16 @@ return req;<br/>
 {{else}}
  <div class="text-info">login for submit</div>
 {{end}}
-
 </div>
+
+<ol>
+{{range $j,$use_file:=$js.use_file}}
+ <li>
+    <a href="{{$use_file.url}}" target="_blank">{{$use_file.name}}</a>
+ </li>
+{{end}}
+</ol>
+
 </fieldset>
 </form>
 

@@ -3,18 +3,18 @@
 <form method="post" action="/file" target="ifr_form">
 <input type="hidden" name="op" value="save">
 
-<input type="hidden" name="nameOrigin" value="{{.file.Name}}">
+<input type="hidden" name="nameOrigin" value="{{.file.Name|html}}">
 
 
 <label>fileName:</label>
-<input type="text" name="name" value="{{.file.Name}}" class="form-control" style="width:300px">
+<input type="text" name="name" value="{{.file.Name|html}}" class="form-control" style="width:300px" pattern="[\w\-\/\.]{1,15}" placeholder="eg:123.txt or 201408/a.json" required autofocus title="must mutch [\w\-\/]{1,15}">
 &nbsp;&nbsp;
-<a href="/file?name={{.file.Name}}/.."><img src="/res/img/list.png">go File List</a>
+<a href="/file?name={{.file.Name|escape}}/.."><img src="/res/img/list.png">go File List</a>
 &nbsp;&nbsp;
 <a href="/f/{{.file.Name}}" target="_blank"><img src="/res/img/view.png">view</a>
 
 <div>
-<textarea style="width:95%;" rows="{{.fileContentRows}}"  name="content">{{.fileContent}}</textarea>
+<textarea style="width:95%;" rows="{{.fileContentRows}}"  name="content">{{.fileContent|html}}</textarea>
 </div>
 <pre>
 js req write:
