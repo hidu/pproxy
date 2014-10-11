@@ -1,57 +1,55 @@
 pproxy 0.4.5
 ======
-http抓包代理程序,http协议调试工具。  
-采用golang编写，采用bs模式(s-代理程序，b-会话查看、配置管理等功能)  
+HTTP protocol analysis tool.  
+write by golang,with BS architecture. 
 
-0.4.2版本已经支持websocket代理，以及重定向(和普通http请求一样使用)  
 
-下载编译好的可执行文件: <http://pan.baidu.com/s/1i3pAe7V>  
+download binary file (linux & windows): <http://pan.baidu.com/s/1i3pAe7V>  
 
-功能特性：
+features：
 <pre>
-1.url重定向
-   如把 http://www.baidu.com/s?wd=pproxy 修改为 http://m.baidu.com/s?wd=pproxy
-   或者把 ws://www.test.com/a 重定向到 ws://www.example.com/b
+1.url redirect
+   redirect *http://www.baidu.com/s?wd=pproxy* to  *http://m.baidu.com/s?wd=pproxy*
+   redirect  *ws://www.test.com/a* to  *ws://www.example.com/b*
    
-2.form表单动态修改  
-   get、post可以动态修改（增删改）  
+2.form dynamic modification  
+   get、post and header all can modify  
    
-3.hosts文件支持
-  相当于 修改host或者dns 如  
-  将www.baidu.com 请求全部发往127.0.0.1  
-  将www.baidu.com:81 请求全部发往192.168.1.2:8080  
+3.hosts
+  www.baidu.com to 127.0.0.1  
+  or www.baidu.com:81 to 192.168.1.2:8080 ,and only  takes effect on port 81  
   
-4.可查看request 和response详情
-   form表单参数，header等都可以很方便的看到
+4.view request and response detail
+   form params，header and all response and easy to share
    
-5.登录认证支持
-   支持httpBasic认证
+5.auth sup
+   http Basic or only try basic auth at first request
    
-6.replay功能
-   可以修改request的参数（get、post、header）
+6.replay
+   can modify the get、post、header params and replay the request
 
-7.父级代理
+7.parent proxy
   
 </pre>
 
-使用javascript来配置重定向功能，如
+use javascript code as config to modify the request params:
 ```
 if(req.host=="www.baidu.com"){
    req.host="www.163.com"
    req.host_addr="127.0.0.0:81" // send req to 127.0.0.1:81
 }
 ```
-当然也可以这样：
+or：
 ```
 if(req.host.indexOf("baidu.com")>-1){
   req.host_addr="127.0.0.0:81"
 }
 ```
 
-req变量示例：
+request params dump：
 ```
 #url : http://www.example.com/album/list?cid=126
-#req对象有如下一下属性：
+#request has these attrs：
 schema : http
 host : www.example.com
 port : 80
@@ -64,30 +62,31 @@ method: GET
 form_get  : {add:function(k,v){},set:function(k,v){},get:function(k){},len:function(){}} 
 form_post : {add:function(k,v){},set:function(k,v){},get:function(k){},len:function(){}}
 
-host_addr: #修改该请求的host是使用，如 127.0.0.1:3218
+host_addr: #modify hosts eg:127.0.0.1:3218
 
-#注意 get 和post的值是数组，如上cid参数
-#form_get 用于更方便的操作  get参数对象
-#form_post 用于更方便的操作 post参数对象
+#note get and post value is array
+#form_get: helper function for get params
+#form_post: helper function for post params
 ```
 
 
-增强的hosts文件使用:
+hosts config demo:
 ```
 www.baidu.com 127.0.0.1
 www.baidu.com:81 10.0.2.2:8080
 ```
 
-忽略禁用req_rewrite.js  
-在js文件的第一行内容写入 ```//ignore```
+disable req_rewrite.js  
+first line ```//ignore```
+
 
 req_rewrite.js支持不同用户设置不同的规则。默认使用当前验证使用用户名的规则，若无则使用默认的。  
 
-配置文件：
+configs：
 ```
 conf/
-├── pproxy.conf          #server的配置
-├── hosts_8080           #8080端口server的hosts规则
+├── pproxy.conf          #server config
+├── hosts_8080           #hosts for 8080
 ├── req_rewrite_8080.js  #8080端口server的url重写规则
 ├── hosts_8081
 ├── req_rewrite_8081.js
