@@ -100,7 +100,8 @@ func (ser *ProxyServe) Start() {
 	addr := fmt.Sprintf("%s:%d", "", ser.conf.Port)
 	fmt.Println("proxy listen at ", addr)
 	ser.ws_init()
-	err := http.ListenAndServe(addr, ser)
+	//	err := http.ListenAndServe(addr, ser)
+	err := utils.NewHttpServer(addr, ser)
 	log.Println(err)
 	fmt.Println(err)
 }

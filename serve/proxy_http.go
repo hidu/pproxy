@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"github.com/hidu/goproxy"
 	"github.com/hidu/goproxy/ext/auth"
+	"github.com/hidu/goutils"
 	"log"
 	"net/http"
 	"net/http/httputil"
@@ -71,6 +72,8 @@ func (proxy *HttpProxy) onRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*ht
 	}
 
 	removeHeader(req)
+	req.Header.Del(utils.HTTP_RAW_HEADER_NAME)
+	req.Header.Del(utils.HTTP_RAW_HEADER_BASE64)
 
 	post_vs := getPostData(req)
 	reqCtx.FormPost = post_vs

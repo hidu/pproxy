@@ -16,6 +16,7 @@ import (
 	"net/http/httputil"
 	"strings"
 	"time"
+	"github.com/hidu/goutils"
 )
 
 var (
@@ -95,9 +96,19 @@ func (w *WebsocketProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		req.Header.Set("Origin", "http://"+req.Host)
 	}
 	requestHeader := http.Header{}
+	headerNames := strings.Split(req.Header.Get(utils.HTTP_RAW_HEADER_NAME), "|")
+	headerNamesMap := make(map[string]string)
+	for _, name := range headerNames {
+		headerNamesMap[http.CanonicalHeaderKey(name)] = name
+	}
+
+	req.Header.Del(utils.HTTP_RAW_HEADER_NAME)
+	req.Header.Del(utils.HTTP_RAW_HEADER_BASE64)
 	for k, v := range req.Header {
 		if _, has := wsProxyIgnoreHeader[strings.ToLower(k)]; !has {
-			requestHeader[k] = v
+			if kOrigin, hasOrigin := headerNamesMap[k]; hasOrigin {
+				requestHeader[kOrigin] = v
+			}
 		}
 	}
 
