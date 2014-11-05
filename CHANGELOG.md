@@ -1,6 +1,6 @@
 2014-09-27
     1:http session list support local filter
-    2:
+    
     
 2014-09-14
     downgrade the socket.io lib

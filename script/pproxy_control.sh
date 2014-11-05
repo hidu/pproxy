@@ -1,26 +1,35 @@
 #!/bin/bash
 
-cd $(dirname $0)
+CUR_DIR=$(dirname $0)
 
-conf_file=$2
+BIN_NAME="./pproxy"
+DEFAULT_CONF="./conf/pproxy.conf"
+INTRO="get more info from github.com/hidu/pproxy"
 
-if [ -z "$conf_file" ];then
-    conf_file="./conf/pproxy.conf"
+
+CONF_FILE=$2
+
+if [ -z "$CONF_FILE" ];then
+    cd $CUR_DIR
+    CONF_FILE="$DEFAULT_CONF"
 fi
 
-conf_path=$(readlink -f $conf_file)
+CONF_PATH=$(readlink -f "$CONF_FILE")
 
-if [ ! -f "$conf_path" ];then
-   echo "conf file[${conf_path}] not exists!"
+cd $CUR_DIR
+
+BIN_PATH=$(readlink -f $BIN_NAME)
+
+if [ ! -f "$CONF_PATH" ];then
+   echo "conf file[${CONF_PATH}] not exists!"
    exit 2
 fi
 
-bin_path=$(readlink -f ./pproxy)
 
-run_cmd="$bin_path -conf $conf_path"
+RUN_CMD="$BIN_PATH -conf $CONF_PATH"
 
 function start(){
-    nohup $run_cmd>/dev/null 2>&1 &  
+    nohup $RUN_CMD>/dev/null 2>&1 &  
     status=$?
    if [ "$status" == "0" ];then
         echo "start suc! pid="$!
@@ -31,7 +40,7 @@ function start(){
 }
 
 function stop(){
-    list=$(ps aux|grep "$run_cmd"|grep -v grep)
+    list=$(ps aux|grep "$RUN_CMD"|grep -v grep)
     if [ -z "${list}" ];then
        echo "no process to kill"
     else
@@ -54,6 +63,7 @@ function restart(){
 function useage(){
    echo "pproxy useage:"
    echo $0 "start|stop|restart" [conf_path]
+   echo  -e "$INTRO"
 }
 
 if [ $# -lt 1 ]; then
