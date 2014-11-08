@@ -2,10 +2,10 @@ package serve
 
 import (
 	"fmt"
-	"net/http"
 )
 
-func (ser *ProxyServe) Broadcast_Req(req *http.Request, reqCtx *requestCtx) bool {
+func (ser *ProxyServe) Broadcast_Req(reqCtx *requestCtx) bool {
+	req:=reqCtx.Req
 	data := make(map[string]interface{})
 	data["docid"] = fmt.Sprintf("%d", reqCtx.Docid)
 	data["sid"] = reqCtx.SessionId % 10000

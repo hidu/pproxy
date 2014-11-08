@@ -2,7 +2,6 @@ package serve
 
 import (
 	"log"
-	"net/http"
 	"time"
 )
 
@@ -15,7 +14,7 @@ type clientSession struct {
 	User             *User
 }
 
-func (ser *ProxyServe) regirestReq(req *http.Request, reqCtx *requestCtx) {
+func (ser *ProxyServe) regirestReq(reqCtx *requestCtx) {
 	ip := reqCtx.GetIp()
 	now := time.Now()
 	ser.mu.Lock()

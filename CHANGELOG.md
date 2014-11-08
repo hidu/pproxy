@@ -1,9 +1,12 @@
+2014-11-08
+	1.重构代理处理逻辑，移除goproxy依赖，改进Upgrade代理协议
+	
 2014-09-27
-    1:http session list support local filter
+    1.http session list support local filter
     
     
 2014-09-14
-    downgrade the socket.io lib
+    1.downgrade the socket.io lib
     
 2014-08-14
    1.emit data with base64encode
@@ -13,15 +16,15 @@
    1.websocket proxy support
    
 2014-08-06
-   1:update socket.io
+   1.update socket.io
    
 2014-07-19
-   1:修复监听端口为80时不能查看会话列表的问题
-   2：完善帮助说明
+   1.修复监听端口为80时不能查看会话列表的问题
+   2.完善帮助说明
 
 2014-07-15
-   1:get和post参数支持重写
-   2：重写请求出现错误自己返回502错误
+   1.get和post参数支持重写
+   2.重写请求出现错误自己返回502错误
 
 2014-07-12 
    1.认证机制升级，新认证机制：一个ip第一次访问的时候会要求登录，若没有输入登录信息也跳过。  

@@ -198,3 +198,31 @@ func parseDocId(strid string) (docid int, err error) {
 	}
 	return 0, parse_err
 }
+
+func removeHeader(req *http.Request) {
+	for k := range req.Header {
+		if len(k) > 5 && k[:6] == "Proxy-" {
+			req.Header.Del(k)
+		}
+	}
+}
+
+func getPostData(req *http.Request) (post *url.Values) {
+	post = new(url.Values)
+	if strings.Contains(req.Header.Get("Content-Type"), "x-www-form-urlencoded") {
+		buf := forgetRead(&req.Body)
+		var body_str string
+		if req.Header.Get(Content_Encoding) == "gzip" {
+			body_str = gzipDocode(buf)
+		} else {
+			body_str = buf.String()
+		}
+		var err error
+		*post, err = url.ParseQuery(body_str)
+		if err != nil {
+			log.Println("parse post err", err, "url=", req.URL.String())
+		}
+
+	}
+	return post
+}

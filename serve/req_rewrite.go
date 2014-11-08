@@ -11,10 +11,11 @@ import (
 	"strings"
 )
 
-func (ser *ProxyServe) reqRewriteByjs(req *http.Request, reqCtx *requestCtx) int {
+func (ser *ProxyServe) reqRewriteByjs( reqCtx *requestCtx) int {
 	if !ser.reqMod.CanMod() {
 		return 304
 	}
+	req:=reqCtx.Req
 	schema := req.URL.Scheme
 	origin_url := req.URL.String()
 	origin_get_query := req.URL.Query()
@@ -180,10 +181,10 @@ func (ser *ProxyServe) reqRewriteByjs(req *http.Request, reqCtx *requestCtx) int
 	return 200
 }
 
-func (ser *ProxyServe) reqRewrite(req *http.Request, reqCtx *requestCtx) int {
-	origin_host := req.Host + "#" + req.URL.Host
-	statusCode1 := ser.reqRewriteByjs(req, reqCtx)
-	new_host := req.Host + "#" + req.URL.Host
+func (ser *ProxyServe) reqRewrite(reqCtx *requestCtx) int {
+	origin_host := reqCtx.Req.Host + "#" + reqCtx.Req.URL.Host
+	statusCode1 := ser.reqRewriteByjs(reqCtx)
+	new_host := reqCtx.Req.Host + "#" + reqCtx.Req.URL.Host
 
 	if ser.Debug {
 		log.Println("rewrte_debug:\n", "origin_host:", origin_host, "\nnew_host:", new_host, "\n")
@@ -191,7 +192,7 @@ func (ser *ProxyServe) reqRewrite(req *http.Request, reqCtx *requestCtx) int {
 
 	statusCode2 := 304
 	if origin_host == new_host {
-		statusCode2 = ser.reqRewriteByHosts(req)
+		statusCode2 = ser.reqRewriteByHosts(reqCtx.Req)
 	}
 	if statusCode1 == 200 || statusCode2 == 200 {
 		return 200

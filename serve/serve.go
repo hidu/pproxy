@@ -9,18 +9,14 @@ import (
 	"net/http/httputil"
 	"os"
 	"path/filepath"
-
-	"net/url"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
 )
 
 type ProxyServe struct {
-	httpProxy *HttpProxy
-	wsproxy   *WebsocketProxy
-	mydb      *TieDb
+	tripper map[string]proxyRoundTripper
+	mydb    *TieDb
 
 	wsSer *wsServer
 
@@ -46,62 +42,36 @@ type ProxyServe struct {
 type KvType map[string]interface{}
 
 func (ser *ProxyServe) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	host, port_int, err := getHostPortFromReq(req)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("bad request"))
-		log.Println("bad request,err", err)
-		return
-	}
 	atomic.AddInt64(&ser.reqNum, 1)
-
-	if req.Host == "p.info" || req.Host == "proxy.info" {
+	
+	ctx := NewRequestCtx(ser, w, req)
+	if ctx.Host == "p.info" || ctx.Host == "proxy.info" {
 		ser.handleUserInfo(w, req)
 		return
 	}
 
-	isLocalReq := port_int == ser.conf.Port
-	if isLocalReq {
-		isLocalReq = IsLocalIp(host)
-	}
-	if isLocalReq {
+	if ctx.IsLocalRequest() {
 		ser.handleLocalReq(w, req)
 	} else {
 		if ser.Debug {
 			req_dump_debug, _ := httputil.DumpRequest(req, req.Method == "GET")
 			log.Println("DEBUG req BEFORE:\nurl_full:", req.URL.String(), "\nschema:", req.URL.Scheme, "\n", string(req_dump_debug), "\n\n")
 		}
-		isWebSocket := strings.ToLower(req.Header.Get("Upgrade")) == "websocket"
-		if isWebSocket {
-			ser.wsproxy.ServeHTTP(w, req)
-		} else {
-			if req.Method != "CONNECT" && !req.URL.IsAbs() {
-				urlOrigin := req.URL.String()
-				urlStr := "http://" + req.Host + req.URL.Path
-				if req.URL.RawQuery != "" {
-					urlStr += "?" + req.URL.RawQuery
-				}
-				var err error
-				req.URL, err = url.Parse(urlStr)
-				if err != nil {
-					log.Println("fix url failed,originUrl:", urlOrigin, "err:", err)
-					return
-				}
-			}
-			ser.httpProxy.ServeHTTP(w, req)
-		}
+		ctx.RoundTrip()
 	}
 }
 
-func (ser *ProxyServe) Start() {
-	ser.httpProxy = NewHttpProxy(ser)
-	ser.wsproxy = NewWsProxy(ser)
+func (ser *ProxyServe)ServeHTTPProxy(w http.ResponseWriter, req *http.Request){
+	atomic.AddInt64(&ser.reqNum, 1)
+	ctx := NewRequestCtx(ser, w, req)
+	ctx.RoundTrip()
+}
 
+func (ser *ProxyServe) Start() {
 	addr := fmt.Sprintf("%s:%d", "", ser.conf.Port)
 	fmt.Println("proxy listen at ", addr)
 	ser.ws_init()
-	//	err := http.ListenAndServe(addr, ser)
-	err := utils.NewHttpServer(addr, ser)
+	err := http.ListenAndServe(addr, ser)
 	log.Println(err)
 	fmt.Println(err)
 }
@@ -186,6 +156,10 @@ func NewProxyServe(confPath string, port int) (*ProxyServe, error) {
 	rand.Seed(time.Now().UnixNano())
 
 	proxy.ProxyClients = make(map[string]*clientSession)
+	proxy.tripper = make(map[string]proxyRoundTripper)
+
+	proxy.tripper["default"] = RoundTrip_Default
+	proxy.tripper["upgrade"] = RoundTrip_Upgrade
 
 	utils.SetInterval(func() {
 		proxy.cleanExpiredSession()
@@ -193,6 +167,17 @@ func NewProxyServe(confPath string, port int) (*ProxyServe, error) {
 
 	//   proxy.mydb.StartGcTimer(60,store_time)
 	return proxy, nil
+}
+
+func (ser *ProxyServe) RoundTrip(ctx *requestCtx) (resp *http.Response, err error) {
+	rtName := "default"
+	if ctx.Req.Header.Get("Upgrade") != "" {
+		rtName = "Upgrade"
+	}
+	if rt, has := ser.tripper[rtName]; has {
+		return rt(ctx)
+	}
+	return nil, fmt.Errorf("unknow roundTrip")
 }
 
 func setupLog(dataDir string, port int) {
