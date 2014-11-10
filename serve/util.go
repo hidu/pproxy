@@ -226,3 +226,9 @@ func getPostData(req *http.Request) (post *url.Values) {
 	}
 	return post
 }
+
+func headerEncode(data []byte) []byte {
+	t := bytes.Replace(data, []byte("\r"), []byte("\\r"), -1)
+	t = bytes.Replace(t, []byte("\n"), []byte("\\n"), -1)
+	return t
+}

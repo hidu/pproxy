@@ -1,5 +1,7 @@
 2014-11-08
-	1.重构代理处理逻辑，移除goproxy依赖，改进Upgrade代理协议
+	1.重构代理处理逻辑，改进Upgrade代理协议
+	2.会话详情页面展现请求时间
+	3.upgrade结束的时候也记录一条response 以方便查看何时断开连接
 	
 2014-09-27
     1.http session list support local filter

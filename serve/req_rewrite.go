@@ -11,11 +11,11 @@ import (
 	"strings"
 )
 
-func (ser *ProxyServe) reqRewriteByjs( reqCtx *requestCtx) int {
+func (ser *ProxyServe) reqRewriteByjs(reqCtx *requestCtx) int {
 	if !ser.reqMod.CanMod() {
 		return 304
 	}
-	req:=reqCtx.Req
+	req := reqCtx.Req
 	schema := req.URL.Scheme
 	origin_url := req.URL.String()
 	origin_get_query := req.URL.Query()
@@ -182,6 +182,9 @@ func (ser *ProxyServe) reqRewriteByjs( reqCtx *requestCtx) int {
 }
 
 func (ser *ProxyServe) reqRewrite(reqCtx *requestCtx) int {
+	if reqCtx.Req.Method == "CONNECT" {
+		return 304
+	}
 	origin_host := reqCtx.Req.Host + "#" + reqCtx.Req.URL.Host
 	statusCode1 := ser.reqRewriteByjs(reqCtx)
 	new_host := reqCtx.Req.Host + "#" + reqCtx.Req.URL.Host

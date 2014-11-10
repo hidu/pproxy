@@ -173,7 +173,7 @@ socket.on("res",
             if(req){
 	            var re_do_str=req["schema"]=="http"?("&nbsp;<a target='_blank' href='/replay?id="+req["id"]+"'>replay</a>"):"";
 	            
-	            html += "<div><table class='tb_1'><caption>Request"+re_do_str+"</caption>";
+	            html += "<div><table class='tb_1'><caption>Request"+re_do_str+pproxy_timeformat(req["now"])+"</caption>";
 	            html += "<tr><th width='80px'>url</th><td>" + h(req["url"]) + "&nbsp;&nbsp;<a href='"+h(req["url"])+"' target='_blank'>view</a></td></tr>"
 	            if (req["url_origin"]!=req["url"]) {
 	                html += "<tr><th>origin</th><td><span style='color:blue'>" + h(req["url_origin"]) + "</span></td></tr>";
@@ -196,14 +196,15 @@ socket.on("res",
             }
             var res_link = "";
             
-            if (res) {
-                res_link = "<a href='/response?id=" + res["id"] + "' target='_blank'>view</a>";
-                html += "<div><table class='tb_1'><caption>Response&nbsp;" + res_link + "</caption>"
-            }
-            
             var hideBigBody=false;
             
             if (res) {
+                res_link = "<a href='/response?id=" + res["id"] + "' target='_blank'>view</a>";
+                html += "<div><table class='tb_1'><caption>Response&nbsp;" + res_link +pproxy_timeformat(res["now"])+ "</caption>"
+                if (res["msg"]) {
+	            	html += "<tr><th  width='80px'>msg</th><td><span style='color:red'>" + h(res["msg"])+"</span></td></tr>";
+	            }
+                
                 if (res["dump"]) {
                     html += "<tr><th width='80px'>res_dump</th><td>" + h(Base64.decode(res["dump"])).replace(/\n/g, "<br/>")
                     + "</td></tr>";
@@ -247,6 +248,25 @@ function pproxy_res_td_body_toggle(){
 	$("#res_td_body").toggleClass("res_td_body");
 	return false;
 }
+
+function pproxy_timeformat(sec){
+	if(!sec ||sec<1000){
+		return ""
+	}
+	var numFill=function(num,len){
+		num=num+""
+		var l=len-num.length
+		for(;l>0;l--){
+			num="0"+num
+		}
+		return num
+	}
+	var d=new Date()
+	d.setTime(sec*1000)
+	return "&nbsp;<font size=-1>"+d.getFullYear()+"-"+numFill(d.getMonth()+1,2)+"-"+numFill(d.getDate(),2)+" "
+		   +numFill(d.getHours(),2)+":"+numFill(d.getMinutes(),2)+":"+numFill(d.getSeconds(),2)+"</font>";
+}
+
         
 function pproxy_parseAsjson(str) {
     try {

@@ -5,7 +5,7 @@ import (
 )
 
 func (ser *ProxyServe) Broadcast_Req(reqCtx *requestCtx) bool {
-	req:=reqCtx.Req
+	req := reqCtx.Req
 	data := make(map[string]interface{})
 	data["docid"] = fmt.Sprintf("%d", reqCtx.Docid)
 	data["sid"] = reqCtx.SessionId % 10000

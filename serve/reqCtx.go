@@ -1,6 +1,7 @@
 package serve
 
 import (
+	"encoding/base64"
 	"fmt"
 	"log"
 	"net/http"
@@ -8,7 +9,6 @@ import (
 	"net/url"
 	"strings"
 	"time"
-	"encoding/base64"
 )
 
 type requestCtx struct {
@@ -27,12 +27,15 @@ type requestCtx struct {
 	HasBroadcast  bool
 	FormPost      *url.Values
 	ClientSession *clientSession
-	LogData       map[string]interface{}
-	OriginUrl     string
-	Msg           string
 
-	Tr  *http.Transport
-	ser *ProxyServe
+	OriginUrl string
+	logData   map[interface{}]interface{}
+	Msg       string
+
+	ser           *ProxyServe
+	startTime     time.Time
+	timeDurations map[string]time.Duration
+	hasPrint      bool
 }
 
 func NewRequestCtx(ser *ProxyServe, rw http.ResponseWriter, req *http.Request) *requestCtx {
@@ -40,11 +43,14 @@ func NewRequestCtx(ser *ProxyServe, rw http.ResponseWriter, req *http.Request) *
 	ctx.Req = req
 	ctx.ser = ser
 	ctx.Rw = rw
+	ctx.SessionId = ser.reqNum
 
-	ctx.LogData = make(map[string]interface{})
+	ctx.logData = make(map[interface{}]interface{})
+	ctx.timeDurations = make(map[string]time.Duration)
+
 	ctx.FormPost = &url.Values{}
 	ctx.init()
-	ctx.Tr = &http.Transport{}
+	ctx.startTime = time.Now()
 	return ctx
 }
 
@@ -61,7 +67,7 @@ func (ctx *requestCtx) init() {
 
 	ctx.OriginUrl = req.URL.String()
 	ctx.IsRePlay = len(req.Header.Get(REPLAY_FLAG)) > 0
-	ctx.LogData["url"] = req.URL.String()
+	ctx.SetLog("url", req.URL.String())
 
 	ctx.RemoteAddr = req.RemoteAddr
 
@@ -71,7 +77,7 @@ func (ctx *requestCtx) init() {
 	if _replay_user := req.Header.Get(REPLAY_USER_NAME); _replay_user != "" {
 		ctx.User = &User{Name: _replay_user, SkipCheckPsw: true}
 	}
-	ctx.Docid = ctx.ser.GetNewDocid()
+	ctx.Docid = ctx.getNewDocid()
 	ctx.ser.regirestReq(ctx)
 }
 
@@ -105,64 +111,59 @@ func (ctx *requestCtx) GetIp() string {
 }
 
 func (ctx *requestCtx) PrintLog() {
-	reqNum := 0
+	reqId := 0
 	if ctx.ClientSession != nil {
-		reqNum = ctx.ClientSession.RequestNum
+		reqId = ctx.ClientSession.RequestNum
 	}
 	log.Println(
 		"session_id:", ctx.SessionId,
 		"remote:", ctx.RemoteAddr,
-		"reqNum:", reqNum,
+		"reqId:", reqId,
 		"docid:", ctx.Docid,
 		"uname:", ctx.User.Name,
 		"broadcast:", ctx.HasBroadcast,
-		"data:", ctx.LogData,
+		"startTime:", ctx.startTime.Unix(),
+		"timeUsed:", fmt.Sprintf("%.3fs", time.Now().Sub(ctx.startTime).Seconds()),
+		"data:", ctx.logData,
+		"times:", ctx.timeDurations,
 	)
 }
 
 func (ctx *requestCtx) RoundTrip() {
-	defer ctx.PrintLog()
-	
-	if !ctx.ser.checkHttpAuth(ctx) {
-		ctx.LogData["status"] = "login required"
-		ctx.Rw.Header().Set("Proxy-Authenticate", "Basic realm=auth required")
-		ctx.Rw.WriteHeader(http.StatusProxyAuthRequired)
-		ctx.Rw.Write([]byte("auth required"))
-		return
-	}
+	defer func() {
+		ctx.hasPrint = true
+		ctx.SetLog("logType", "defer")
+		ctx.PrintLog()
+	}()
+
+	time.AfterFunc(10*time.Second, func() {
+		if !ctx.hasPrint {
+			ctx.SetLog("logType", "timeout10")
+			ctx.PrintLog()
+		}
+	})
+
 	removeHeader(ctx.Req)
 	rewrite_code := ctx.ser.reqRewrite(ctx)
 
 	ctx.HasBroadcast = ctx.ser.Broadcast_Req(ctx)
 
-	ctx.LogData["js_rewrite_code"] = rewrite_code
-	defer ctx.saveRequestData()
+	ctx.SetLog("js_rewrite_code", rewrite_code)
+
+	time.AfterFunc(1*time.Second, ctx.saveRequestData)
 
 	if rewrite_code != 200 && rewrite_code != 304 {
-		ctx.Msg = "rewrite"
-		ctx.Rw.WriteHeader(http.StatusBadGateway)
-		ctx.Rw.Write([]byte("pproxy error"))
+		ctx.badGateway(fmt.Errorf("rewrite failed"))
 		return
 	}
-	resp, err := ctx.ser.RoundTrip(ctx)
-	if resp == nil && err == nil {
-		return
-	}
-	ctx.saveResponse(resp)
-	if err != nil {
-		ctx.Rw.WriteHeader(http.StatusBadGateway)
-		ctx.Rw.Write([]byte("pproxy error"))
-		return
-	}
-	if resp != nil {
-		hijack, _ := ctx.Rw.(http.Hijacker)
-		conn, _, _ := hijack.Hijack()
-		defer conn.Close()
-		resp.Write(conn)
-		resp.Body.Close()
-	}
-
+	ctx.ser.proxy.RoundTrip(ctx)
 }
+func (ctx *requestCtx) badGateway(err error) {
+	ctx.SetLog("errMsg", fmt.Sprintf("%s", err))
+	ctx.Rw.WriteHeader(http.StatusBadGateway)
+	ctx.Rw.Write([]byte("pproxy error"))
+}
+
 func (ctx *requestCtx) DestAddr() string {
 	return fmt.Sprintf("%s:%d", ctx.Host, ctx.Port)
 }
@@ -179,7 +180,6 @@ func (ctx *requestCtx) saveRequestData() {
 		logdata["path"] = ctx.Req.URL.Path
 		logdata["cookies"] = ctx.Req.Cookies()
 		logdata["now"] = time.Now().Unix()
-		logdata["session_id"] = ctx.SessionId
 		logdata["user"] = ctx.User.Name
 		logdata["client_ip"] = ctx.RemoteAddr
 		logdata["method"] = ctx.Req.Method
@@ -187,9 +187,12 @@ func (ctx *requestCtx) saveRequestData() {
 		logdata["replay"] = ctx.IsRePlay
 		logdata["msg"] = ctx.Msg
 
-		req_dump, err_dump := httputil.DumpRequest(ctx.Req, true)
+		logdata["now"] = ctx.startTime.Unix()
+
+		dumpBody := false
+		req_dump, err_dump := httputil.DumpRequest(ctx.Req, dumpBody)
 		if err_dump != nil {
-			ctx.LogData["dump"] = "dump request failed"
+			ctx.SetLog("dumpMsg", "dump request failed")
 			req_dump = []byte("dump failed")
 		}
 		logdata["dump"] = base64.StdEncoding.EncodeToString(req_dump)
@@ -203,16 +206,16 @@ func (ctx *requestCtx) saveRequestData() {
 	}
 }
 
-func (ctx *requestCtx)saveResponse(res *http.Response) {
-	if ctx.Docid < 1 ||res==nil{
+func (ctx *requestCtx) saveResponse(res *http.Response) {
+	if ctx.Docid < 1 || res == nil {
 		return
 	}
 	data := KvType{}
-	data["session_id"] = ctx.SessionId
 	data["now"] = time.Now().Unix()
 	data["header"] = map[string][]string(res.Header)
 	data["status"] = res.StatusCode
 	data["content_length"] = res.ContentLength
+	data["msg"] = ctx.Msg
 
 	res_dump, dump_err := httputil.DumpResponse(res, false)
 	if dump_err != nil {
@@ -223,12 +226,16 @@ func (ctx *requestCtx)saveResponse(res *http.Response) {
 	//   data["cookies"]=res.Cookies()
 
 	body := []byte("pproxy skip")
-	if res.ContentLength <= ctx.ser.MaxResSaveLength {
+	if res.Body != nil && res.ContentLength <= ctx.ser.MaxResSaveLength {
 		buf := forgetRead(&res.Body)
 		if res.Header.Get(Content_Encoding) == "gzip" {
 			body = []byte(gzipDocode(buf))
 		} else {
 			body = buf.Bytes()
+		}
+		l := int64(len(body))
+		if l > ctx.ser.MaxResSaveLength {
+			body = []byte(fmt.Sprintf("pproxy skip,body too large,[len=%d]", l))
 		}
 	}
 	data["body"] = base64.StdEncoding.EncodeToString(body)
@@ -236,4 +243,21 @@ func (ctx *requestCtx)saveResponse(res *http.Response) {
 	err := ctx.ser.mydb.ResponseTable.Set(ctx.Docid, data)
 
 	log.Println("save_res", ctx.SessionId, "docid=", ctx.Docid, "body_len=", len(data["body"].(string)), err)
+}
+
+func (ctx *requestCtx) SetLog(k, v interface{}) {
+	ctx.logData[k] = v
+}
+func (ctx *requestCtx) SetTimePoint(key string) {
+	ctx.timeDurations[key] = time.Now().Sub(ctx.startTime)
+}
+
+func (ctx *requestCtx) getNewDocid() int {
+	id_str := fmt.Sprintf("%s%d", time.Now().Format("200601021504"), ctx.ser.reqNum)
+	id, err := parseDocId(id_str)
+	if err == nil {
+		return id
+	}
+	log.Println("GetNewDocid failed", id_str, err)
+	return int(time.Now().UnixNano() + ctx.ser.reqNum)
 }

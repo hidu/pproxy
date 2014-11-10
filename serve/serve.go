@@ -15,8 +15,8 @@ import (
 )
 
 type ProxyServe struct {
-	tripper map[string]proxyRoundTripper
-	mydb    *TieDb
+	mydb  *TieDb
+	proxy *HttpProxy
 
 	wsSer *wsServer
 
@@ -43,7 +43,7 @@ type KvType map[string]interface{}
 
 func (ser *ProxyServe) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	atomic.AddInt64(&ser.reqNum, 1)
-	
+
 	ctx := NewRequestCtx(ser, w, req)
 	if ctx.Host == "p.info" || ctx.Host == "proxy.info" {
 		ser.handleUserInfo(w, req)
@@ -57,11 +57,19 @@ func (ser *ProxyServe) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			req_dump_debug, _ := httputil.DumpRequest(req, req.Method == "GET")
 			log.Println("DEBUG req BEFORE:\nurl_full:", req.URL.String(), "\nschema:", req.URL.Scheme, "\n", string(req_dump_debug), "\n\n")
 		}
+		if !ser.checkHttpAuth(ctx) {
+			ctx.SetLog("msg", "login required")
+			ctx.Rw.Header().Set("Proxy-Authenticate", "Basic realm=auth required")
+			ctx.Rw.WriteHeader(http.StatusProxyAuthRequired)
+			ctx.Rw.Write([]byte("auth required"))
+			return
+		}
 		ctx.RoundTrip()
 	}
 }
 
-func (ser *ProxyServe)ServeHTTPProxy(w http.ResponseWriter, req *http.Request){
+//for replay
+func (ser *ProxyServe) ServeHTTPProxy(w http.ResponseWriter, req *http.Request) {
 	atomic.AddInt64(&ser.reqNum, 1)
 	ctx := NewRequestCtx(ser, w, req)
 	ctx.RoundTrip()
@@ -74,16 +82,6 @@ func (ser *ProxyServe) Start() {
 	err := http.ListenAndServe(addr, ser)
 	log.Println(err)
 	fmt.Println(err)
-}
-
-func (ser *ProxyServe) GetNewDocid() int {
-	id_str := fmt.Sprintf("%s%d", time.Now().Format("200601021504"), ser.reqNum)
-	id, err := parseDocId(id_str)
-	if err == nil {
-		return id
-	}
-	log.Println("GetNewDocid failed", id_str, err)
-	return int(time.Now().UnixNano() + ser.reqNum)
 }
 
 func (ser *ProxyServe) GetResponseByDocid(docid int) (res_data KvType) {
@@ -156,28 +154,13 @@ func NewProxyServe(confPath string, port int) (*ProxyServe, error) {
 	rand.Seed(time.Now().UnixNano())
 
 	proxy.ProxyClients = make(map[string]*clientSession)
-	proxy.tripper = make(map[string]proxyRoundTripper)
-
-	proxy.tripper["default"] = RoundTrip_Default
-	proxy.tripper["upgrade"] = RoundTrip_Upgrade
+	proxy.proxy = NewHttpProxy(proxy)
 
 	utils.SetInterval(func() {
 		proxy.cleanExpiredSession()
 	}, 60)
-
 	//   proxy.mydb.StartGcTimer(60,store_time)
 	return proxy, nil
-}
-
-func (ser *ProxyServe) RoundTrip(ctx *requestCtx) (resp *http.Response, err error) {
-	rtName := "default"
-	if ctx.Req.Header.Get("Upgrade") != "" {
-		rtName = "Upgrade"
-	}
-	if rt, has := ser.tripper[rtName]; has {
-		return rt(ctx)
-	}
-	return nil, fmt.Errorf("unknow roundTrip")
 }
 
 func setupLog(dataDir string, port int) {
