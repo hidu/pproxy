@@ -46,7 +46,7 @@ func (ser *ProxyServe) handleLocalReq(w http.ResponseWriter, req *http.Request) 
 	}
 
 	if strings.HasPrefix(req.URL.Path, "/res/") {
-		utils.DefaultResource.HandleStatic(w, req, req.URL.Path)
+		Assest.HttpHandler("/").ServeHTTP(w, req)
 		return
 	}
 
@@ -344,7 +344,7 @@ func (ctx *webRequestCtx) showErrorOrAlert(msg string) {
 }
 
 func render_html(fileName string, values map[string]interface{}, layout bool) string {
-	html := utils.DefaultResource.Load("/res/tpl/" + fileName)
+	html := Assest.GetContent("res/tpl/" + fileName)
 	funcs := template.FuncMap{
 		"escape": func(str string) string {
 			return url.QueryEscape(str)

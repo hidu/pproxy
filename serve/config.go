@@ -59,11 +59,11 @@ const (
 //"0:no auth | 1:basic auth | 2:basic auth with any name"
 
 func GetVersion() string {
-	return string(utils.DefaultResource.Load("/res/version"))
+	return Assest.GetContent("res/version")
 }
 
 func GetDemoConf() string {
-	return strings.TrimSpace(string(utils.DefaultResource.Load("/res/conf/demo.conf")))
+	return strings.TrimSpace(Assest.GetContent("res/conf/demo.conf"))
 }
 
 func (u *User) isPswEq(psw string) bool {

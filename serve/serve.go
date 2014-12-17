@@ -26,7 +26,8 @@ type ProxyServe struct {
 
 	mu sync.RWMutex
 
-	Debug bool
+	Debug    bool
+	DebugRes bool //goassest visit all assest direct?
 
 	conf      *Config
 	configDir string
@@ -78,7 +79,12 @@ func (ser *ProxyServe) ServeHTTPProxy(w http.ResponseWriter, req *http.Request) 
 func (ser *ProxyServe) Start() {
 	addr := fmt.Sprintf("%s:%d", "", ser.conf.Port)
 	fmt.Println("proxy listen at ", addr)
+
 	ser.ws_init()
+	if ser.DebugRes {
+		Assest.Direct = true
+	}
+
 	err := http.ListenAndServe(addr, ser)
 	log.Println(err)
 	fmt.Println(err)

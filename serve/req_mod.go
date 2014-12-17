@@ -10,7 +10,7 @@ import (
 	"sync"
 )
 
-var rewriteJsTpl = string(utils.DefaultResource.Load("res/sjs/req_rewrite.js"))
+var rewriteJsTpl = Assest.GetContent("res/sjs/req_rewrite.js")
 
 type requestModifier struct {
 	mu     sync.RWMutex

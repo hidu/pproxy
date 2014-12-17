@@ -1,19 +1,21 @@
 package main
 
 import (
-	"./serve"
 	"flag"
 	"fmt"
+	"github.com/hidu/pproxy/serve"
 	"log"
 	"os"
 )
 
 var configPath = flag.String("conf", "./conf/pproxy.conf", "pproxy's config file")
 var port = flag.Int("port", 0, "proxy port")
-var debug = flag.Bool("debug", false, "debug the request")
+var vv = flag.Bool("vv", false, "debug,log request with more detail")
 var show_conf = flag.Bool("demo_conf", false, "show default conf")
 
 var version = flag.Bool("v", false, "show version")
+
+var res_dev = flag.Bool("res_dev", false, "for developer debug the res(for goassest)")
 
 func main() {
 	flag.Parse()
@@ -35,6 +37,7 @@ func main() {
 		fmt.Println("start pproxy failed", err)
 		os.Exit(2)
 	}
-	ser.Debug = *debug
+	ser.Debug = *vv
+	ser.DebugRes = *res_dev
 	ser.Start()
 }
