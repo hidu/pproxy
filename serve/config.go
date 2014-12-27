@@ -12,6 +12,7 @@ import (
 
 type Config struct {
 	Port         int
+	AdminPort    int
 	Title        string
 	Notice       string
 	AuthType     int
@@ -78,6 +79,12 @@ func LoadConfig(confPath string) (*Config, error) {
 	}
 	config := new(Config)
 	config.Port = gconf.MustInt(goconfig.DEFAULT_SECTION, "port", 8080)
+	config.AdminPort = gconf.MustInt(goconfig.DEFAULT_SECTION, "adminPort", 0)
+
+	if config.AdminPort == 0 {
+		config.AdminPort = config.Port
+	}
+
 	config.DataStoreDay = gconf.MustInt(goconfig.DEFAULT_SECTION, "dataStoreDay", 0)
 	if config.DataStoreDay < 0 {
 		log.Println("wrong DataStoreDay,skip")

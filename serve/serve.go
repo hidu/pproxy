@@ -46,7 +46,7 @@ func (ser *ProxyServe) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	atomic.AddInt64(&ser.reqNum, 1)
 
 	ctx := NewRequestCtx(ser, w, req)
-	if ctx.Host == "p.info" || ctx.Host == "proxy.info" {
+	if ctx.Host == "p.info" || ctx.Host == "pproxy.info" {
 		ser.handleUserInfo(w, req)
 		return
 	}
@@ -79,15 +79,42 @@ func (ser *ProxyServe) ServeHTTPProxy(w http.ResponseWriter, req *http.Request) 
 func (ser *ProxyServe) Start() {
 	addr := fmt.Sprintf("%s:%d", "", ser.conf.Port)
 	fmt.Println("proxy listen at ", addr)
+	defer log.Println("pproxy exit")
 
 	ser.ws_init()
 	if ser.DebugRes {
 		Assest.Direct = true
 	}
 
-	err := http.ListenAndServe(addr, ser)
-	log.Println(err)
-	fmt.Println(err)
+	wg := new(sync.WaitGroup)
+	wg.Add(1)
+	go func() {
+		err := http.ListenAndServe(addr, ser)
+		log.Println(err)
+		fmt.Println(err)
+		wg.Done()
+	}()
+
+	wg.Add(1)
+	go func() {
+		ser.startAdmin()
+		wg.Done()
+	}()
+
+	wg.Wait()
+}
+
+func (ser *ProxyServe) startAdmin() {
+	if ser.conf.Port == ser.conf.AdminPort {
+		return
+	}
+	addr := fmt.Sprintf(":%d", ser.conf.AdminPort)
+	fmt.Println("admin http service listen at ", addr)
+	httpSer := http.NewServeMux()
+	httpSer.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
+		ser.handleLocalReq(w, req)
+	})
+	http.ListenAndServe(addr, httpSer)
 }
 
 func (ser *ProxyServe) GetResponseByDocid(docid int) (res_data KvType) {

@@ -17,6 +17,15 @@ var version = flag.Bool("v", false, "show version")
 
 var res_dev = flag.Bool("res_dev", false, "for developer debug the res(for goassest)")
 
+func init() {
+	df := flag.Usage
+
+	flag.Usage = func() {
+		df()
+		fmt.Fprintln(os.Stderr, "\n HTTP protocol analysis tool\n https://github.com/hidu/pproxy/\n")
+	}
+}
+
 func main() {
 	flag.Parse()
 

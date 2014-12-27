@@ -1,4 +1,4 @@
-pproxy 0.4.5
+pproxy 0.4.7
 ======
 http抓包代理程序,http协议调试工具。  
 采用golang编写，采用bs模式(s-代理程序，b-会话查看、配置管理等功能)  
@@ -6,6 +6,9 @@ http抓包代理程序,http协议调试工具。
 0.4.2版本已经支持websocket代理，以及重定向(和普通http请求一样使用)  
 
 下载编译好的可执行文件: <http://pan.baidu.com/s/1i3pAe7V>  
+
+已经安装golang的用户直接安装：  
+>go get -u github.com/hidu/pproxy
 
 功能特性：
 <pre>
@@ -106,8 +109,11 @@ name:admin_sec psw_md5:7bb483729b5a8e26f73e1831cde5b842 is_admin:admin
 
 配置文件示例:
 ```
-
+#提供代理服务的端口
 port : 8080
+
+#管理界面的端口，为0表示和代理服务使用相同的端口,eg:8081
+adminPort : 0
 
 title : demo
 notice :notice notice
