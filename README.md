@@ -1,16 +1,18 @@
 pproxy 0.4.7
 ======
+##intro
 http抓包代理程序,http协议调试工具。  
 采用golang编写，采用bs模式(s-代理程序，b-会话查看、配置管理等功能)  
 
 0.4.2版本已经支持websocket代理，以及重定向(和普通http请求一样使用)  
 
+##install
 下载编译好的可执行文件: <http://pan.baidu.com/s/1i3pAe7V>  
 
 已经安装golang的用户直接安装：  
 >go get -u github.com/hidu/pproxy
 
-功能特性：
+##功能特性
 <pre>
 1.url重定向
    如把 http://www.baidu.com/s?wd=pproxy 修改为 http://m.baidu.com/s?wd=pproxy
@@ -37,6 +39,9 @@ http抓包代理程序,http协议调试工具。
   
 </pre>
 
+##配置
+
+###rewrite req
 使用javascript来配置重定向功能，如
 ```
 if(req.host=="www.baidu.com"){
@@ -51,7 +56,7 @@ if(req.host.indexOf("baidu.com")>-1){
 }
 ```
 
-req变量示例：
+###req变量示例
 ```
 #url : http://www.example.com/album/list?cid=126
 #req对象有如下一下属性：
@@ -74,19 +79,20 @@ host_addr: #修改该请求的host是使用，如 127.0.0.1:3218
 #form_post 用于更方便的操作 post参数对象
 ```
 
-
+###hosts
 增强的hosts文件使用:
 ```
 www.baidu.com 127.0.0.1
 www.baidu.com:81 10.0.2.2:8080
 ```
 
+###other
 忽略禁用req_rewrite.js  
 在js文件的第一行内容写入 ```//ignore```
 
 req_rewrite.js支持不同用户设置不同的规则。默认使用当前验证使用用户名的规则，若无则使用默认的。  
 
-配置文件：
+###配置文件结构：
 ```
 conf/
 ├── pproxy.conf          #server的配置
@@ -97,7 +103,7 @@ conf/
 └── users                #全局帐号配置文件
 ```
 
-users配置:
+###users配置:
 ```
 #帐号 admin，密码 是 psw,是管理员帐号
 name:admin psw:psw is_admin:admin
@@ -107,7 +113,7 @@ name:admin_sec psw_md5:7bb483729b5a8e26f73e1831cde5b842 is_admin:admin
 ```
 可以在线修改配置时必须使用管理员帐号登录
 
-配置文件示例:
+###配置文件示例(pproxy.conf):
 ```
 #提供代理服务的端口
 port : 8080
@@ -141,3 +147,10 @@ sessionView : all
 # http://pass:pass@10.10.2.2:3128 the user and psw will pass through to the parent proxy
 parentProxy:
 ```
+
+##(管理)web查看界面
+方式1： 直接访问 http://serverHost:port  
+方式2： 直接访问 http://serverHost:adminPort  
+方式3： 浏览器设置http代理 serverHost:port，访问 http://pproxy.man 或者 http://pproxy.com  
+
+

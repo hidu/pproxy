@@ -51,7 +51,7 @@ func (ser *ProxyServe) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if ctx.IsLocalRequest() {
+	if ctx.Host == "pproxy.man" || ctx.Host == "pproxy.com" || ctx.IsLocalRequest() {
 		ser.handleLocalReq(w, req)
 	} else {
 		if ser.Debug {
