@@ -1,5 +1,5 @@
 {
-  "assestDir":"res",
-  "destName":"serve/assest.go",
-  "packageName":"serve"
+  "src":"res",
+  "dest":"serve/assest.go",
+  "package":"serve"
 }

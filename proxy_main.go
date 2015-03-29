@@ -15,7 +15,6 @@ var show_conf = flag.Bool("demo_conf", false, "show default conf")
 
 var version = flag.Bool("v", false, "show version")
 
-var res_dev = flag.Bool("res_dev", false, "for developer debug the res(for goassest)")
 
 func init() {
 	df := flag.Usage
@@ -47,6 +46,5 @@ func main() {
 		os.Exit(2)
 	}
 	ser.Debug = *vv
-	ser.DebugRes = *res_dev
 	ser.Start()
 }

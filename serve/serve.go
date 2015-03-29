@@ -27,7 +27,6 @@ type ProxyServe struct {
 	mu sync.RWMutex
 
 	Debug    bool
-	DebugRes bool //goassest visit all assest direct?
 
 	conf      *Config
 	configDir string
@@ -82,9 +81,6 @@ func (ser *ProxyServe) Start() {
 	defer log.Println("pproxy exit")
 
 	ser.ws_init()
-	if ser.DebugRes {
-		Assest.Direct = true
-	}
 
 	wg := new(sync.WaitGroup)
 	wg.Add(1)
