@@ -343,14 +343,32 @@ func (ctx *webRequestCtx) showErrorOrAlert(msg string) {
 	}
 }
 
+func reader_html_include(fileName string) string {
+	html := Assest.GetContent("/res/tpl/" + fileName)
+	myfn := template.FuncMap{
+		"my_include": func(name string) string {
+			return reader_html_include(name)
+		},
+	}
+	tpl, _ := template.New("page_include").Delims("{%", "%}").Funcs(myfn).Parse(html)
+	var bf []byte
+	w := bytes.NewBuffer(bf)
+	tpl.Execute(w, make(map[string]string))
+	body := w.String()
+	return body
+}
+
 func render_html(fileName string, values map[string]interface{}, layout bool) string {
-	html := Assest.GetContent("res/tpl/" + fileName)
+	html := reader_html_include(fileName)
 	funcs := template.FuncMap{
 		"escape": func(str string) string {
 			return url.QueryEscape(str)
 		},
+		"my_include": func(fileName string) string {
+			return "include (" + fileName + ") with Delims {%my_include %}"
+		},
 	}
-	tpl, _ := template.New("page").Funcs(funcs).Parse(string(html))
+	tpl, _ := template.New("page").Funcs(funcs).Parse(html)
 	var bf []byte
 	w := bytes.NewBuffer(bf)
 	tpl.Execute(w, values)

@@ -1,0 +1,31 @@
+<span class="h6">req rewrite</span>
+{{range $i,$js:=.jss}}
+<form  method="post" action="/config" autocomplete="off" target="ifr_form">
+<fieldset>
+<legend>{{$js.title}}</legend>
+function rewrite(req){
+<textarea style="width:95%;height:{{$js.jsHeight}}px" name="js">{{$js.rewriteJs}}</textarea>
+return req;<br/>
+}
+<input type="hidden" name="type" value="js">
+<input type="hidden" name="name" value="{{$js.name}}">
+<div style="text-align:center">
+
+{{if $.isLogin}}
+<input type="submit" class="btn btn-primary" value="save">
+{{else}}
+ <div class="text-info">login for submit</div>
+{{end}}
+</div>
+
+<ol>
+{{range $j,$use_file:=$js.use_file}}
+ <li>
+    <a href="{{$use_file.url}}" target="_blank">{{$use_file.name}}</a>
+ </li>
+{{end}}
+</ol>
+
+</fieldset>
+</form>
+{{end}}

@@ -15,7 +15,6 @@ var show_conf = flag.Bool("demo_conf", false, "show default conf")
 
 var version = flag.Bool("v", false, "show version")
 
-
 func init() {
 	df := flag.Usage
 

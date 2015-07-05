@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/hidu/goproxy"
 	"io"
+	"log"
 	"net"
 	"net/http"
 	"net/http/httputil"
@@ -12,10 +13,11 @@ import (
 )
 
 type HttpProxy struct {
-	GoProxy *goproxy.ProxyHttpServer
-	ser     *ProxyServe
-	ctxs    map[string]*requestCtx
-	mu      sync.RWMutex
+	GoProxy            *goproxy.ProxyHttpServer
+	ser                *ProxyServe
+	ctxs               map[string]*requestCtx
+	mu                 sync.RWMutex
+	goproxyMitmConnect *goproxy.ConnectAction
 }
 
 func NewHttpProxy(ser *ProxyServe) *HttpProxy {
@@ -27,14 +29,33 @@ func NewHttpProxy(ser *ProxyServe) *HttpProxy {
 		proxy.GoProxy.Tr = tr
 	}
 	proxy.ctxs = make(map[string]*requestCtx)
+	if proxy.ser.conf.SslOn {
+		proxy.goproxyMitmConnect = &goproxy.ConnectAction{
+			Action:    goproxy.ConnectMitm,
+			TLSConfig: goproxy.TLSConfigFromCA(&proxy.ser.conf.SslCert),
+		}
+		proxy.GoProxy.OnRequest().HandleConnectFunc(proxy.httpsHandle)
+	}
+	proxy.GoProxy.OnRequest().DoFunc(my_requestHanderFunc)
 	proxy.GoProxy.OnResponse().DoFunc(proxy.onResponse)
 	return proxy
+}
+
+func my_requestHanderFunc(r *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
+	fmt.Println("call url:", r.URL.String())
+	return r, nil
 }
 
 const PROXY_CTX_NAME = "X-PPROXY-CTX-ID"
 
 func (proxy *HttpProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
+	//	fmt.Println("call url:",req.URL.String())
 	proxy.GoProxy.ServeHTTP(rw, req)
+}
+
+func (proxy *HttpProxy) httpsHandle(host string, ctx *goproxy.ProxyCtx) (*goproxy.ConnectAction, string) {
+	log.Println("https conn", host, ctx.Req.URL.String())
+	return proxy.goproxyMitmConnect, host
 }
 
 func (proxy *HttpProxy) RoundTrip(ctx *requestCtx) {

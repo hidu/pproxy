@@ -26,7 +26,7 @@ type ProxyServe struct {
 
 	mu sync.RWMutex
 
-	Debug    bool
+	Debug bool
 
 	conf      *Config
 	configDir string

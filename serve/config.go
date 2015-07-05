@@ -1,6 +1,7 @@
 package serve
 
 import (
+	"crypto/tls"
 	"fmt"
 	"github.com/Unknwon/goconfig"
 	"github.com/hidu/goutils"
@@ -22,6 +23,10 @@ type Config struct {
 	SessionView  int
 	DataStoreDay int
 	ParentProxy  *url.URL
+
+	SslOn bool
+
+	SslCert tls.Certificate
 }
 
 const (
@@ -138,7 +143,18 @@ func LoadConfig(confPath string) (*Config, error) {
 			config.ParentProxy = _urlObj
 		}
 	}
-
+	config.SslOn = gconf.MustValue(goconfig.DEFAULT_SECTION, "ssl", "off") == "on"
+	if config.SslOn {
+		_ssl_client_cert := gconf.MustValue(goconfig.DEFAULT_SECTION, "ssl_client_cert", "")
+		_ssl_server_key := gconf.MustValue(goconfig.DEFAULT_SECTION, "ssl_server_key", "")
+		cert, err := getSslCert(_ssl_client_cert, _ssl_server_key)
+		if err != nil {
+			hasError = true
+			log.Println("ssl ca config error:", err)
+		} else {
+			config.SslCert = cert
+		}
+	}
 	if hasError {
 		return config, fmt.Errorf("config error")
 	}

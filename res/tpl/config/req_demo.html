@@ -1,0 +1,42 @@
+<div style="color:gray">
+note:
+<ol>
+<li>put <font color=blue>//ignore</font> at the first line to ignore the js</li>
+<li>user's js is default,or the global</li>
+
+{{if not .isLogin}}
+<li><a href="/login">login</a> to edit your custom profile</li>
+{{end}}
+
+</ol>
+</div>
+<b>req demo:</b><a href="javascript:;" onclick="$('#pre_req_demo').toggle()">show/hide</a>
+<pre id="pre_req_demo" style="display:none">
+url : http://www.example.com/album/list?cid=126
+schema : http
+host : www.example.com
+port : 80
+path : /album/list
+get: {cid:[123]}
+post: {}
+username : 
+password : 
+method: GET
+===============================================
+//demo code:<code>
+if(req.host=="www.baidu.com"){
+   req.host="www.163.com"
+   req.host_addr="127.0.0.0:81" // send req to 127.0.0.1:81
+   form_get.add("a","a")
+   //form_post.set("d","a")
+}</code>
+//demo 2 <code>
+if(req.host=="www.hao123.com"){
+   req.url="http://zhida.baidu.com/"
+}</code>
+//demo 3 <code>
+if(req.host=="www.hao123.com"){
+  use_file("index.htm")   //use the static file in dir "file"
+}</code>
+</pre>
+<hr/><br/>

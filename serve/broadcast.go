@@ -17,7 +17,7 @@ func (ser *ProxyServe) Broadcast_Req(reqCtx *requestCtx) bool {
 	}
 	data["path"] = urlPath
 	data["url"] = req.URL.String()
-	if req.Method == "CONNECT" {
+	if req.Method == "CONNECT" && !ser.conf.SslOn {
 		data["path"] = "https req,unknow path"
 	}
 	data["method"] = req.Method
