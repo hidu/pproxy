@@ -80,16 +80,23 @@ func (wsSer *wsServer) get_response(ns *socketio.NameSpace, docid_str string) {
 		return
 	}
 	log.Println("receive docid", docid, ns.Session.Request.RemoteAddr)
-	req := wsSer.proxySer.GetRequestByDocid(docid)
-	res := wsSer.proxySer.GetResponseByDocid(docid)
+	req, _ := wsSer.proxySer.GetRequestByDocid(docid)
+	fmt.Println("debug:req:", req)
+	res, _ := wsSer.proxySer.GetResponseByDocid(docid)
 	if wsSer.proxySer.Debug {
 		fmt.Println("req:\n", req, "\n==========\n")
 		fmt.Println("res:\n", res, "\n==========\n")
 	}
 	//	delete(req,"header")
 	data := make(map[string]interface{})
-	data["req"] = req
-	data["res"] = res
+	data["req"] = nil
+	data["res"] = nil
+	if req != nil {
+		data["req"] = req.Data
+	}
+	if res != nil {
+		data["res"] = res.Data
+	}
 	wsSer.send(ns, "res", data, true)
 }
 
@@ -130,13 +137,14 @@ func (wsSer *wsServer) send(ns *socketio.NameSpace, msg_name string, data interf
 		}
 	}(ns)
 	var err error
+	encode = false
 	if encode {
-		err = ns.Emit(msg_name, gob_encode(data))
+		err = ns.Emit(msg_name, data_encode(data))
 	} else {
 		err = ns.Emit(msg_name, data)
 	}
 	if err != nil {
-		log.Println("emit ", msg_name, " failed", err)
+		log.Println("emit_failed", msg_name, err)
 	}
 }
 

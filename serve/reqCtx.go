@@ -178,16 +178,15 @@ func (ctx *requestCtx) saveRequestData() {
 		logdata["url"] = ctx.Req.URL.String()
 		logdata["url_origin"] = ctx.OriginUrl
 		logdata["path"] = ctx.Req.URL.Path
-		logdata["cookies"] = ctx.Req.Cookies()
-		logdata["now"] = time.Now().Unix()
+		//		logdata["cookies"] = ctx.Req.Cookies()
+		//		logdata["now"] = time.Now().Unix()
 		logdata["user"] = ctx.User.Name
 		logdata["client_ip"] = ctx.RemoteAddr
 		logdata["method"] = ctx.Req.Method
 		logdata["form_get"] = ctx.Req.URL.Query()
 		logdata["replay"] = ctx.IsRePlay
 		logdata["msg"] = ctx.Msg
-
-		logdata["now"] = ctx.startTime.Unix()
+		logdata["id"] = fmt.Sprintf("%d", ctx.Docid)
 
 		dumpBody := false
 		req_dump, err_dump := httputil.DumpRequest(ctx.Req, dumpBody)
@@ -199,7 +198,9 @@ func (ctx *requestCtx) saveRequestData() {
 
 		logdata["form_post"] = ctx.FormPost
 
-		err := ctx.ser.mydb.RequestTable.Set(ctx.Docid, logdata)
+		tb := ctx.ser.mydb.GetkvStoreTable(KV_TABLE_REQ)
+		data := newStoreType(logdata)
+		err := tb.Save(IntToBytes(ctx.Docid), data)
 		if err != nil {
 			log.Println("save req failed:", err)
 		}
@@ -216,6 +217,7 @@ func (ctx *requestCtx) saveResponse(res *http.Response) {
 	data["status"] = res.StatusCode
 	data["content_length"] = res.ContentLength
 	data["msg"] = ctx.Msg
+	data["id"] = fmt.Sprintf("%d", ctx.Docid)
 
 	res_dump, dump_err := httputil.DumpResponse(res, false)
 	if dump_err != nil {
@@ -240,7 +242,9 @@ func (ctx *requestCtx) saveResponse(res *http.Response) {
 	}
 	data["body"] = base64.StdEncoding.EncodeToString(body)
 
-	err := ctx.ser.mydb.ResponseTable.Set(ctx.Docid, data)
+	tb := ctx.ser.mydb.GetkvStoreTable(KV_TABLE_RES)
+	storeData := newStoreType(data)
+	err := tb.Save(IntToBytes(ctx.Docid), storeData)
 
 	log.Println("save_res", ctx.SessionId, "docid=", ctx.Docid, "body_len=", len(data["body"].(string)), err)
 }

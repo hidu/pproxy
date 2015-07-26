@@ -30,13 +30,13 @@ func (ctx *webRequestCtx) handle_replay() {
 		ctx.w.Write([]byte(fmt.Sprintf("param id[%s] error:\n%s", docid_str, err_int)))
 		return
 	}
-	req_doc := ctx.ser.GetRequestByDocid(docid)
+	req_doc, _ := ctx.ser.GetRequestByDocid(docid)
 	if req_doc == nil {
 		ctx.w.WriteHeader(http.StatusNotFound)
 		ctx.w.Write([]byte("request doc not found!"))
 		return
 	}
-	_url := fmt.Sprintf("%s", req_doc["url"])
+	_url := fmt.Sprintf("%s", req_doc.Data["url"])
 	u, err := url.Parse(_url)
 	if err != nil {
 		ctx.w.WriteHeader(http.StatusInternalServerError)

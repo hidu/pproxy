@@ -10,11 +10,11 @@ import (
 func NewCaCert(ca_cert []byte, ca_key []byte) (tls.Certificate, error) {
 	ca, err := tls.X509KeyPair(ca_cert, ca_key)
 	if err != nil {
-		log.Println("NewCaCert error:",err)
+		log.Println("NewCaCert error:", err)
 		return ca, err
 	}
 	if ca.Leaf, err = x509.ParseCertificate(ca.Certificate[0]); err != nil {
-		log.Println("NewCaCert error:",err)
+		log.Println("NewCaCert error:", err)
 		return ca, err
 	}
 	log.Println("NewCaCert Ok")

@@ -15,7 +15,7 @@ import (
 )
 
 type ProxyServe struct {
-	mydb  *TieDb
+	mydb  *kvStore
 	proxy *HttpProxy
 
 	wsSer *wsServer
@@ -113,20 +113,13 @@ func (ser *ProxyServe) startAdmin() {
 	http.ListenAndServe(addr, httpSer)
 }
 
-func (ser *ProxyServe) GetResponseByDocid(docid int) (res_data KvType) {
-	res_data, err := ser.mydb.ResponseTable.GetByKey(docid)
-	if err != nil {
-		log.Println("read res by docid failed,docid=", docid, err)
-	}
-	//  fmt.Println(docid,res_data)
-	return res_data
+func (ser *ProxyServe) GetResponseByDocid(docid int) (res_data *StoreType, err error) {
+	tb := ser.mydb.GetkvStoreTable(KV_TABLE_RES)
+	return tb.Get(IntToBytes(docid))
 }
-func (ser *ProxyServe) GetRequestByDocid(docid int) (req_data KvType) {
-	req_data, err := ser.mydb.RequestTable.GetByKey(docid)
-	if err != nil {
-		log.Println("read req by docid failed,docid=", docid, err)
-	}
-	return req_data
+func (ser *ProxyServe) GetRequestByDocid(docid int) (req_data *StoreType, err error) {
+	tb := ser.mydb.GetkvStoreTable(KV_TABLE_REQ)
+	return tb.Get(IntToBytes(docid))
 }
 
 func (ser *ProxyServe) GetHostsFilePath() string {
@@ -176,7 +169,14 @@ func NewProxyServe(confPath string, port int) (*ProxyServe, error) {
 
 	proxy.loadHosts()
 
-	proxy.mydb = NewTieDb(fmt.Sprintf("%s/%d/", conf.DataDir, conf.Port), conf.DataStoreDay)
+	db_path := fmt.Sprintf("%s/%d.db", conf.DataDir, conf.Port)
+
+	//	proxy.mydb = NewTieDb(fmt.Sprintf("%s/%d/", conf.DataDir, conf.Port), conf.DataStoreDay)
+	proxy.mydb, err = newKvStore(db_path)
+	if err != nil {
+		log.Fatalln("init db failed", err)
+	}
+
 	proxy.startTime = time.Now()
 	proxy.MaxResSaveLength = 2 * 1024 * 1024
 

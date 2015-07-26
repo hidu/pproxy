@@ -27,3 +27,4 @@ dest/
 hosts_*
 conf/*
 file/
+.*.html

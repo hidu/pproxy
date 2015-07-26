@@ -231,11 +231,11 @@ func (ctx *webRequestCtx) handle_config() {
 func (ctx *webRequestCtx) handle_response() {
 	docid, uint_parse_err := parseDocId(ctx.req.FormValue("id"))
 	if uint_parse_err == nil {
-		responseData := ctx.ser.GetResponseByDocid(docid)
+		responseData, _ := ctx.ser.GetResponseByDocid(docid)
 		if responseData == nil {
 			ctx.showError("response not found")
 		} else {
-			walker := utils.NewInterfaceWalker(map[string]interface{}(responseData))
+			walker := utils.NewInterfaceWalker(map[string]interface{}(responseData.Data))
 			content_type := ""
 			if type_header, has := walker.GetStringSlice("/header/Content-Type"); has {
 				content_type = strings.Join(type_header, ";")

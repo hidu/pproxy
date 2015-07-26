@@ -3,10 +3,11 @@ package serve
 import (
 	"bytes"
 	"compress/gzip"
-	"encoding/base64"
+	//	"encoding/base64"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	//	"gopkg.in/vmihailenco/msgpack.v2"
 	"io"
 	"io/ioutil"
 	"log"
@@ -18,6 +19,12 @@ import (
 )
 
 func Int64ToBytes(i int64) []byte {
+	var buf = make([]byte, 8)
+	binary.BigEndian.PutUint64(buf, uint64(i))
+	return buf
+}
+
+func IntToBytes(i int) []byte {
 	var buf = make([]byte, 8)
 	binary.BigEndian.PutUint64(buf, uint64(i))
 	return buf
@@ -52,28 +59,24 @@ func forgetRead(reader *io.ReadCloser) *bytes.Buffer {
 	return bytes.NewBuffer(buf.Bytes())
 }
 
-func gob_encode(data interface{}) string {
+func data_encode(data interface{}) []byte {
 	bf, err := json.Marshal(data)
 	if err != nil {
-		log.Println("gob encode err", err)
-		return ""
+		log.Println("data_encode_err", err)
+		return bf
 	}
-	return base64.StdEncoding.EncodeToString(bf)
+	return bf
 }
-
-func gob_decode(data_input string, out interface{}) {
-	//	dec := gob.NewDecoder(bytes.NewBufferString(data_input))
-	//	err:= dec.Decode(&out)
-	str_64, err := base64.StdEncoding.DecodeString(data_input)
-	if err != nil {
-		log.Println("decode64 err:", err)
-		return
+func data_decode(data_input []byte, out interface{}) error {
+	if len(data_input) == 0 {
+		return fmt.Errorf("empty data_input")
 	}
-	dec := json.NewDecoder(bytes.NewBuffer(str_64))
-	err = dec.Decode(&out)
+	err := json.Unmarshal(data_input, &out)
 	if err != nil {
-		log.Println("msgpack decode:", err)
+		log.Println("json_decode_err:", err, "data_input:", string(data_input))
+		return err
 	}
+	return err
 }
 
 func getMapValStr(m map[string]interface{}, k string) string {

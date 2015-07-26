@@ -119,11 +119,18 @@ function pproxy_getColor(addr){
 }
 
 
-function pproxy_show_req(dataStr64) {
-    var dataStr=Base64.decode(dataStr64);
-	var data=$.parseJSON(dataStr)
+function pproxy_show_req(data) {
+	console && console.log("pproxy_show_req:",data)
+//    var dataStr=Base64.decode(dataStr64+"");
+//	var data={};
+//	try{
+//		data=$.parseJSON(dataStr)
+//	}catch(e){
+//		console && console.log("parseJSON_error-pproxy_show_req",e,"datastr:",dataStr)
+//		return
+//	}
 	
-    console && console.log("req", data)
+//    console && console.log("req", data)
     var html="<tr onclick=\"get_response(this,'" + data['docid'] + "')\" ";
 	var cls=[]
     if(data["replay"]){
@@ -152,9 +159,10 @@ function pproxy_show_req(dataStr64) {
 }
 
 
-socket.on("req",function(dataStr64){
-	pproxy_save_req_local(dataStr64)
-	pproxy_show_req(dataStr64)
+socket.on("req",function(data){
+	console && console.log("on.req","data:",data)
+	pproxy_save_req_local(data)
+	pproxy_show_req(data)
 });
 
 
@@ -163,10 +171,16 @@ socket.on("user_num", function(data) {
 });
 
 socket.on("res",
-        function(dataStr64) {
-	        var dataStr=Base64.decode(dataStr64);
-			var data=$.parseJSON(dataStr)
-			console && console.log(data)
+        function(data) {
+			console && console.log("on.res","data:",data)
+//	        var dataStr=Base64.decode(dataStr64+"");
+//			try{
+//				var data=$.parseJSON(dataStr)
+//			}catch(e){
+//				console && console.log("parseJSON_error on.res:",e)
+//				return
+//			}
+//			console && console.log(data)
             var req = data["req"];
             var res = data["res"];
             var html="";
@@ -280,6 +294,7 @@ function pproxy_parseAsjson(str) {
             return "<pre>" + json_str + "</pre>";
         }
     } catch (e) {
+    	console.log("pproxy_parseAsjson_error",e)
     }
     return false;
 }
@@ -317,7 +332,7 @@ function pproxy_tr_sub_table(obj, name) {
 }
 
 function pproxy_show_response(docid){
-	console && console.log("get_response docid=", docid);
+	console && console.log("get_response start,docid=", docid);
     var loading_msg="loading...docid=" + docid;
     var isValidId=(docid+"").length>2;
     if(!isValidId){
@@ -330,6 +345,7 @@ function pproxy_show_response(docid){
     	return;
     }
 	socket.emit("get_response", docid);
+	console.log && console.log("emit get_response,docid=",docid)
 }
 
 function get_response(tr, docid) {
