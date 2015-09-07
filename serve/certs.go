@@ -7,8 +7,8 @@ import (
 	"log"
 )
 
-func NewCaCert(ca_cert []byte, ca_key []byte) (tls.Certificate, error) {
-	ca, err := tls.X509KeyPair(ca_cert, ca_key)
+func newCaCert(caCert []byte, caKey []byte) (tls.Certificate, error) {
+	ca, err := tls.X509KeyPair(caCert, caKey)
 	if err != nil {
 		log.Println("NewCaCert error:", err)
 		return ca, err
@@ -21,19 +21,20 @@ func NewCaCert(ca_cert []byte, ca_key []byte) (tls.Certificate, error) {
 	return ca, nil
 }
 
-func getSslCert(ca_cert_path string, ca_key_path string) (ca tls.Certificate, err error) {
-	if ca_cert_path == "" {
-		ca_cert := Assest.GetContent("/res/private/cert.pem")
-		ca_key := Assest.GetContent("/res/private/key.pem")
-		return NewCaCert([]byte(ca_cert), []byte(ca_key))
+// getSslCert get user's caCert or use the default buildin
+func getSslCert(caCertPath string, caKeyPath string) (ca tls.Certificate, err error) {
+	if caCertPath == "" {
+		caCert := Assest.GetContent("/res/private/cert.pem")
+		caKey := Assest.GetContent("/res/private/key.pem")
+		return newCaCert([]byte(caCert), []byte(caKey))
 	}
-	cert, err := ioutil.ReadFile(ca_cert_path)
+	cert, err := ioutil.ReadFile(caCertPath)
 	if err != nil {
 		return ca, err
 	}
-	key, err := ioutil.ReadFile(ca_key_path)
+	key, err := ioutil.ReadFile(caKeyPath)
 	if err != nil {
 		return ca, err
 	}
-	return NewCaCert(cert, key)
+	return newCaCert(cert, key)
 }

@@ -215,7 +215,7 @@ func getPostData(req *http.Request) (post *url.Values) {
 	if strings.Contains(req.Header.Get("Content-Type"), "x-www-form-urlencoded") {
 		buf := forgetRead(&req.Body)
 		var body_str string
-		if req.Header.Get(Content_Encoding) == "gzip" {
+		if req.Header.Get(contentEncoding) == "gzip" {
 			body_str = gzipDocode(buf)
 		} else {
 			body_str = buf.String()

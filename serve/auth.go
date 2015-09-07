@@ -42,15 +42,15 @@ func (ser *ProxyServe) checkUserLogin(userInfo *User) bool {
 }
 
 //(ser.conf.AuthType == AuthType_Basic && !ser.CheckUserLogin(reqCtx.User))
-func (ser *ProxyServe) checkHttpAuth(reqCtx *requestCtx) bool {
+func (ser *ProxyServe) checkHTTPAuth(reqCtx *requestCtx) bool {
 	switch ser.conf.AuthType {
-	case AuthType_NO:
+	case authTypeNO:
 		return true
-	case AuthType_Basic:
+	case authTypeBasic:
 		return ser.checkUserLogin(reqCtx.User)
-	case AuthType_Basic_WithAny:
+	case authTypeBasicWithAny:
 		return reqCtx.User.Name != ""
-	case AuthType_Basic_Try:
+	case authTypeBasicTry:
 		if reqCtx.ClientSession.RequestNum == 1 {
 			return reqCtx.User.Name != ""
 		}

@@ -11,6 +11,7 @@ import (
 	"strings"
 )
 
+// Config  pproxy's config
 type Config struct {
 	Port         int
 	AdminPort    int
@@ -30,18 +31,19 @@ type Config struct {
 }
 
 const (
-	AuthType_NO            = 0
-	AuthType_Basic         = 1
-	AuthType_Basic_WithAny = 2
-	AuthType_Basic_Try     = 3
+	authTypeNO            = 0
+	authTypeBasic         = 1
+	authTypeBasicWithAny = 2
+	authTypeBasicTry     = 3
 
-	ResponseSave_All      = 0
-	ResponseSave_HasBroad = 1 //has show
+	responseSaveAll      = 0
+	responseSaveHasBroad = 1 //has show
 
-	SessionView_ALL        = 0
-	SessionView_IP_OR_USER = 1
+	sessionViewALL        = 0
+	sessionViewIPOrUser = 1
 )
 
+// User user struct 
 type User struct {
 	Name         string
 	Psw          string
@@ -50,24 +52,28 @@ type User struct {
 	SkipCheckPsw bool
 }
 
+// String string format
 func (u *User) String() string {
 	return fmt.Sprintf("Name:%s,Psw:%s,isAdmin:%v,SkipCheckPsw:%v", u.Name, u.Psw, u.IsAdmin, u.SkipCheckPsw)
 }
 
+// ConfigString one line in file
 func (u *User) ConfigString() string {
 	return fmt.Sprintf("name:%s\tpsw:%s\tis_admin:%v\tpsw_md5:%s", u.Name, u.Psw, u.IsAdmin, u.PswMd5)
 }
 
 const (
-	Content_Encoding = "Content-Encoding"
+	contentEncoding = "Content-Encoding"
 )
 
 //"0:no auth | 1:basic auth | 2:basic auth with any name"
 
+// GetVersion get current version
 func GetVersion() string {
 	return Assest.GetContent("res/version")
 }
 
+// GetDemoConf get the demo config
 func GetDemoConf() string {
 	return strings.TrimSpace(Assest.GetContent("res/conf/demo.conf"))
 }
@@ -76,6 +82,7 @@ func (u *User) isPswEq(psw string) bool {
 	return u.PswMd5 == utils.StrMd5(psw)
 }
 
+// LoadConfig load the pproxy's config
 func LoadConfig(confPath string) (*Config, error) {
 	gconf, err := goconfig.LoadConfigFile(confPath)
 	if err != nil {

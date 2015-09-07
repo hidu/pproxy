@@ -160,7 +160,7 @@ func (ser *ProxyServe) reqRewriteByjs(reqCtx *requestCtx) int {
 		buf := bytes.NewBuffer([]byte{})
 		_post_body := post_new.Encode()
 		req.Header.Del("Content-Length")
-		if req.Header.Get(Content_Encoding) == "gzip" {
+		if req.Header.Get(contentEncoding) == "gzip" {
 			tmp := gzipEncode([]byte(_post_body)).Bytes()
 			buf.Write(tmp)
 		} else {

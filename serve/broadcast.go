@@ -4,7 +4,8 @@ import (
 	"fmt"
 )
 
-func (ser *ProxyServe) Broadcast_Req(reqCtx *requestCtx) bool {
+// broadcastReq broadcast request to user's browser
+func (ser *ProxyServe) broadcastReq(reqCtx *requestCtx) bool {
 	req := reqCtx.Req
 	data := make(map[string]interface{})
 	data["docid"] = fmt.Sprintf("%d", reqCtx.Docid)

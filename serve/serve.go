@@ -57,7 +57,7 @@ func (ser *ProxyServe) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			req_dump_debug, _ := httputil.DumpRequest(req, req.Method == "GET")
 			log.Println("DEBUG req BEFORE:\nurl_full:", req.URL.String(), "\nschema:", req.URL.Scheme, "\n", string(req_dump_debug), "\n\n")
 		}
-		if !ser.checkHttpAuth(ctx) {
+		if !ser.checkHTTPAuth(ctx) {
 			ctx.SetLog("msg", "login required")
 			ctx.Rw.Header().Set("Proxy-Authenticate", "Basic realm=auth required")
 			ctx.Rw.WriteHeader(http.StatusProxyAuthRequired)

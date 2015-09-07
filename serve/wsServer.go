@@ -154,7 +154,7 @@ func (wsSer *wsServer) broadcastReq(req *http.Request, reqCtx *requestCtx, data 
 
 	hasSend := false
 	for _, client := range wsSer.clients {
-		if wsSer.proxySer.conf.SessionView == SessionView_IP_OR_USER && len(client.filter_ip) == 0 && len(client.filter_user) == 0 {
+		if wsSer.proxySer.conf.SessionView == sessionViewIPOrUser && len(client.filter_ip) == 0 && len(client.filter_user) == 0 {
 			continue
 		}
 

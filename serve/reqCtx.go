@@ -146,7 +146,7 @@ func (ctx *requestCtx) RoundTrip() {
 	removeHeader(ctx.Req)
 	rewrite_code := ctx.ser.reqRewrite(ctx)
 
-	ctx.HasBroadcast = ctx.ser.Broadcast_Req(ctx)
+	ctx.HasBroadcast = ctx.ser.broadcastReq(ctx)
 
 	ctx.SetLog("js_rewrite_code", rewrite_code)
 
@@ -169,8 +169,8 @@ func (ctx *requestCtx) DestAddr() string {
 }
 
 func (ctx *requestCtx) saveRequestData() {
-	if ctx.ser.conf.ResponseSave == ResponseSave_All ||
-		(ctx.ser.conf.ResponseSave == ResponseSave_HasBroad && ctx.HasBroadcast) {
+	if ctx.ser.conf.ResponseSave == responseSaveAll ||
+		(ctx.ser.conf.ResponseSave == responseSaveHasBroad && ctx.HasBroadcast) {
 		logdata := KvType{}
 		logdata["host"] = ctx.Req.Host
 		logdata["schema"] = ctx.Req.URL.Scheme
@@ -230,7 +230,7 @@ func (ctx *requestCtx) saveResponse(res *http.Response) {
 	body := []byte("pproxy skip")
 	if res.Body != nil && res.ContentLength <= ctx.ser.MaxResSaveLength {
 		buf := forgetRead(&res.Body)
-		if res.Header.Get(Content_Encoding) == "gzip" {
+		if res.Header.Get(contentEncoding) == "gzip" {
 			body = []byte(gzipDocode(buf))
 		} else {
 			body = buf.Bytes()
