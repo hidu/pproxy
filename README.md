@@ -1,4 +1,4 @@
-pproxy 0.4.7
+pproxy 0.5
 ======
 ##intro
 http抓包代理程序,http协议调试工具。  

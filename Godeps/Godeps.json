@@ -1,0 +1,40 @@
+{
+	"ImportPath": "github.com/hidu/pproxy",
+	"GoVersion": "go1.5",
+	"Packages": [
+		"./..."
+	],
+	"Deps": [
+		{
+			"ImportPath": "code.google.com/p/go.net/websocket",
+			"Comment": "null-240",
+			"Rev": "937a34c9de13c766c814510f76bca091dee06028"
+		},
+		{
+			"ImportPath": "github.com/Unknwon/goconfig",
+			"Rev": "5cfc02f2789e6e98d8546e40b29d907aedc4c590"
+		},
+		{
+			"ImportPath": "github.com/boltdb/bolt",
+			"Comment": "v1.0-121-g0c24824",
+			"Rev": "0c24824a36818ef7fb62d30142020dbe3178468d"
+		},
+		{
+			"ImportPath": "github.com/hidu/goproxy",
+			"Rev": "54207681068ab5b51c33842d27e64ba2e78b6af0"
+		},
+		{
+			"ImportPath": "github.com/hidu/goutils",
+			"Rev": "ee2ee06e1fab98420ba500419a9cac952d58e82d"
+		},
+		{
+			"ImportPath": "github.com/robertkrimen/otto",
+			"Rev": "47082f430885e505c18bbedc3e2b336a968a50dd"
+		},
+		{
+			"ImportPath": "gopkg.in/hidu/go-socket.io.v1",
+			"Comment": "v1",
+			"Rev": "b844b5cf65e6fb6afa9f9776a84e98c6b2f063fd"
+		}
+	]
+}

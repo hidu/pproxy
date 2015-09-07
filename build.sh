@@ -6,22 +6,8 @@
 set -e
 cd $(dirname $0)
 
-dest_file="pproxy"
+#export GOPATH=`readlink -f Godeps/_workspace`:$GOPATH
 
-DEST_OS=$1
-if [ "$DEST_OS" == "windows" ];then
-  export GOOS=windows 
-  export GOARCH=amd64
-  dest_file="pproxy.exe"
-fi
+export GO15VENDOREXPERIMENT=1
 
-go build -o $dest_file -ldflags "-s -w"  proxy_main.go 
-
-#zip -r res.zip res
-#cat res.zip>> $dest_file
-#zip -A $dest_file
-#mkdir -p dest/
-mv $dest_file dest/
-#rm res.zip
-
-echo "all finish"
+go install

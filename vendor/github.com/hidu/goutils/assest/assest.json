@@ -1,0 +1,5 @@
+{
+  "src":"res",
+  "dest":"assest.go",
+  "package":"assest"
+}
