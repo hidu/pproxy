@@ -134,6 +134,7 @@ func (reqMod *requestModifier) rewrite(data map[string]interface{}, name string)
 	js_ret, err_js := (*jsFn).Call(*jsFn, reqJsObj)
 
 	if err_js != nil {
+		log.Println("parse js error:", err_js)
 		return nil, err_js
 	}
 	if !js_ret.IsObject() {

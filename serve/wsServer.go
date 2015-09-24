@@ -81,7 +81,6 @@ func (wsSer *wsServer) get_response(ns *socketio.NameSpace, docid_str string) {
 	}
 	log.Println("receive docid", docid, ns.Session.Request.RemoteAddr)
 	req, _ := wsSer.proxySer.GetRequestByDocid(docid)
-	fmt.Println("debug:req:", req)
 	res, _ := wsSer.proxySer.GetResponseByDocid(docid)
 	if wsSer.proxySer.Debug {
 		fmt.Println("req:\n", req, "\n==========\n")

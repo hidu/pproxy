@@ -1,7 +1,7 @@
 
 function pproxy_rewrite(req){
-	req.get=pproxy_params_copy(req.origin.get);
-	req.post=pproxy_params_copy(req.origin.post);
+	req.get=pproxy_params_copy(req.origin.get||{});
+	req.post=pproxy_params_copy(req.origin.post||{});
 	
 	
 	for(var k in req.origin.header){
@@ -41,13 +41,14 @@ function pproxy_obj_helper(values){
     	  values[name]=[val]
       },
       add:function(name,val){
+    	  val=val+""
     	  if(typeof values[name]=="undefined"){
-    		  values[name]=[] 
+    		  values[name]=[val]
+    		  return
     	  }
     	  if(typeof values[name]!="Object"){
     		  values[name]=[values[name]+""]
     	  }
-    	  val=val+""
           values[name].push(val)
       },
       del:function(name){

@@ -31,19 +31,19 @@ type Config struct {
 }
 
 const (
-	authTypeNO            = 0
-	authTypeBasic         = 1
+	authTypeNO           = 0
+	authTypeBasic        = 1
 	authTypeBasicWithAny = 2
 	authTypeBasicTry     = 3
 
 	responseSaveAll      = 0
 	responseSaveHasBroad = 1 //has show
 
-	sessionViewALL        = 0
+	sessionViewALL      = 0
 	sessionViewIPOrUser = 1
 )
 
-// User user struct 
+// User user struct
 type User struct {
 	Name         string
 	Psw          string
