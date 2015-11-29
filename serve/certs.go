@@ -25,7 +25,7 @@ func newCaCert(caCert []byte, caKey []byte) (tls.Certificate, error) {
 func getSslCert(caCertPath string, caKeyPath string) (ca tls.Certificate, err error) {
 	if caCertPath == "" {
 		caCert := Assest.GetContent("/res/private/cert.pem")
-		caKey := Assest.GetContent("/res/private/key.pem")
+		caKey := Assest.GetContent("/res/private/server_key.pem")
 		return newCaCert([]byte(caCert), []byte(caKey))
 	}
 	cert, err := ioutil.ReadFile(caCertPath)
