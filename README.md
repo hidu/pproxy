@@ -6,6 +6,8 @@ http抓包代理程序,http协议调试工具。
 
 0.4.2版本已经支持websocket代理，以及重定向(和普通http请求一样使用)  
 
+0.5 版本是对底层存储进行了替换，并且尝试支持https抓包
+
 ##install
 下载编译好的可执行文件: <http://pan.baidu.com/s/1i3pAe7V>  
 
@@ -146,6 +148,17 @@ sessionView : all
 #eg http://10.10.2.2:3128 or http://name:psw@10.10.2.2:3128
 # http://pass:pass@10.10.2.2:3128 the user and psw will pass through to the parent proxy
 parentProxy:
+
+
+#是否使用中间人方式对https进行抓包，若启用的话 需要客户端按照证书-/res/private/client_cert.pem
+#pproxy内置默认证书存放在/res/private目录中
+#options:{on:启用  off:禁用}
+ssl : on
+
+#ssl 服务端秘钥文件地址，为空则使用默认内置的 /res/private/server_key.pem
+ssl_server_key: 
+#ssl 公钥地址 ，为空则使用默认内置的 /res/private/client_cert.pem
+ssl_client_cert :
 ```
 
 ##(管理)web查看界面
