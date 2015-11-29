@@ -26,7 +26,7 @@ type webRequestCtx struct {
 	ser     *ProxyServe
 }
 
-var CookieName = "pproxy"
+var cookieName = "pproxy"
 
 func (ser *ProxyServe) handleLocalReq(w http.ResponseWriter, req *http.Request) {
 	accessLogStr := "web_access " + req.Method + " " + req.URL.String() + " " + req.RemoteAddr + " refer:" + req.Referer()
@@ -72,9 +72,9 @@ func (ser *ProxyServe) handleLocalReq(w http.ResponseWriter, req *http.Request) 
 	funcMap := make(map[string]func())
 	funcMap["/"] = ctx.handle_index
 	funcMap["/about"] = ctx.handle_about
-	funcMap["/config"] = ctx.handle_config
+	funcMap["/config"] = ctx.handleConfig
 	funcMap["/useage"] = ctx.handle_useage
-	funcMap["/replay"] = ctx.handle_replay
+	funcMap["/replay"] = ctx.handleReplay
 	funcMap["/login"] = ctx.handle_login
 	funcMap["/logout"] = ctx.handle_logout
 	funcMap["/response"] = ctx.handle_response
@@ -94,7 +94,7 @@ func (ser *ProxyServe) web_checkLogin(req *http.Request) (user *User, isLogin bo
 	if req == nil {
 		return
 	}
-	cookie, err := req.Cookie(CookieName)
+	cookie, err := req.Cookie(cookieName)
 	if err != nil {
 		return
 	}
@@ -139,7 +139,7 @@ func (ctx *webRequestCtx) getRewriteJsInfo(name string, title string) map[string
 
 	//	fmt.Println(matches)
 
-	use_file := make([]map[string]interface{}, 0)
+	var useFile []map[string]interface{}
 	tmpNames := make(map[string]int)
 
 	for _, subMatch := range matches {
@@ -156,9 +156,9 @@ func (ctx *webRequestCtx) getRewriteJsInfo(name string, title string) map[string
 		}
 		tmpNames[fileName] = 1
 
-		isUrl := strings.HasPrefix(fileName, "http://")
-		use["isUrl"] = isUrl
-		if isUrl {
+		isURL := strings.HasPrefix(fileName, "http://")
+		use["isUrl"] = isURL
+		if isURL {
 			use["url"] = subMatch[1]
 		} else {
 			webFile, err := newWebFileInfo(ctx.ser.conf.FileDir, fileName)
@@ -168,18 +168,18 @@ func (ctx *webRequestCtx) getRewriteJsInfo(name string, title string) map[string
 			use["url"] = webFile.link()
 			defer webFile.Close()
 		}
-		use_file = append(use_file, use)
+		useFile = append(useFile, use)
 	}
 
 	info["name"] = name
-	info["use_file"] = use_file
+	info["use_file"] = useFile
 	info["title"] = title
 	info["rewriteJs"] = html.EscapeString(jsStr)
 	info["jsHeight"] = getTextAreaHeightByString(jsStr, 100)
 	return info
 }
 
-func (ctx *webRequestCtx) handle_config() {
+func (ctx *webRequestCtx) handleConfig() {
 	if ctx.req.Method == "GET" {
 		jsDataArr := make([]interface{}, 0, 2)
 		jsDataArr = append(jsDataArr, ctx.getRewriteJsInfo("", "global config"))
@@ -190,8 +190,8 @@ func (ctx *webRequestCtx) handle_config() {
 
 		ctx.values["jss"] = jsDataArr
 
-		hosts_byte, _ := utils.File_get_contents(ctx.ser.GetHostsFilePath())
-		ctx.values["hosts"] = html.EscapeString(string(hosts_byte))
+		hostsByte, _ := utils.File_get_contents(ctx.ser.getHostsFilePath())
+		ctx.values["hosts"] = html.EscapeString(string(hostsByte))
 		ctx.values["hostsHeight"] = getTextAreaHeightByString("", 100)
 
 		ctx.render("config.html", true)
@@ -217,7 +217,7 @@ func (ctx *webRequestCtx) handle_config() {
 			}
 			hosts := strings.TrimSpace(ctx.req.PostFormValue("hosts"))
 			log.Println("hosts_update", hosts)
-			err = utils.File_put_contents(ctx.ser.GetHostsFilePath(), []byte(hosts))
+			err = utils.File_put_contents(ctx.ser.getHostsFilePath(), []byte(hosts))
 			ctx.ser.loadHosts()
 		}
 		if err != nil {
@@ -229,40 +229,40 @@ func (ctx *webRequestCtx) handle_config() {
 
 }
 func (ctx *webRequestCtx) handle_response() {
-	docid, uint_parse_err := parseDocId(ctx.req.FormValue("id"))
-	if uint_parse_err == nil {
-		responseData, _ := ctx.ser.GetResponseByDocid(docid)
+	docid, uintParseErr := parseDocID(ctx.req.FormValue("id"))
+	if uintParseErr == nil {
+		responseData, _ := ctx.ser.getResponseByDocid(docid)
 		if responseData == nil {
 			ctx.showError("response not found")
 		} else {
 			walker := utils.NewInterfaceWalker(map[string]interface{}(responseData.Data))
-			content_type := ""
-			if type_header, has := walker.GetStringSlice("/header/Content-Type"); has {
-				content_type = strings.Join(type_header, ";")
+			var contentType string
+			if typeHeader, has := walker.GetStringSlice("/header/Content-Type"); has {
+				contentType = strings.Join(typeHeader, ";")
 			}
 
-			custom_content_type := ctx.req.FormValue("type")
+			customContentType := ctx.req.FormValue("type")
 			//set custom content type
-			if custom_content_type != "" {
-				switch custom_content_type {
+			if customContentType != "" {
+				switch customContentType {
 				case "json":
-					content_type = "application/json"
+					contentType = "application/json"
 				case "html":
-					content_type = "text/html;charset=utf-8"
+					contentType = "text/html;charset=utf-8"
 				default:
-					content_type = custom_content_type
+					contentType = customContentType
 				}
 			}
-			if content_type != "" {
-				ctx.w.Header().Set("Content-Type", content_type)
+			if contentType != "" {
+				ctx.w.Header().Set("Content-Type", contentType)
 			}
 			if statusCode, has := walker.GetInt("/status"); has {
 				ctx.w.WriteHeader(statusCode)
 			}
-			if body_str, has := walker.GetString("/body"); has {
-				body_byte, err := base64.StdEncoding.DecodeString(body_str)
+			if bodyStr, has := walker.GetString("/body"); has {
+				bodyByte, err := base64.StdEncoding.DecodeString(bodyStr)
 				if err == nil {
-					ctx.w.Write(body_byte)
+					ctx.w.Write(bodyByte)
 				} else {
 					log.Println("decode body failed", err)
 				}
@@ -287,7 +287,7 @@ func (ctx *webRequestCtx) handle_about() {
 }
 
 func (ctx *webRequestCtx) handle_logout() {
-	cookie := &http.Cookie{Name: CookieName, Value: "", Path: "/"}
+	cookie := &http.Cookie{Name: cookieName, Value: "", Path: "/"}
 	http.SetCookie(ctx.w, cookie)
 	http.Redirect(ctx.w, ctx.req, "/", 302)
 }
@@ -306,7 +306,7 @@ func (ctx *webRequestCtx) handle_login() {
 			if user.isPswEq(psw) {
 				log.Println("login suc,name=", name)
 				cookie := &http.Cookie{
-					Name:    CookieName,
+					Name:    cookieName,
 					Value:   fmt.Sprintf("%s:%s", name, user.PswMd5),
 					Path:    "/",
 					Expires: time.Now().Add(86400 * time.Second),

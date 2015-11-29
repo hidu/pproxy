@@ -11,7 +11,7 @@ import (
 var configPath = flag.String("conf", "./conf/pproxy.conf", "pproxy's config file")
 var port = flag.Int("port", 0, "proxy port")
 var vv = flag.Bool("vv", false, "debug,log request with more detail")
-var show_conf = flag.Bool("demo_conf", false, "show default conf")
+var showConf = flag.Bool("demo_conf", false, "show default conf")
 
 var version = flag.Bool("v", false, "show version")
 
@@ -27,9 +27,9 @@ func init() {
 func main() {
 	flag.Parse()
 
-	if *show_conf {
-		demo_conf := serve.GetDemoConf()
-		fmt.Println(demo_conf)
+	if *showConf {
+		demoConf := serve.GetDemoConf()
+		fmt.Println(demoConf)
 		os.Exit(0)
 	}
 

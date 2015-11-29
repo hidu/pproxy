@@ -12,6 +12,7 @@ import (
 	"time"
 )
 
+//
 type HttpProxy struct {
 	GoProxy            *goproxy.ProxyHttpServer
 	ser                *ProxyServe
@@ -42,7 +43,7 @@ func NewHttpProxy(ser *ProxyServe) *HttpProxy {
 }
 
 func my_requestHanderFunc(r *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
-	fmt.Println("call url:", r.URL.String())
+	log.Println("trace_my_requestHanderFunc call url:", r.URL.String())
 	return r, nil
 }
 
@@ -59,7 +60,7 @@ func (proxy *HttpProxy) httpsHandle(host string, ctx *goproxy.ProxyCtx) (*goprox
 }
 
 func (proxy *HttpProxy) RoundTrip(ctx *requestCtx) {
-	sid := fmt.Sprintf("%d", ctx.SessionId)
+	sid := fmt.Sprintf("%d", ctx.SessionID)
 	ctx.Req.Header.Set(PROXY_CTX_NAME, sid)
 	func() {
 		proxy.mu.Lock()
@@ -76,7 +77,7 @@ func (proxy *HttpProxy) RoundTrip(ctx *requestCtx) {
 	}()
 
 	if ctx.Req.Header.Get("Upgrade") != "" {
-		proxy.roundTrip_Upgrade(ctx)
+		proxy.roundTripUpgrade(ctx)
 		return
 	}
 	proxy.ServeHTTP(ctx.Rw, ctx.Req)
@@ -107,7 +108,7 @@ func (proxy *HttpProxy) onResponse(resp *http.Response, ctx *goproxy.ProxyCtx) *
 	return resp
 }
 
-func (proxy *HttpProxy) roundTrip_Upgrade(ctx *requestCtx) (err error) {
+func (proxy *HttpProxy) roundTripUpgrade(ctx *requestCtx) (err error) {
 	//save it,so we know it has been closed
 	defer func() {
 		resp := &http.Response{
@@ -118,7 +119,7 @@ func (proxy *HttpProxy) roundTrip_Upgrade(ctx *requestCtx) (err error) {
 		ctx.saveResponse(resp)
 	}()
 
-	req_dump, err := httputil.DumpRequest(ctx.Req, false)
+	reqDump, err := httputil.DumpRequest(ctx.Req, false)
 	if err != nil {
 		ctx.Msg = "dump req failed:" + err.Error()
 		return
@@ -130,7 +131,7 @@ func (proxy *HttpProxy) roundTrip_Upgrade(ctx *requestCtx) (err error) {
 		return
 	}
 	defer dia.Close()
-	_, err = dia.Write(req_dump)
+	_, err = dia.Write(reqDump)
 	if err != nil {
 		return
 	}

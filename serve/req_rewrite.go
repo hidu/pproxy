@@ -17,18 +17,18 @@ func (ser *ProxyServe) reqRewriteByjs(reqCtx *requestCtx) int {
 	}
 	req := reqCtx.Req
 	schema := req.URL.Scheme
-	origin_url := req.URL.String()
-	origin_get_query := req.URL.Query()
+	originURL := req.URL.String()
+	originGetQuery := req.URL.Query()
 	///================================================================
 	headerKv := make(map[string]string)
 	headerKv["method"] = req.Method
 	headerKv["schema"] = schema
 	headerKv["path"] = req.URL.Path
 
-	_host, port_int, _ := getHostPortFromReq(req)
+	_host, portInt, _ := getHostPortFromReq(req)
 
 	headerKv["host"] = _host
-	headerKv["port"] = fmt.Sprintf("%d", port_int)
+	headerKv["port"] = fmt.Sprintf("%d", portInt)
 
 	username := ""
 	psw := ""
@@ -45,7 +45,7 @@ func (ser *ProxyServe) reqRewriteByjs(reqCtx *requestCtx) int {
 	//===================================================================
 	rewriteData := make(map[string]interface{})
 	rewriteData["header"] = headerKv
-	rewriteData["get"] = origin_get_query
+	rewriteData["get"] = originGetQuery
 	rewriteData["post"] = *reqCtx.FormPost
 
 	reqObjNew, rErr := ser.reqMod.rewrite(rewriteData, reqCtx.User.Name)
@@ -79,31 +79,31 @@ func (ser *ProxyServe) reqRewriteByjs(reqCtx *requestCtx) int {
 		}
 	}
 	//-------------------------------------------------------
-	var get_new url.Values
+	var getNew url.Values
 
 	isGetChange := false
 
 	if _get, has := reqObjNew["get"]; has {
-		get_new = _req_mapToUrlValue(_get)
-		isGetChange = checkUrlValuesChange(origin_get_query, get_new)
+		getNew = _reqMapToURLValue(_get)
+		isGetChange = checkURLValuesChange(originGetQuery, getNew)
 	}
 	//-------------------------------------------------------
-	var post_new url.Values
+	var postNew url.Values
 	isPostChange := false
 	if schema == "http" {
 		if _post, has := reqObjNew["post"]; has {
-			post_new = _req_mapToUrlValue(_post)
-			isPostChange = checkUrlValuesChange(*reqCtx.FormPost, post_new)
+			postNew = _reqMapToURLValue(_post)
+			isPostChange = checkURLValuesChange(*reqCtx.FormPost, postNew)
 		}
 	}
 
-	host_addr := getMapValStr(reqObjNew, "host_addr")
-	isHostAddrChange := host_addr != ""
+	hostAddr := getMapValStr(reqObjNew, "hostAddr")
+	isHostAddrChange := hostAddr != ""
 
 	if ser.Debug {
-		fmt.Println("rewriteChange:", "is_get_change:", isGetChange, "new_get:", get_new,
-			"isPostChange:", isPostChange, "new_post:", post_new,
-			"isHostAddrChange:", isHostAddrChange, "new_host_addr:", host_addr,
+		fmt.Println("rewriteChange:", "is_get_change:", isGetChange, "new_get:", getNew,
+			"isPostChange:", isPostChange, "new_post:", postNew,
+			"isHostAddrChange:", isHostAddrChange, "newHostAddr:", hostAddr,
 		)
 	}
 
@@ -113,41 +113,41 @@ func (ser *ProxyServe) reqRewriteByjs(reqCtx *requestCtx) int {
 	}
 	///===============================================================================
 
-	var url_base string
+	var urlBase string
 
 	if isHeaderChange {
 		//		schema := headerKvNew["schema"]
-		url_base = schema + "://"
+		urlBase = schema + "://"
 
 		if headerKvNew["username"] != "" {
-			url_base += fmt.Sprintf("%s:%s@", headerKvNew["username"], headerKvNew["password"])
+			urlBase += fmt.Sprintf("%s:%s@", headerKvNew["username"], headerKvNew["password"])
 		}
-		url_base += headerKvNew["host"]
+		urlBase += headerKvNew["host"]
 		if headerKvNew["port"] != "" && headerKvNew["port"] != "80" {
-			url_base += ":" + headerKvNew["port"]
+			urlBase += ":" + headerKvNew["port"]
 		}
-		url_base += headerKvNew["path"]
+		urlBase += headerKvNew["path"]
 	} else {
 		if req.URL.RawQuery == "" {
-			url_base = origin_url
+			urlBase = originURL
 		} else {
-			url_base = origin_url[:len(origin_url)-len(req.URL.RawQuery)-1]
+			urlBase = originURL[:len(originURL)-len(req.URL.RawQuery)-1]
 		}
 	}
 
 	if isGetChange {
-		url_base += "?" + get_new.Encode()
+		urlBase += "?" + getNew.Encode()
 	} else {
-		url_base += "?" + req.URL.RawQuery
+		urlBase += "?" + req.URL.RawQuery
 	}
 
 	if isHeaderChange || isGetChange {
-		var url_err error
-		req.URL, url_err = url.Parse(url_base)
+		var urlErr error
+		req.URL, urlErr = url.Parse(urlBase)
 		if ser.Debug {
-			log.Println("DEBUG req_rewrite,url_new:", url_base, "req_new:", req.URL)
+			log.Println("DEBUG req_rewrite,url_new:", urlBase, "req_new:", req.URL)
 		}
-		if url_err != nil {
+		if urlErr != nil {
 			return 502
 		}
 
@@ -158,13 +158,13 @@ func (ser *ProxyServe) reqRewriteByjs(reqCtx *requestCtx) int {
 
 	if isPostChange {
 		buf := bytes.NewBuffer([]byte{})
-		_post_body := post_new.Encode()
+		_postBody := postNew.Encode()
 		req.Header.Del("Content-Length")
 		if req.Header.Get(contentEncoding) == "gzip" {
-			tmp := gzipEncode([]byte(_post_body)).Bytes()
+			tmp := gzipEncode([]byte(_postBody)).Bytes()
 			buf.Write(tmp)
 		} else {
-			buf.WriteString(_post_body)
+			buf.WriteString(_postBody)
 		}
 		req.ContentLength = int64(buf.Len())
 		req.Body = ioutil.NopCloser(buf).(io.ReadCloser)
@@ -173,9 +173,9 @@ func (ser *ProxyServe) reqRewriteByjs(reqCtx *requestCtx) int {
 	////////////////////////////////////////////////////////////////////////////
 
 	if isHostAddrChange {
-		req.URL.Host = host_addr
+		req.URL.Host = hostAddr
 		if ser.Debug {
-			log.Println("rewrite host addr:", req.URL.Host, "==>", host_addr)
+			log.Println("rewrite host addr:", req.URL.Host, "==>", hostAddr)
 		}
 	}
 	return 200
@@ -185,16 +185,16 @@ func (ser *ProxyServe) reqRewrite(reqCtx *requestCtx) int {
 	if reqCtx.Req.Method == "CONNECT" {
 		return 304
 	}
-	origin_host := reqCtx.Req.Host + "#" + reqCtx.Req.URL.Host
+	originHost := reqCtx.Req.Host + "#" + reqCtx.Req.URL.Host
 	statusCode1 := ser.reqRewriteByjs(reqCtx)
-	new_host := reqCtx.Req.Host + "#" + reqCtx.Req.URL.Host
+	newHost := reqCtx.Req.Host + "#" + reqCtx.Req.URL.Host
 
 	if ser.Debug {
-		log.Println("rewrte_debug:\n", "origin_host:", origin_host, "\nnew_host:", new_host, "\n")
+		log.Println("rewrte_debug:\n", "originHost:", originHost, "\nnewHost:", newHost, "\n")
 	}
 
 	statusCode2 := 304
-	if origin_host == new_host {
+	if originHost == newHost {
 		statusCode2 = ser.reqRewriteByHosts(reqCtx.Req)
 	}
 	if statusCode1 == 200 || statusCode2 == 200 {
@@ -215,24 +215,24 @@ func (ser *ProxyServe) reqRewriteByHosts(req *http.Request) int {
 		req.URL.Host = host
 		return 200
 	}
-	host_info := strings.Split(req.URL.Host, ":")
-	if len(host_info) == 1 {
+	hostInfo := strings.Split(req.URL.Host, ":")
+	if len(hostInfo) == 1 {
 		if req.URL.Scheme == "http" {
-			host_info = append(host_info, "80")
+			hostInfo = append(hostInfo, "80")
 		}
 	}
-	req_host := strings.Join(host_info, ":")
-	if host, has := ser.hosts[req_host]; has {
+	reqHost := strings.Join(hostInfo, ":")
+	if host, has := ser.hosts[reqHost]; has {
 		log.Println("rewrite host:", req.Host, "==>", host)
 		req.URL.Host = host
 		return 200
 	}
 
-	if host, has := ser.hosts[host_info[0]]; has {
+	if host, has := ser.hosts[hostInfo[0]]; has {
 		log.Println("rewrite host:", req.Host, "==>", host)
 		req.URL.Host = host
 		if !strings.Contains(host, ":") {
-			req.URL.Host += ":" + host_info[1]
+			req.URL.Host += ":" + hostInfo[1]
 		}
 		return 200
 	}
@@ -242,7 +242,7 @@ func (ser *ProxyServe) reqRewriteByHosts(req *http.Request) int {
 /**
 *
  */
-func _req_mapToUrlValue(values interface{}) url.Values {
+func _reqMapToURLValue(values interface{}) url.Values {
 	uValues := make(url.Values)
 	if values == nil {
 		return uValues

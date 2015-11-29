@@ -152,9 +152,9 @@ func LoadConfig(confPath string) (*Config, error) {
 	}
 	config.SslOn = gconf.MustValue(goconfig.DEFAULT_SECTION, "ssl", "off") == "on"
 	if config.SslOn {
-		_ssl_client_cert := gconf.MustValue(goconfig.DEFAULT_SECTION, "ssl_client_cert", "")
-		_ssl_server_key := gconf.MustValue(goconfig.DEFAULT_SECTION, "ssl_server_key", "")
-		cert, err := getSslCert(_ssl_client_cert, _ssl_server_key)
+		_sslClientCert := gconf.MustValue(goconfig.DEFAULT_SECTION, "ssl_client_cert", "")
+		_sslServerKey := gconf.MustValue(goconfig.DEFAULT_SECTION, "ssl_server_key", "")
+		cert, err := getSslCert(_sslClientCert, _sslServerKey)
 		if err != nil {
 			hasError = true
 			log.Println("ssl ca config error:", err)
@@ -171,18 +171,19 @@ func LoadConfig(confPath string) (*Config, error) {
 
 type configHosts map[string]string
 
+//  loadHosts 读取host配置文件
 func loadHosts(confPath string) (hosts configHosts, err error) {
 	hosts = make(configHosts)
 	if !utils.File_exists(confPath) {
 		return
 	}
-	hosts_byte, err := utils.File_get_contents(confPath)
+	hostsByte, err := utils.File_get_contents(confPath)
 	if err != nil {
 		log.Println("load hosts_file failed:", confPath, err)
 		return nil, err
 	}
-	hosts_arr := utils.LoadText2Slice(string(hosts_byte))
-	for _, v := range hosts_arr {
+	hostsArr := utils.LoadText2Slice(string(hostsByte))
+	for _, v := range hostsArr {
 		if len(v) != 2 {
 			log.Println("hosts file line wrong,ignore,", v)
 			continue
@@ -197,12 +198,12 @@ func loadUsers(confPath string) (users map[string]*User, err error) {
 	if !utils.File_exists(confPath) {
 		return
 	}
-	userInfo_byte, err := utils.File_get_contents(confPath)
+	userInfoByte, err := utils.File_get_contents(confPath)
 	if err != nil {
 		log.Println("load user file failed:", confPath, err)
 		return
 	}
-	lines := utils.LoadText2SliceMap(string(userInfo_byte))
+	lines := utils.LoadText2SliceMap(string(userInfoByte))
 	for _, line := range lines {
 		name, has := line["name"]
 		if !has || name == "" {
@@ -248,9 +249,8 @@ func (config *Config) getTransport() *http.Transport {
 				}
 				urlTmp.User = url.UserPassword(user.Name, user.Psw)
 				return urlTmp, nil
-			} else {
-				return config.ParentProxy, nil
 			}
+			return config.ParentProxy, nil
 		},
 	}
 	return tr

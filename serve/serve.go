@@ -54,8 +54,8 @@ func (ser *ProxyServe) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		ser.handleLocalReq(w, req)
 	} else {
 		if ser.Debug {
-			req_dump_debug, _ := httputil.DumpRequest(req, req.Method == "GET")
-			log.Println("DEBUG req BEFORE:\nurl_full:", req.URL.String(), "\nschema:", req.URL.Scheme, "\n", string(req_dump_debug), "\n\n")
+			reqDumpDebug, _ := httputil.DumpRequest(req, req.Method == "GET")
+			log.Println("DEBUG req BEFORE:\nurl_full:", req.URL.String(), "\nschema:", req.URL.Scheme, "\n", string(reqDumpDebug), "\n\n")
 		}
 		if !ser.checkHTTPAuth(ctx) {
 			ctx.SetLog("msg", "login required")
@@ -80,7 +80,7 @@ func (ser *ProxyServe) Start() {
 	fmt.Println("proxy listen at ", addr)
 	defer log.Println("pproxy exit")
 
-	ser.ws_init()
+	ser.wsInit()
 
 	wg := new(sync.WaitGroup)
 	wg.Add(1)
@@ -113,25 +113,25 @@ func (ser *ProxyServe) startAdmin() {
 	http.ListenAndServe(addr, httpSer)
 }
 
-func (ser *ProxyServe) GetResponseByDocid(docid int) (res_data *StoreType, err error) {
+func (ser *ProxyServe) getResponseByDocid(docid int) (resData *StoreType, err error) {
 	tb := ser.mydb.GetkvStoreTable(KV_TABLE_RES)
 	return tb.Get(IntToBytes(docid))
 }
-func (ser *ProxyServe) GetRequestByDocid(docid int) (req_data *StoreType, err error) {
+func (ser *ProxyServe) getRequestByDocid(docid int) (reqData *StoreType, err error) {
 	tb := ser.mydb.GetkvStoreTable(KV_TABLE_REQ)
 	return tb.Get(IntToBytes(docid))
 }
 
-func (ser *ProxyServe) GetHostsFilePath() string {
+func (ser *ProxyServe) getHostsFilePath() string {
 	return fmt.Sprintf("%s/hosts_%d", ser.configDir, ser.conf.Port)
 }
 
 func (ser *ProxyServe) loadHosts() {
 	ser.mu.Lock()
 	defer ser.mu.Unlock()
-	hosts_path := ser.GetHostsFilePath()
-	log.Println("load hosts:", hosts_path)
-	ser.hosts, _ = loadHosts(hosts_path)
+	hostsPath := ser.getHostsFilePath()
+	log.Println("load hosts:", hostsPath)
+	ser.hosts, _ = loadHosts(hostsPath)
 }
 
 func NewProxyServe(confPath string, port int) (*ProxyServe, error) {
@@ -169,10 +169,10 @@ func NewProxyServe(confPath string, port int) (*ProxyServe, error) {
 
 	proxy.loadHosts()
 
-	db_path := fmt.Sprintf("%s/%d.db", conf.DataDir, conf.Port)
+	dbPath := fmt.Sprintf("%s/%d.db", conf.DataDir, conf.Port)
 
 	//	proxy.mydb = NewTieDb(fmt.Sprintf("%s/%d/", conf.DataDir, conf.Port), conf.DataStoreDay)
-	proxy.mydb, err = newKvStore(db_path)
+	proxy.mydb, err = newKvStore(dbPath)
 	if err != nil {
 		log.Fatalln("init db failed", err)
 	}

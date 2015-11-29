@@ -9,7 +9,7 @@ func (ser *ProxyServe) broadcastReq(reqCtx *requestCtx) bool {
 	req := reqCtx.Req
 	data := make(map[string]interface{})
 	data["docid"] = fmt.Sprintf("%d", reqCtx.Docid)
-	data["sid"] = reqCtx.SessionId % 10000
+	data["sid"] = reqCtx.SessionID % 10000
 	data["host"] = req.Host
 	data["client_ip"] = req.RemoteAddr
 	urlPath := req.URL.Path

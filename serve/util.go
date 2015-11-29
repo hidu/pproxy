@@ -18,19 +18,22 @@ import (
 	"strings"
 )
 
+// Int64ToBytes int64转换为byte
 func Int64ToBytes(i int64) []byte {
 	var buf = make([]byte, 8)
 	binary.BigEndian.PutUint64(buf, uint64(i))
 	return buf
 }
 
+// IntToBytes int转换为byte
 func IntToBytes(i int) []byte {
 	var buf = make([]byte, 8)
 	binary.BigEndian.PutUint64(buf, uint64(i))
 	return buf
 }
 
-func IsLocalIp(host string) bool {
+// IsLocalIP 判断一个host是否本地ip
+func IsLocalIP(host string) bool {
 	ips, _ := net.LookupIP(host)
 	for _, ip := range ips {
 		if ip.IsLoopback() {
@@ -39,10 +42,10 @@ func IsLocalIp(host string) bool {
 	}
 	if addrs, err := net.InterfaceAddrs(); err == nil {
 		for _, addr := range addrs {
-			_, ip_g, err := net.ParseCIDR(addr.String())
+			_, ipG, err := net.ParseCIDR(addr.String())
 			if err == nil {
 				for _, ip := range ips {
-					if ip_g.Contains(ip) {
+					if ipG.Contains(ip) {
 						return true
 					}
 				}
@@ -59,7 +62,7 @@ func forgetRead(reader *io.ReadCloser) *bytes.Buffer {
 	return bytes.NewBuffer(buf.Bytes())
 }
 
-func data_encode(data interface{}) []byte {
+func dataEncode(data interface{}) []byte {
 	bf, err := json.Marshal(data)
 	if err != nil {
 		log.Println("data_encode_err", err)
@@ -67,13 +70,13 @@ func data_encode(data interface{}) []byte {
 	}
 	return bf
 }
-func data_decode(data_input []byte, out interface{}) error {
-	if len(data_input) == 0 {
-		return fmt.Errorf("empty data_input")
+func dataDecode(dataInput []byte, out interface{}) error {
+	if len(dataInput) == 0 {
+		return fmt.Errorf("empty dataInput")
 	}
-	err := json.Unmarshal(data_input, &out)
+	err := json.Unmarshal(dataInput, &out)
 	if err != nil {
-		log.Println("json_decode_err:", err, "data_input:", string(data_input))
+		log.Println("json_decode_err:", err, "dataInput:", string(dataInput))
 		return err
 	}
 	return err
@@ -93,12 +96,11 @@ func gzipDocode(buf *bytes.Buffer) string {
 	gr, err := gzip.NewReader(buf)
 	defer gr.Close()
 	if err == nil {
-		bd_bt, _ := ioutil.ReadAll(gr)
-		return string(bd_bt)
-	} else {
-		log.Println("unzip body failed", err)
-		return ""
+		bdBt, _ := ioutil.ReadAll(gr)
+		return string(bdBt)
 	}
+	log.Println("unzip body failed", err)
+	return ""
 }
 func gzipEncode(data []byte) *bytes.Buffer {
 	buf := bytes.NewBuffer([]byte{})
@@ -108,9 +110,9 @@ func gzipEncode(data []byte) *bytes.Buffer {
 	return buf
 }
 
-func parseUrlInputAsSlice(input string) []string {
+func parseURLInputAsSlice(input string) []string {
 	arr := strings.Split(input, "|")
-	result := make([]string, 0)
+	var result []string
 	for _, val := range arr {
 		val = strings.TrimSpace(val)
 		if val != "" {
@@ -120,7 +122,7 @@ func parseUrlInputAsSlice(input string) []string {
 	return result
 }
 
-func GetFormValuesWithPrefix(values url.Values, prefix string) map[string][]string {
+func getFormValuesWithPrefix(values url.Values, prefix string) map[string][]string {
 	result := make(map[string][]string)
 	for k, v := range values {
 		if strings.HasPrefix(k, prefix) {
@@ -157,49 +159,49 @@ func getHostPortFromReq(req *http.Request) (host string, port int, err error) {
 }
 
 func parseHostPort(hostPortstr string) (host string, port int, err error) {
-	var port_str string
+	var portStr string
 	if !strings.Contains(hostPortstr, ":") {
 		hostPortstr += ":0"
 	}
-	host, port_str, err = net.SplitHostPort(hostPortstr)
+	host, portStr, err = net.SplitHostPort(hostPortstr)
 	if err != nil {
 		return
 	}
-	port, err = strconv.Atoi(port_str)
+	port, err = strconv.Atoi(portStr)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func checkUrlValuesChange(first url.Values, second url.Values) (change bool) {
+func checkURLValuesChange(first url.Values, second url.Values) (change bool) {
 	for k, v := range first {
-		sec_v, has := second[k]
+		secV, has := second[k]
 		if !has {
 			return true
 		}
-		if len(v) != len(sec_v) || fmt.Sprintf("%v", v) != fmt.Sprintf("%v", sec_v) {
+		if len(v) != len(secV) || fmt.Sprintf("%v", v) != fmt.Sprintf("%v", secV) {
 			return true
 		}
 	}
 	for k, v := range second {
-		first_v, has := first[k]
+		firstV, has := first[k]
 		if !has {
 			return true
 		}
-		if len(v) != len(first_v) || fmt.Sprintf("%v", v) != fmt.Sprintf("%v", first_v) {
+		if len(v) != len(firstV) || fmt.Sprintf("%v", v) != fmt.Sprintf("%v", firstV) {
 			return true
 		}
 	}
 	return false
 }
 
-func parseDocId(strid string) (docid int, err error) {
-	docid64, parse_err := strconv.ParseUint(strid, 10, 64)
-	if parse_err == nil {
+func parseDocID(strid string) (docid int, err error) {
+	docid64, parseErr := strconv.ParseUint(strid, 10, 64)
+	if parseErr == nil {
 		return int(docid64), nil
 	}
-	return 0, parse_err
+	return 0, parseErr
 }
 
 func removeHeader(req *http.Request) {
@@ -214,14 +216,14 @@ func getPostData(req *http.Request) (post *url.Values) {
 	post = new(url.Values)
 	if strings.Contains(req.Header.Get("Content-Type"), "x-www-form-urlencoded") {
 		buf := forgetRead(&req.Body)
-		var body_str string
+		var bodyStr string
 		if req.Header.Get(contentEncoding) == "gzip" {
-			body_str = gzipDocode(buf)
+			bodyStr = gzipDocode(buf)
 		} else {
-			body_str = buf.String()
+			bodyStr = buf.String()
 		}
 		var err error
-		*post, err = url.ParseQuery(body_str)
+		*post, err = url.ParseQuery(bodyStr)
 		if err != nil {
 			log.Println("parse post err", err, "url=", req.URL.String())
 		}

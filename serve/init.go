@@ -1,6 +1,7 @@
 package serve
 
-var PproxyVersion string = ""
+// 系统版本
+var PproxyVersion string
 
 func init() {
 	PproxyVersion = GetVersion()

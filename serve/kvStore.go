@@ -87,7 +87,7 @@ func newkvStoreTable(name KV_TBALE_NAME_TYPE, kv *kvStore) *kvStoreTable {
 func (tb *kvStoreTable) Save(key []byte, val *StoreType) error {
 	err := tb.kv.db.Update(func(tx *bolt.Tx) error {
 		bk, _ := tx.CreateBucketIfNotExists([]byte(tb.name))
-		return bk.Put(key, data_encode(val))
+		return bk.Put(key, dataEncode(val))
 	})
 	return err
 }
@@ -97,7 +97,7 @@ func (tb *kvStoreTable) Get(key []byte) (val *StoreType, err error) {
 		bk := tx.Bucket([]byte(tb.name))
 		bs := bk.Get(key)
 		if len(bs) > 0 {
-			return data_decode(bs, &val)
+			return dataDecode(bs, &val)
 		}
 		return nil
 	})
@@ -121,7 +121,7 @@ func (tb *kvStoreTable) Gc(gc_life int64) {
 	tb.kv.db.View(func(tx *bolt.Tx) error {
 		bk := tx.Bucket([]byte(tb.name))
 		bk.ForEach(func(k, v []byte) error {
-			data_decode(v, &val)
+			dataDecode(v, &val)
 			if val != nil && val.Now < max_time {
 				tb.Del(k)
 			}
