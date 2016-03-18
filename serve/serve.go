@@ -44,6 +44,9 @@ type KvType map[string]interface{}
 func (ser *ProxyServe) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	atomic.AddInt64(&ser.reqNum, 1)
 
+	//	reqDump, _ := httputil.DumpRequest(req, true)
+	//    fmt.Println("req dump:\n",string(reqDump))
+
 	ctx := NewRequestCtx(ser, w, req)
 	if ctx.Host == "p.info" || ctx.Host == "pproxy.info" {
 		ser.handleUserInfo(w, req)

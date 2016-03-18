@@ -48,6 +48,16 @@ func (ser *ProxyServe) reqRewriteByjs(reqCtx *requestCtx) int {
 	rewriteData["get"] = originGetQuery
 	rewriteData["post"] = *reqCtx.FormPost
 
+	_buf := forgetRead(&reqCtx.Req.Body)
+	var rawBody string
+	// 暂时只考虑gip的，其他的压缩就不支持了
+	if req.Header.Get(contentEncoding) == "gzip" {
+		rawBody = gzipDocode(_buf)
+	} else {
+		rawBody = _buf.String()
+	}
+	rewriteData["body"] = rawBody
+
 	reqObjNew, rErr := ser.reqMod.rewrite(rewriteData, reqCtx.User.Name)
 	if rErr != nil {
 		log.Println("rewrite failed:", rErr)
@@ -60,6 +70,7 @@ func (ser *ProxyServe) reqRewriteByjs(reqCtx *requestCtx) int {
 	var err error
 
 	urlStrNew := getMapValStr(reqObjNew, "url")
+
 	if urlStrNew != "" {
 		req.URL, err = url.Parse(urlStrNew)
 		if err != nil || req.URL.Scheme != "http" {
@@ -69,6 +80,7 @@ func (ser *ProxyServe) reqRewriteByjs(reqCtx *requestCtx) int {
 		req.Host = req.URL.Host
 		skipHeader = true
 	}
+
 	if !skipHeader {
 		for k, v := range headerKv {
 			_newVal := getMapValStr(reqObjNew, k)
@@ -90,11 +102,18 @@ func (ser *ProxyServe) reqRewriteByjs(reqCtx *requestCtx) int {
 	//-------------------------------------------------------
 	var postNew url.Values
 	isPostChange := false
+
 	if schema == "http" {
 		if _post, has := reqObjNew["post"]; has {
 			postNew = _reqMapToURLValue(_post)
 			isPostChange = checkURLValuesChange(*reqCtx.FormPost, postNew)
 		}
+	}
+	isBodyChange := false
+	bodyNew := ""
+	if _bodyNew, has := reqObjNew["body"]; has {
+		bodyNew = _bodyNew.(string)
+		isBodyChange = rawBody != bodyNew
 	}
 
 	hostAddr := getMapValStr(reqObjNew, "hostAddr")
@@ -104,11 +123,12 @@ func (ser *ProxyServe) reqRewriteByjs(reqCtx *requestCtx) int {
 		fmt.Println("rewriteChange:", "is_get_change:", isGetChange, "new_get:", getNew,
 			"isPostChange:", isPostChange, "new_post:", postNew,
 			"isHostAddrChange:", isHostAddrChange, "newHostAddr:", hostAddr,
+			"isBodyChange:", isBodyChange,
 		)
 	}
 
 	///===============================================================================
-	if !isHeaderChange && !isGetChange && !isPostChange && !isHostAddrChange {
+	if !isHeaderChange && !isGetChange && !isPostChange && !isHostAddrChange && !isBodyChange {
 		return 304
 	}
 	///===============================================================================
@@ -156,15 +176,20 @@ func (ser *ProxyServe) reqRewriteByjs(reqCtx *requestCtx) int {
 
 	//////////////////////////////////////////////////////////////////////////////
 
-	if isPostChange {
+	if isPostChange || isBodyChange {
 		buf := bytes.NewBuffer([]byte{})
-		_postBody := postNew.Encode()
+		var bodyData string
+		if isPostChange {
+			bodyData = postNew.Encode()
+		} else if isBodyChange {
+			bodyData = bodyNew
+		}
 		req.Header.Del("Content-Length")
 		if req.Header.Get(contentEncoding) == "gzip" {
-			tmp := gzipEncode([]byte(_postBody)).Bytes()
+			tmp := gzipEncode([]byte(bodyData)).Bytes()
 			buf.Write(tmp)
 		} else {
-			buf.WriteString(_postBody)
+			buf.WriteString(bodyData)
 		}
 		req.ContentLength = int64(buf.Len())
 		req.Body = ioutil.NopCloser(buf).(io.ReadCloser)
