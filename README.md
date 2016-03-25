@@ -1,4 +1,4 @@
-pproxy 0.5
+pproxy 0.5.1
 ======
 ##intro
 http抓包代理程序,http协议调试工具。  
@@ -166,4 +166,19 @@ ssl_client_cert :
 方式2： 直接访问 http://serverHost:adminPort  
 方式3： 浏览器设置http代理 serverHost:port，访问 http://pproxy.man 或者 http://pproxy.com  
 
+# 其他
+## 如何自己修改源码中的静态资源？
+该项目的静态资源（res目录中的所有内容）都编译到go文件中去了，可以处理即可:  
+1. 安装goassest工具：
+```
+go get -u github.com/hidu/goassest
+```
+2.到pproxy代码根目录下运行命令：
+```
+goassest
+```
 
+调试过程中可以添加参数  `-assest_direct` 可以让静态资源实时生效而不需要重新编译静态资源：
+```
+go run proxy_main.go -assest_direct
+```

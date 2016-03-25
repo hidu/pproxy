@@ -12,7 +12,8 @@ import (
 )
 
 func (ser *ProxyServe) reqRewriteByjs(reqCtx *requestCtx) int {
-	if !ser.reqMod.CanMod() {
+	modifer := ser.reqMod
+	if !modifer.CanMod() {
 		return 304
 	}
 	req := reqCtx.Req
@@ -58,7 +59,7 @@ func (ser *ProxyServe) reqRewriteByjs(reqCtx *requestCtx) int {
 	}
 	rewriteData["body"] = rawBody
 
-	reqObjNew, rErr := ser.reqMod.rewrite(rewriteData, reqCtx.User.Name)
+	reqObjNew, rErr := modifer.rewrite(rewriteData, reqCtx.User.Name)
 	if rErr != nil {
 		log.Println("rewrite failed:", rErr)
 	}

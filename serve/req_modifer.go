@@ -12,6 +12,10 @@ import (
 
 var rewriteJsTpl = Assest.GetContent("res/sjs/req_rewrite.js")
 
+/**
+*request动态修改引擎
+*使用javascript 来对请求进行修改
+ */
 type requestModifier struct {
 	mu     sync.RWMutex
 	jsVm   *otto.Otto
@@ -86,14 +90,15 @@ func (reqMod *requestModifier) parseJs(jsStr string, name string, save2File bool
 	rewriteJs := strings.Replace(rewriteJsTpl, "CUSTOM_JS", jsStr, 1)
 	rewriteJs = strings.Replace(rewriteJs, "PPROXY_HOST", fmt.Sprintf("127.0.0.1:%d", reqMod.ser.conf.Port), 1)
 
+	reqMod.mu.Lock()
+	defer reqMod.mu.Unlock()
+
 	reqMod.jsVm.Run(rewriteJs)
 	jsFn, err := reqMod.jsVm.Get("pproxy_rewrite")
 	if err != nil {
 		log.Println("rewrite js init error:", err)
 		return err
 	}
-	reqMod.mu.Lock()
-	defer reqMod.mu.Unlock()
 
 	if strings.HasPrefix(jsStr, "//ignore") {
 		if _, has := reqMod.jsFns[name]; has {
@@ -123,6 +128,9 @@ func (reqMod *requestModifier) getJsFnByName(name string) (*otto.Value, error) {
 }
 
 func (reqMod *requestModifier) rewrite(data map[string]interface{}, name string) (map[string]interface{}, error) {
+	reqMod.mu.Lock()
+	defer reqMod.mu.Unlock()
+
 	reqJsObj, _ := reqMod.jsVm.Object(`req={}`)
 	reqJsObj.Set("origin", data)
 
@@ -131,6 +139,13 @@ func (reqMod *requestModifier) rewrite(data map[string]interface{}, name string)
 	if err != nil {
 		return nil, err
 	}
+
+	defer func() {
+		if caught := recover(); caught != nil {
+			log.Println("fatal:requestModifer  recover:", caught)
+		}
+	}()
+
 	js_ret, err_js := (*jsFn).Call(*jsFn, reqJsObj)
 
 	if err_js != nil {
@@ -138,7 +153,7 @@ func (reqMod *requestModifier) rewrite(data map[string]interface{}, name string)
 		return nil, err_js
 	}
 	if !js_ret.IsObject() {
-		log.Println("wrong req_rewirte return value")
+		log.Println("wrong req_rewirte return value,not object:", js_ret)
 		return nil, fmt.Errorf("wrong req_rewirte return value,not object.%t", js_ret)
 	}
 	obj, export_err := js_ret.Export()
