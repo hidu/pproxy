@@ -150,9 +150,14 @@ func (ctx *requestCtx) RoundTrip() {
 
 	ctx.HasBroadcast = ctx.ser.broadcastReq(ctx)
 
+	//reqDump, _ := httputil.DumpRequest(ctx.Req, true)
+	//    fmt.Println("req dump3:\n",string(reqDump))
+
 	ctx.SetLog("js_rewrite_code", rewriteCode)
 
-	time.AfterFunc(1*time.Second, ctx.saveRequestData)
+	ctx.saveRequestData()
+	//异步的会导致req.body dump不了，先暂时这样，对接口会有一些影响
+	//	time.AfterFunc(1*time.Second, ctx.saveRequestData)
 
 	if rewriteCode != 200 && rewriteCode != 304 {
 		ctx.badGateway(fmt.Errorf("rewrite failed"))
@@ -190,13 +195,19 @@ func (ctx *requestCtx) saveRequestData() {
 		logdata["msg"] = ctx.Msg
 		logdata["id"] = fmt.Sprintf("%d", ctx.Docid)
 
-		dumpBody := false
+		//当无普通form post表单数据的时候，比如可能body也有数据
+		//比如request 的content-type=application/json
+		dumpBody := len(*ctx.FormPost) == 0
+		//   fmt.Println("dumpBody",dumpBody)
+		//dumpBody=false
 		reqDump, errDump := httputil.DumpRequest(ctx.Req, dumpBody)
 		if errDump != nil {
-			ctx.SetLog("dumpMsg", "dump request failed")
-			reqDump = []byte("dump failed")
+			ctx.SetLog("dumpMsg", fmt.Sprintf("dump request failed,%s", errDump.Error()))
+			reqDump = []byte(fmt.Sprintf("dump failed,%s", errDump.Error()))
 		}
 		logdata["dump"] = base64.StdEncoding.EncodeToString(reqDump)
+		//		buf := forgetRead(&ctx.Req.Body)
+		//		logdata["dump"] = base64.StdEncoding.EncodeToString(buf.Bytes())
 
 		logdata["form_post"] = ctx.FormPost
 

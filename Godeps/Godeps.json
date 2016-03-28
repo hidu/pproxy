@@ -29,7 +29,7 @@
 		},
 		{
 			"ImportPath": "github.com/robertkrimen/otto",
-			"Rev": "47082f430885e505c18bbedc3e2b336a968a50dd"
+			"Rev": "53221230c215611a90762720c9042ac782ef74ee"
 		},
 		{
 			"ImportPath": "gopkg.in/hidu/go-socket.io.v1",
