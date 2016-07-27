@@ -16,8 +16,8 @@
 		},
 		{
 			"ImportPath": "github.com/boltdb/bolt",
-			"Comment": "v1.0-121-g0c24824",
-			"Rev": "0c24824a36818ef7fb62d30142020dbe3178468d"
+			"Comment": "v1.2.1-13-g5cc10bb",
+			"Rev": "5cc10bbbc5c141029940133bb33c9e969512a698"
 		},
 		{
 			"ImportPath": "github.com/hidu/goproxy",
@@ -29,7 +29,7 @@
 		},
 		{
 			"ImportPath": "github.com/robertkrimen/otto",
-			"Rev": "53221230c215611a90762720c9042ac782ef74ee"
+			"Rev": "c41cf547e08c4a88c36859766ece30dd178d7bc1"
 		},
 		{
 			"ImportPath": "gopkg.in/hidu/go-socket.io.v1",
