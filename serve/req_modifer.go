@@ -55,6 +55,10 @@ func (reqMod *requestModifier) tryLoadJs(name string) (err error) {
 }
 
 func (reqMod *requestModifier) loadAllJs() error {
+	if !reqMod.ser.conf.ModifyRequest {
+		log.Println("ignore requestModifier loadAllJs")
+		return nil
+	}
 	names := []string{""}
 	for _, user := range reqMod.ser.Users {
 		names = append(names, user.Name)
@@ -92,7 +96,9 @@ func (reqMod *requestModifier) parseJs(jsStr string, name string, save2File bool
 
 	reqMod.mu.Lock()
 	defer reqMod.mu.Unlock()
-
+	if reqMod.ser.Debug {
+		log.Println("jsvm_execute:", rewriteJs)
+	}
 	reqMod.jsVm.Run(rewriteJs)
 	jsFn, err := reqMod.jsVm.Get("pproxy_rewrite")
 	if err != nil {
@@ -128,6 +134,7 @@ func (reqMod *requestModifier) getJsFnByName(name string) (*otto.Value, error) {
 }
 
 func (reqMod *requestModifier) rewrite(data map[string]interface{}, name string) (map[string]interface{}, error) {
+
 	reqMod.mu.Lock()
 	defer reqMod.mu.Unlock()
 

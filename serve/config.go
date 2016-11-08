@@ -28,6 +28,8 @@ type Config struct {
 	SslOn bool
 
 	SslCert tls.Certificate
+
+	ModifyRequest bool
 }
 
 const (
@@ -162,6 +164,9 @@ func LoadConfig(confPath string) (*Config, error) {
 			config.SslCert = cert
 		}
 	}
+
+	config.ModifyRequest = gconf.MustValue(goconfig.DEFAULT_SECTION, "modifyRequest", "on") == "on"
+
 	if hasError {
 		return config, fmt.Errorf("config error")
 	}

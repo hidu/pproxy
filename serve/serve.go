@@ -191,7 +191,7 @@ func NewProxyServe(confPath string, port int) (*ProxyServe, error) {
 	utils.SetInterval(func() {
 		proxy.cleanExpiredSession()
 	}, 60)
-	proxy.mydb.StartGcTimer(60,int64(conf.DataStoreDay*86400))
+	proxy.mydb.StartGcTimer(60, int64(conf.DataStoreDay*86400))
 	return proxy, nil
 }
 

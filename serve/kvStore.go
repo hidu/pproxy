@@ -67,7 +67,7 @@ func (kv *kvStore) Gc(max_life int64) {
 }
 
 func (kv *kvStore) StartGcTimer(sec int64, max_life int64) {
-	if(max_life<1){
+	if max_life < 1 {
 		return
 	}
 	utils.SetInterval(func() {

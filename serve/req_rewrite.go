@@ -208,6 +208,10 @@ func (ser *ProxyServe) reqRewriteByjs(reqCtx *requestCtx) int {
 }
 
 func (ser *ProxyServe) reqRewrite(reqCtx *requestCtx) int {
+
+	if !ser.conf.ModifyRequest {
+		return 304
+	}
 	if reqCtx.Req.Method == "CONNECT" {
 		return 304
 	}
