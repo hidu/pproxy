@@ -1,6 +1,7 @@
 {
 	"ImportPath": "github.com/hidu/pproxy",
 	"GoVersion": "go1.5",
+	"GodepVersion": "v74",
 	"Packages": [
 		"./..."
 	],
@@ -16,8 +17,8 @@
 		},
 		{
 			"ImportPath": "github.com/boltdb/bolt",
-			"Comment": "v1.2.1-13-g5cc10bb",
-			"Rev": "5cc10bbbc5c141029940133bb33c9e969512a698"
+			"Comment": "v1.3.0-29-g4b1ebc1",
+			"Rev": "4b1ebc1869ad66568b313d0dc410e2be72670dda"
 		},
 		{
 			"ImportPath": "github.com/hidu/goproxy",
@@ -35,6 +36,10 @@
 			"ImportPath": "gopkg.in/hidu/go-socket.io.v1",
 			"Comment": "v1",
 			"Rev": "b844b5cf65e6fb6afa9f9776a84e98c6b2f063fd"
+		},
+		{
+			"ImportPath": "golang.org/x/sys/unix",
+			"Rev": "c200b10b5d5e122be351b67af224adc6128af5bf"
 		}
 	]
 }

@@ -1,9 +1,13 @@
 #!/bin/bash
+
+echo "bye bye"
+exit
+
 cd $(dirname $0)
 cd ../
 
 if [ -z "$1" ];then
-    bash build.sh
+    gox -arch amd64 -os linux
     bash build.sh windows
 fi
 
