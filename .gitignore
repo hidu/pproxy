@@ -28,3 +28,4 @@ hosts_*
 conf/*
 file/
 .*.html
+.DS_Store

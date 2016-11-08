@@ -22,12 +22,14 @@ type Config struct {
 	FileDir      string
 	ResponseSave int
 	SessionView  int
-	DataStoreDay int
+	DataStoreDay float64
 	ParentProxy  *url.URL
 
 	SslOn bool
 
 	SslCert tls.Certificate
+
+	ModifyRequest bool
 }
 
 const (
@@ -97,7 +99,7 @@ func LoadConfig(confPath string) (*Config, error) {
 		config.AdminPort = config.Port
 	}
 
-	config.DataStoreDay = gconf.MustInt(goconfig.DEFAULT_SECTION, "dataStoreDay", 0)
+	config.DataStoreDay = gconf.MustFloat64(goconfig.DEFAULT_SECTION, "dataStoreDay", 0)
 	if config.DataStoreDay < 0 {
 		log.Println("wrong DataStoreDay,skip")
 		config.DataStoreDay = 0
@@ -162,6 +164,9 @@ func LoadConfig(confPath string) (*Config, error) {
 			config.SslCert = cert
 		}
 	}
+
+	config.ModifyRequest = gconf.MustValue(goconfig.DEFAULT_SECTION, "modifyRequest", "on") == "on"
+
 	if hasError {
 		return config, fmt.Errorf("config error")
 	}

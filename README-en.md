@@ -1,4 +1,4 @@
-pproxy 0.5.1
+pproxy 0.5.2
 ======
 HTTP protocol analysis tool.  
 write by golang,with BS architecture. 

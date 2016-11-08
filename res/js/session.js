@@ -16,13 +16,13 @@ if(window.localStorage){
 
 function pproxy_show_reqs_from_local(){
 	for(var i=0;i<pproxy_req_list.length;i++){
-		pproxy_show_req(pproxy_req_list[i])
+		pproxy_show_req(pproxy_req_list[i]);
 	}
 }
 
 window.onbeforeunload=function(){
 	if(pproxy_session_max_len>0){
-		window.localStorage["reqs"]=JSON.stringify(pproxy_req_list)
+		window.localStorage["reqs"]=JSON.stringify(pproxy_req_list);
 	}
 }
 
@@ -37,7 +37,7 @@ function pproxy_save_req_local(dataStr64){
 }
 
 function pporxy_session_clean(){
-	pproxy_req_list=[]
+	pproxy_req_list=[];
 	$('#tb_network tbody').empty();
 }
 
@@ -48,20 +48,20 @@ function pproxy_log(msg){
 
 function pproxy_net_local_filter(host,path){
 	if(!_pproxy_filter(host,$("#net_local_host").val())){
-		return false
+		return false;
 	}
 	if(!_pproxy_filter(path,$("#net_local_path").val())){
-		return false
+		return false;
 	}
 	return true;
 }
 
 function _pproxy_filter(kw,kwstr){
 	if(kwstr==""){
-		return true
+		return true;
 	}
-	var kws=(kwstr+"").split("|")
-	kw+=""
+	var kws=(kwstr+"").split("|");
+	kw+="";
 	var tmp=[]	
 	for(var i in kws){
 		var _kw=$.trim(kws[i]+"");
@@ -74,7 +74,7 @@ function _pproxy_filter(kw,kwstr){
 	}
 	for (var i in tmp){
 		if(kw.indexOf(tmp[i])!=-1){
-			return true
+			return true;
 		}
 	}
 	return false;
@@ -97,23 +97,23 @@ socket.on("disconnect", function() {
 });
 
 socket.on("hello",function(data){
-	console && console.log(new Date().toString(),data)
+	console && console.log(new Date().toString(),data);
 });
 
 function pproxy_getColor(addr){
-	var info=addr.split(":")
+	var info=addr.split(":");
 	if(info.length!=2){
-		return "#FFFFFF"
+		return "#FFFFFF";
 	}
 	var ip=info[0];
-	var color=ip_colors[ip]
+	var color=ip_colors[ip];
 	if(!color){
 		var l=0;
 		for(var _t in ip_colors){
-			l++
+			l++;
 		}
-		color=pproxy_colors[l% pproxy_colors.length]
-		ip_colors[ip]=color
+		color=pproxy_colors[l% pproxy_colors.length];
+		ip_colors[ip]=color;
 	}
 	return color
 }
@@ -153,16 +153,16 @@ function pproxy_show_req(data) {
     
     if(Math.random()*100>95 && tb.find("tr").size()>pproxy_table_max_row*1.5){
     	tb.find("tr:gt("+pproxy_table_max_row+")").each(function(){
-    		$(this).remove()
+    		$(this).remove();
     	});
     }
 }
 
 
 socket.on("req",function(data){
-	console && console.log("on.req","data:",data)
-	pproxy_save_req_local(data)
-	pproxy_show_req(data)
+	console && console.log("on.req","data:",data);
+	pproxy_save_req_local(data);
+	pproxy_show_req(data);
 });
 
 
@@ -265,15 +265,15 @@ function pproxy_res_td_body_toggle(){
 
 function pproxy_timeformat(sec){
 	if(!sec ||sec<1000){
-		return ""
+		return "";
 	}
 	var numFill=function(num,len){
-		num=num+""
-		var l=len-num.length
+		num=num+"";
+		var l=len-num.length;
 		for(;l>0;l--){
-			num="0"+num
+			num="0"+num;
 		}
-		return num
+		return num;
 	}
 	var d=new Date()
 	d.setTime(sec*1000)
@@ -284,7 +284,7 @@ function pproxy_timeformat(sec){
         
 function pproxy_parseAsjson(str) {
     try {
-    	str=str+""
+    	str=str+"";
     	if(str[0]!="{" && str[0]!="["){
     		return false;
     	}
@@ -294,7 +294,7 @@ function pproxy_parseAsjson(str) {
             return "<pre>" + json_str + "</pre>";
         }
     } catch (e) {
-    	console.log("pproxy_parseAsjson_error",e)
+    	console.log("pproxy_parseAsjson_error",e);
     }
     return false;
 }
@@ -322,13 +322,13 @@ function pproxy_tr_sub_table(obj, name) {
             html += "</li>";
         }
         html += "</ul></td></tr>";
-        i++
+        i++;
     }
     if (i < 1) {
         return "";
     }
     html += "</table></td></tr>"
-    return html
+    return html;
 }
 
 function pproxy_show_response(docid){
@@ -336,7 +336,7 @@ function pproxy_show_response(docid){
     var loading_msg="loading...docid=" + docid;
     var isValidId=(docid+"").length>2;
     if(!isValidId){
-    	loading_msg="https request:no data"
+    	loading_msg="https request:no data";
     }else{
     	loading_msg+="&nbsp;<a href='javascript:;' onclick=\"pproxy_show_response('"+docid+"')\">reload</a>";
     }
@@ -345,7 +345,7 @@ function pproxy_show_response(docid){
     	return;
     }
 	socket.emit("get_response", docid);
-	console.log && console.log("emit get_response,docid=",docid)
+	console.log && console.log("emit get_response,docid=",docid);
 }
 
 function get_response(tr, docid) {

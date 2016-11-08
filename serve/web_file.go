@@ -108,7 +108,7 @@ func (ser *ProxyServe) getWebFilePath(name string) (fullPath string, nameNew str
 		return "", "", fmt.Errorf("unsafe path:%s", name)
 	}
 	nameNew = fullPath[len(rootDir):]
-	re := regexp.MustCompile(`^[\w/\-\.]+$`)
+	re := regexp.MustCompile(`^[\w/\-\.]*$`)
 	if !re.MatchString(nameNew) {
 		err = fmt.Errorf("illegal path:%s", nameNew)
 	}
