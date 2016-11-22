@@ -48,6 +48,7 @@ func (statics *AssestStruct) GetAssestFile(name string) (*AssestFile, error) {
 	if name != "" && name[0] != '/' {
 		name = "/" + name
 	}
+	name = strings.Replace(name,"\\","/",-1)
 	name = path.Clean(name)
 	if _assestDirect {
 		f, err := os.Open(_assestCwd + string(filepath.Separator) + name)
