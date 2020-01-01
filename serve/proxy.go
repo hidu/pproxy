@@ -2,7 +2,7 @@ package serve
 
 import (
 	"fmt"
-	"github.com/hidu/goproxy"
+	"github.com/elazarl/goproxy"
 	"io"
 	"log"
 	"net"

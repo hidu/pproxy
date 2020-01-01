@@ -1,7 +1,7 @@
 package serve
 
 import (
-	"gopkg.in/hidu/go-socket.io.v1"
+	"github.com/googollee/go-socket.io"
 	"net/http"
 	"path/filepath"
 	"strings"

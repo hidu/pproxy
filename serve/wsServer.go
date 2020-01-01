@@ -3,7 +3,7 @@ package serve
 import (
 	"fmt"
 	"github.com/hidu/goutils"
-	"gopkg.in/hidu/go-socket.io.v1"
+	"github.com/googollee/go-socket.io"
 	"log"
 	"net/http"
 	"net/url"
