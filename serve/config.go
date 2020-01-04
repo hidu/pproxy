@@ -3,12 +3,14 @@ package serve
 import (
 	"crypto/tls"
 	"fmt"
-	"github.com/Unknwon/goconfig"
-	"github.com/hidu/goutils"
 	"log"
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/Unknwon/goconfig"
+	"github.com/hidu/goutils/fs"
+	"github.com/hidu/goutils/str_util"
 )
 
 // Config  pproxy's config
@@ -39,7 +41,7 @@ const (
 	authTypeBasicTry     = 3
 
 	responseSaveAll      = 0
-	responseSaveHasBroad = 1 //has show
+	responseSaveHasBroad = 1 // has show
 
 	sessionViewALL      = 0
 	sessionViewIPOrUser = 1
@@ -68,7 +70,7 @@ const (
 	contentEncoding = "Content-Encoding"
 )
 
-//"0:no auth | 1:basic auth | 2:basic auth with any name"
+// "0:no auth | 1:basic auth | 2:basic auth with any name"
 
 // GetVersion get current version
 func GetVersion() string {
@@ -81,7 +83,7 @@ func GetDemoConf() string {
 }
 
 func (u *User) isPswEq(psw string) bool {
-	return u.PswMd5 == utils.StrMd5(psw)
+	return u.PswMd5 == str_util.StrMd5(psw)
 }
 
 // LoadConfig load the pproxy's config
@@ -179,15 +181,15 @@ type configHosts map[string]string
 //  loadHosts 读取host配置文件
 func loadHosts(confPath string) (hosts configHosts, err error) {
 	hosts = make(configHosts)
-	if !utils.File_exists(confPath) {
+	if !fs.FileExists(confPath) {
 		return
 	}
-	hostsByte, err := utils.File_get_contents(confPath)
+	hostsByte, err := fs.FileGetContents(confPath)
 	if err != nil {
 		log.Println("load hosts_file failed:", confPath, err)
 		return nil, err
 	}
-	hostsArr := utils.LoadText2Slice(string(hostsByte))
+	hostsArr := str_util.LoadText2Slice(string(hostsByte))
 	for _, v := range hostsArr {
 		if len(v) != 2 {
 			log.Println("hosts file line wrong,ignore,", v)
@@ -200,15 +202,15 @@ func loadHosts(confPath string) (hosts configHosts, err error) {
 
 func loadUsers(confPath string) (users map[string]*User, err error) {
 	users = make(map[string]*User)
-	if !utils.File_exists(confPath) {
+	if !fs.FileExists(confPath) {
 		return
 	}
-	userInfoByte, err := utils.File_get_contents(confPath)
+	userInfoByte, err := fs.FileGetContents(confPath)
 	if err != nil {
 		log.Println("load user file failed:", confPath, err)
 		return
 	}
-	lines := utils.LoadText2SliceMap(string(userInfoByte))
+	lines := str_util.LoadText2SliceMap(string(userInfoByte))
 	for _, line := range lines {
 		name, has := line["name"]
 		if !has || name == "" {
@@ -231,7 +233,7 @@ func loadUsers(confPath string) (users map[string]*User, err error) {
 		if user.PswMd5 == "" {
 			if val, has := line["psw"]; has {
 				user.Psw = val
-				user.PswMd5 = utils.StrMd5(val)
+				user.PswMd5 = str_util.StrMd5(val)
 			}
 		}
 		users[user.Name] = user

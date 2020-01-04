@@ -46,6 +46,11 @@ func (client *wsClient) checkFilter(req *http.Request, reqCtx *requestCtx) bool 
 		addrInfo := strings.Split(reqCtx.RemoteAddr, ":")
 		ipInList := false
 		for _, ip := range client.filterIP {
+			if ip == "*" {
+				ipInList = true
+				break
+			}
+
 			if ip != "" && addrInfo[0] == ip {
 				ipInList = true
 				break

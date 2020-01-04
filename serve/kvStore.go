@@ -1,9 +1,10 @@
 package serve
 
 import (
-	"github.com/boltdb/bolt"
-	"github.com/hidu/goutils"
 	"time"
+
+	"github.com/boltdb/bolt"
+	"github.com/hidu/goutils/time_util"
 )
 
 type KV_TBALE_NAME_TYPE string
@@ -70,7 +71,7 @@ func (kv *kvStore) StartGcTimer(sec int64, max_life int64) {
 	if max_life < 1 {
 		return
 	}
-	utils.SetInterval(func() {
+	time_util.SetInterval(func() {
 		kv.Gc(max_life)
 	}, sec)
 }

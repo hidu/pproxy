@@ -2,19 +2,20 @@ package serve
 
 import (
 	"fmt"
-	"github.com/hidu/goutils"
-	"github.com/robertkrimen/otto"
 	"io/ioutil"
 	"log"
 	"strings"
 	"sync"
+
+	"github.com/hidu/goutils/fs"
+	"github.com/robertkrimen/otto"
 )
 
 var rewriteJsTpl = Assest.GetContent("res/sjs/req_rewrite.js")
 
-/**
-*request动态修改引擎
-*使用javascript 来对请求进行修改
+/*
+ * request动态修改引擎
+ * 使用javascript 来对请求进行修改
  */
 type requestModifier struct {
 	mu     sync.RWMutex
@@ -74,7 +75,7 @@ func (reqMod *requestModifier) loadAllJs() error {
 
 func (reqMod *requestModifier) getJsContent(name string) (content string, err error) {
 	jsPath := reqMod.getJsPath(name)
-	if utils.File_exists(jsPath) {
+	if fs.FileExists(jsPath) {
 		script, err := ioutil.ReadFile(jsPath)
 		if err == nil {
 			return string(script), nil
@@ -118,7 +119,7 @@ func (reqMod *requestModifier) parseJs(jsStr string, name string, save2File bool
 	reqMod.canMod = true
 	if save2File {
 		jsPath := reqMod.getJsPath(name)
-		err = utils.File_put_contents(jsPath, []byte(jsStr))
+		err = fs.FilePutContents(jsPath, []byte(jsStr))
 		log.Println("save rewritejs ", jsPath, err)
 	}
 	return err

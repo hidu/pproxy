@@ -2,9 +2,10 @@ package serve
 
 import (
 	"encoding/base64"
-	"github.com/hidu/goutils"
 	"net/http"
 	"strings"
+
+	"github.com/hidu/goutils/str_util"
 )
 
 var proxyAuthorizatonHeader = "Proxy-Authorization"
@@ -23,7 +24,7 @@ func getAuthorInfo(req *http.Request) *User {
 	if len(userpass) != 2 {
 		return defaultInfo
 	}
-	return &User{Name: userpass[0], PswMd5: utils.StrMd5(userpass[1]), Psw: userpass[1]}
+	return &User{Name: userpass[0], PswMd5: str_util.StrMd5(userpass[1]), Psw: userpass[1]}
 }
 
 func (ser *ProxyServe) checkUserLogin(userInfo *User) bool {
@@ -41,7 +42,7 @@ func (ser *ProxyServe) checkUserLogin(userInfo *User) bool {
 	return false
 }
 
-//(ser.conf.AuthType == AuthType_Basic && !ser.CheckUserLogin(reqCtx.User))
+// (ser.conf.AuthType == AuthType_Basic && !ser.CheckUserLogin(reqCtx.User))
 func (ser *ProxyServe) checkHTTPAuth(reqCtx *requestCtx) bool {
 	switch ser.conf.AuthType {
 	case authTypeNO:

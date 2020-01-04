@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
-	"github.com/hidu/goutils"
 	"html"
 	"log"
 	"net"
@@ -14,6 +13,10 @@ import (
 	"strings"
 	"text/template"
 	"time"
+
+	"github.com/hidu/goutils/fs"
+	"github.com/hidu/goutils/html_util"
+	"github.com/hidu/goutils/object"
 )
 
 type webRequestCtx struct {
@@ -137,7 +140,7 @@ func (ctx *webRequestCtx) getRewriteJsInfo(name string, title string) map[string
 	re := regexp.MustCompile(`use_file\(["'](.+)["']\)`)
 	matches := re.FindAllStringSubmatch(jsStr, -1)
 
-	//	fmt.Println(matches)
+	// 	fmt.Println(matches)
 
 	var useFile []map[string]interface{}
 	tmpNames := make(map[string]int)
@@ -190,7 +193,7 @@ func (ctx *webRequestCtx) handleConfig() {
 
 		ctx.values["jss"] = jsDataArr
 
-		hostsByte, _ := utils.File_get_contents(ctx.ser.getHostsFilePath())
+		hostsByte, _ := fs.FileGetContents(ctx.ser.getHostsFilePath())
 		ctx.values["hosts"] = html.EscapeString(string(hostsByte))
 		ctx.values["hostsHeight"] = getTextAreaHeightByString("", 100)
 
@@ -217,7 +220,7 @@ func (ctx *webRequestCtx) handleConfig() {
 			}
 			hosts := strings.TrimSpace(ctx.req.PostFormValue("hosts"))
 			log.Println("hosts_update", hosts)
-			err = utils.File_put_contents(ctx.ser.getHostsFilePath(), []byte(hosts))
+			err = fs.FilePutContents(ctx.ser.getHostsFilePath(), []byte(hosts))
 			ctx.ser.loadHosts()
 		}
 		if err != nil {
@@ -235,14 +238,14 @@ func (ctx *webRequestCtx) handle_response() {
 		if responseData == nil {
 			ctx.showError("response not found")
 		} else {
-			walker := utils.NewInterfaceWalker(map[string]interface{}(responseData.Data))
+			walker := object.NewInterfaceWalker(map[string]interface{}(responseData.Data))
 			var contentType string
 			if typeHeader, has := walker.GetStringSlice("/header/Content-Type"); has {
 				contentType = strings.Join(typeHeader, ";")
 			}
 
 			customContentType := ctx.req.FormValue("type")
-			//set custom content type
+			// set custom content type
 			if customContentType != "" {
 				switch customContentType {
 				case "json":
@@ -377,7 +380,7 @@ func render_html(fileName string, values map[string]interface{}, layout bool) st
 		values["body"] = body
 		return render_html("layout.html", values, false)
 	}
-	return utils.Html_reduceSpace(body)
+	return html_util.Html_reduceSpace(body)
 }
 
 func (ser *ProxyServe) handleUserInfo(w http.ResponseWriter, req *http.Request) {

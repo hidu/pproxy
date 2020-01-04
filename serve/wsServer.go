@@ -2,12 +2,13 @@ package serve
 
 import (
 	"fmt"
-	"github.com/hidu/goutils"
 	"github.com/googollee/go-socket.io"
 	"log"
 	"net/http"
 	"net/url"
 	"sync"
+
+	"github.com/hidu/goutils/time_util"
 )
 
 type wsServer struct {
@@ -40,12 +41,11 @@ func (wsSer *wsServer) init() {
 		wsSer.mu.Lock()
 		defer wsSer.mu.Unlock()
 		wsSer.clients[ns.Id()] = &wsClient{ns: ns, user: "guest"}
-
-		log.Println("ws connected", ns.Session.Request.RemoteAddr, ns.Id(), "ws_client_num:", len(wsSer.clients))
+		log.Println("ws connected", ns.Id(), "ws_client_num:", len(wsSer.clients))
 	})
 	wsSer.server.On("disconnect", func(ns *socketio.NameSpace) {
 		wsSer.remove(ns.Id())
-		log.Println("ws disconnect", ns.Session.Request.RemoteAddr, ns.Id(), "ws_client_num:", len(wsSer.clients))
+		log.Println("ws disconnect", ns.Id(), "ws_client_num:", len(wsSer.clients))
 	})
 	wsSer.server.On("error", func(ns *socketio.NameSpace, err error) {
 		log.Println("ws error:", err)
@@ -53,7 +53,7 @@ func (wsSer *wsServer) init() {
 	wsSer.server.On("get_response", wsSer.getResponse)
 	wsSer.server.On("client_filter", wsSer.saveFilter)
 
-	utils.SetInterval(func() {
+	time_util.SetInterval(func() {
 		wsSer.broadcast("hello", "hello", false)
 	}, 120)
 }
@@ -70,8 +70,8 @@ func (wsSer *wsServer) broadProxyClientNum() {
 	wsSer.broadcast("user_num", len(wsSer.proxySer.ProxyClients), false)
 }
 
-/**
-*https://github.com/googollee/go-socket.io
+/*
+ * https://github.com/googollee/go-socket.io
  */
 func (wsSer *wsServer) getResponse(ns *socketio.NameSpace, docidStr string) {
 	docid, uintParseErr := parseDocID(docidStr)
@@ -79,14 +79,14 @@ func (wsSer *wsServer) getResponse(ns *socketio.NameSpace, docidStr string) {
 		log.Println("parse str2int failed", docidStr, uintParseErr)
 		return
 	}
-	log.Println("receive docid", docid, ns.Session.Request.RemoteAddr)
+	log.Println("receive docid", docid)
 	req, _ := wsSer.proxySer.getRequestByDocid(docid)
 	res, _ := wsSer.proxySer.getResponseByDocid(docid)
 	if wsSer.proxySer.Debug {
 		fmt.Println("req:\n", req, "\n==========\n")
 		fmt.Println("res:\n", res, "\n==========\n")
 	}
-	//	delete(req,"header")
+	// 	delete(req,"header")
 	data := make(map[string]interface{})
 	data["req"] = nil
 	data["res"] = nil
@@ -113,7 +113,6 @@ func (wsSer *wsServer) saveFilter(ns *socketio.NameSpace, formData string) {
 		nsClient.filterURL = parseURLInputAsSlice(m.Get("url_match"))
 		nsClient.filterURLHide = parseURLInputAsSlice(m.Get("hide_url"))
 		nsClient.filterUser = parseURLInputAsSlice(m.Get("user"))
-
 		loginUser, isLogin := wsSer.proxySer.web_checkLogin(ns.Session.Request)
 		if isLogin {
 			nsClient.LoginUser = loginUser

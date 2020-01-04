@@ -2,7 +2,6 @@ package serve
 
 import (
 	"fmt"
-	"github.com/hidu/goutils"
 	"io/ioutil"
 	"log"
 	"net/url"
@@ -10,6 +9,8 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/hidu/goutils/fs"
 )
 
 type webFileInfo struct {
@@ -140,7 +141,7 @@ func (ctx *webRequestCtx) handle_file() {
 			ctx.showError("file dir wrong")
 			return
 		}
-		if !utils.File_exists(dirFullPath) {
+		if !fs.FileExists(dirFullPath) {
 			os.MkdirAll(dirFullPath, os.ModePerm)
 		}
 	}
@@ -229,7 +230,7 @@ func (ctx *webRequestCtx) handle_file_new() {
 			return
 		}
 
-		if utils.File_exists(fileFullPath) {
+		if fs.FileExists(fileFullPath) {
 			ctx.jsAlert("file already exists")
 			return
 		}
@@ -245,12 +246,12 @@ func (ctx *webRequestCtx) handle_file_new() {
 		}
 
 		dirName := filepath.Dir(fileFullPath)
-		if !utils.File_exists(dirName) {
+		if !fs.FileExists(dirName) {
 			os.MkdirAll(dirName, os.ModePerm)
 		}
 		content := ctx.req.FormValue("content")
 
-		wErr := utils.File_put_contents(fileFullPath, []byte(content))
+		wErr := fs.FilePutContents(fileFullPath, []byte(content))
 		if wErr != nil {
 			ctx.jsAlert("write file failed")
 			return
@@ -284,11 +285,11 @@ func (ctx *webRequestCtx) handle_file_save() {
 	}
 
 	dirName := filepath.Dir(fullPath)
-	if !utils.File_exists(dirName) {
+	if !fs.FileExists(dirName) {
 		os.MkdirAll(dirName, os.ModePerm)
 	}
 
-	errWrite := utils.File_put_contents(fullPath, []byte(content))
+	errWrite := fs.FilePutContents(fullPath, []byte(content))
 	if errWrite != nil {
 		ctx.jsAlert("save failed:" + errWrite.Error())
 		return

@@ -2,7 +2,6 @@ package serve
 
 import (
 	"fmt"
-	"github.com/hidu/goutils"
 	"log"
 	"math/rand"
 	"net/http"
@@ -12,6 +11,9 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/hidu/goutils/fs"
+	"github.com/hidu/goutils/time_util"
 )
 
 type ProxyServe struct {
@@ -44,7 +46,7 @@ type KvType map[string]interface{}
 func (ser *ProxyServe) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	atomic.AddInt64(&ser.reqNum, 1)
 
-	//	reqDump, _ := httputil.DumpRequest(req, true)
+	// 	reqDump, _ := httputil.DumpRequest(req, true)
 	//    fmt.Println("req dump:\n",string(reqDump))
 
 	ctx := NewRequestCtx(ser, w, req)
@@ -71,7 +73,7 @@ func (ser *ProxyServe) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-//for replay
+// for replay
 func (ser *ProxyServe) ServeHTTPProxy(w http.ResponseWriter, req *http.Request) {
 	atomic.AddInt64(&ser.reqNum, 1)
 	ctx := NewRequestCtx(ser, w, req)
@@ -174,7 +176,7 @@ func NewProxyServe(confPath string, port int) (*ProxyServe, error) {
 
 	dbPath := fmt.Sprintf("%s/%d.db", conf.DataDir, conf.Port)
 
-	//	proxy.mydb = NewTieDb(fmt.Sprintf("%s/%d/", conf.DataDir, conf.Port), conf.DataStoreDay)
+	// 	proxy.mydb = NewTieDb(fmt.Sprintf("%s/%d/", conf.DataDir, conf.Port), conf.DataStoreDay)
 	proxy.mydb, err = newKvStore(dbPath)
 	if err != nil {
 		log.Fatalln("init db failed", err)
@@ -188,7 +190,7 @@ func NewProxyServe(confPath string, port int) (*ProxyServe, error) {
 	proxy.ProxyClients = make(map[string]*clientSession)
 	proxy.proxy = NewHttpProxy(proxy)
 
-	utils.SetInterval(func() {
+	time_util.SetInterval(func() {
 		proxy.cleanExpiredSession()
 	}, 60)
 	proxy.mydb.StartGcTimer(60, int64(conf.DataStoreDay*86400))
@@ -205,8 +207,8 @@ func setupLog(dataDir string, port int) {
 	}
 	log.SetOutput(logFile)
 
-	utils.SetInterval(func() {
-		if !utils.File_exists(logPath) {
+	time_util.SetInterval(func() {
+		if !fs.FileExists(logPath) {
 			logFile.Close()
 			logFile, _ = os.OpenFile(logPath, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0644)
 			log.SetOutput(logFile)
