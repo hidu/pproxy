@@ -2,7 +2,6 @@ package serve
 
 import (
 	"fmt"
-	"github.com/elazarl/goproxy"
 	"io"
 	"log"
 	"net"
@@ -10,6 +9,8 @@ import (
 	"net/http/httputil"
 	"sync"
 	"time"
+
+	"github.com/elazarl/goproxy"
 )
 
 //
@@ -50,7 +51,7 @@ func my_requestHanderFunc(r *http.Request, ctx *goproxy.ProxyCtx) (*http.Request
 const PROXY_CTX_NAME = "X-PPROXY-CTX-ID"
 
 func (proxy *HttpProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	//	fmt.Println("call url:",req.URL.String())
+	// 	fmt.Println("call url:",req.URL.String())
 	proxy.GoProxy.ServeHTTP(rw, req)
 }
 
@@ -109,7 +110,7 @@ func (proxy *HttpProxy) onResponse(resp *http.Response, ctx *goproxy.ProxyCtx) *
 }
 
 func (proxy *HttpProxy) roundTripUpgrade(ctx *requestCtx) (err error) {
-	//save it,so we know it has been closed
+	// save it,so we know it has been closed
 	defer func() {
 		resp := &http.Response{
 			Request: ctx.Req,

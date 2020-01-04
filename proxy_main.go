@@ -3,9 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/hidu/pproxy/serve"
 	"log"
 	"os"
+
+	"github.com/hidu/pproxy/serve"
 )
 
 var configPath = flag.String("conf", "./conf/pproxy.conf", "pproxy's config file")

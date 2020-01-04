@@ -3,11 +3,10 @@ package serve
 import (
 	"bytes"
 	"compress/gzip"
-	//	"encoding/base64"
+	// "encoding/base64"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	//	"gopkg.in/vmihailenco/msgpack.v2"
 	"io"
 	"io/ioutil"
 	"log"
@@ -16,6 +15,8 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+
+	// "gopkg.in/vmihailenco/msgpack.v2"
 )
 
 // Int64ToBytes int64转换为byte

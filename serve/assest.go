@@ -36,7 +36,7 @@ var _assestDirect bool
 
 func init() {
 	exeName := filepath.Base(os.Getenv("_"))
-	//only enable with go run
+	// only enable with go run
 	if exeName == "go" || (runtime.GOOS == "windows" && strings.Contains(os.Args[0], "go-build")) {
 		flag.BoolVar(&_assestDirect, "assest_direct", false, "for debug,read assest direct")
 	}
@@ -146,11 +146,11 @@ func (statics *AssestStruct) FileHandlerFunc(name string) http.HandlerFunc {
 }
 
 // HTTPHandler handler http request
-//eg:on file system is :/res/js/a.js and request is /res/js/a.js
-//http.Handle("/res/",res.Assest.HttpHandler("/"))
+// eg:on file system is :/res/js/a.js and request is /res/js/a.js
+// http.Handle("/res/",res.Assest.HttpHandler("/"))
 
-//eg:on file system is :/res/js/a.js and request is /js/a.js
-//http.Handle("/js/",res.Assest.HttpHandler("/res/"))
+// eg:on file system is :/res/js/a.js and request is /js/a.js
+// http.Handle("/js/",res.Assest.HttpHandler("/res/"))
 func (statics *AssestStruct) HTTPHandler(baseDir string) http.Handler {
 	return &_assestFileServer{sf: statics, pdir: baseDir}
 }

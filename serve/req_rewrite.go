@@ -20,7 +20,7 @@ func (ser *ProxyServe) reqRewriteByjs(reqCtx *requestCtx) int {
 	schema := req.URL.Scheme
 	originURL := req.URL.String()
 	originGetQuery := req.URL.Query()
-	///================================================================
+	// /================================================================
 	headerKv := make(map[string]string)
 	headerKv["method"] = req.Method
 	headerKv["schema"] = schema
@@ -43,7 +43,7 @@ func (ser *ProxyServe) reqRewriteByjs(reqCtx *requestCtx) int {
 
 	headerKv["password"] = psw
 
-	//===================================================================
+	// ===================================================================
 	rewriteData := make(map[string]interface{})
 	rewriteData["header"] = headerKv
 	rewriteData["get"] = originGetQuery
@@ -51,7 +51,7 @@ func (ser *ProxyServe) reqRewriteByjs(reqCtx *requestCtx) int {
 
 	_buf := forgetRead(&reqCtx.Req.Body)
 	var rawBody string
-	// 暂时只考虑gip的，其他的压缩就不支持了
+	//  暂时只考虑gip的，其他的压缩就不支持了
 	if req.Header.Get(contentEncoding) == "gzip" {
 		rawBody = gzipDocode(_buf)
 	} else {
@@ -91,7 +91,7 @@ func (ser *ProxyServe) reqRewriteByjs(reqCtx *requestCtx) int {
 			}
 		}
 	}
-	//-------------------------------------------------------
+	// -------------------------------------------------------
 	var getNew url.Values
 
 	isGetChange := false
@@ -100,7 +100,7 @@ func (ser *ProxyServe) reqRewriteByjs(reqCtx *requestCtx) int {
 		getNew = _reqMapToURLValue(_get)
 		isGetChange = checkURLValuesChange(originGetQuery, getNew)
 	}
-	//-------------------------------------------------------
+	// -------------------------------------------------------
 	var postNew url.Values
 	isPostChange := false
 
@@ -128,16 +128,16 @@ func (ser *ProxyServe) reqRewriteByjs(reqCtx *requestCtx) int {
 		)
 	}
 
-	///===============================================================================
+	// /===============================================================================
 	if !isHeaderChange && !isGetChange && !isPostChange && !isHostAddrChange && !isBodyChange {
 		return 304
 	}
-	///===============================================================================
+	// /===============================================================================
 
 	var urlBase string
 
 	if isHeaderChange {
-		//		schema := headerKvNew["schema"]
+		// 		schema := headerKvNew["schema"]
 		urlBase = schema + "://"
 
 		if headerKvNew["username"] != "" {
@@ -175,7 +175,7 @@ func (ser *ProxyServe) reqRewriteByjs(reqCtx *requestCtx) int {
 		req.Host = req.URL.Host
 	}
 
-	//////////////////////////////////////////////////////////////////////////////
+	// ////////////////////////////////////////////////////////////////////////////
 
 	if isPostChange || isBodyChange {
 		buf := bytes.NewBuffer([]byte{})
@@ -196,7 +196,7 @@ func (ser *ProxyServe) reqRewriteByjs(reqCtx *requestCtx) int {
 		req.Body = ioutil.NopCloser(buf).(io.ReadCloser)
 	}
 
-	////////////////////////////////////////////////////////////////////////////
+	// //////////////////////////////////////////////////////////////////////////
 
 	if isHostAddrChange {
 		req.URL.Host = hostAddr
@@ -269,9 +269,6 @@ func (ser *ProxyServe) reqRewriteByHosts(req *http.Request) int {
 	return 304
 }
 
-/**
-*
- */
 func _reqMapToURLValue(values interface{}) url.Values {
 	uValues := make(url.Values)
 	if values == nil {
