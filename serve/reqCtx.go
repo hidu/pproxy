@@ -2,11 +2,13 @@ package serve
 
 import (
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -30,7 +32,7 @@ type requestCtx struct {
 	ClientSession *clientSession
 
 	OriginURL string
-	logData   map[interface{}]interface{}
+	logData   map[any]any
 	Msg       string
 
 	ser           *ProxyServe
@@ -47,7 +49,7 @@ func NewRequestCtx(ser *ProxyServe, rw http.ResponseWriter, req *http.Request) *
 	ctx.Rw = rw
 	ctx.SessionID = ser.reqNum
 
-	ctx.logData = make(map[interface{}]interface{})
+	ctx.logData = make(map[any]any)
 	ctx.timeDurations = make(map[string]time.Duration)
 
 	ctx.FormPost = &url.Values{}
@@ -125,7 +127,7 @@ func (ctx *requestCtx) PrintLog() {
 		"uname:", ctx.User.Name,
 		"broadcast:", ctx.HasBroadcast,
 		"startTime:", ctx.startTime.Unix(),
-		"timeUsed:", fmt.Sprintf("%.3fs", time.Now().Sub(ctx.startTime).Seconds()),
+		"timeUsed:", fmt.Sprintf("%.3fs", time.Since(ctx.startTime).Seconds()),
 		"data:", ctx.logData,
 		"times:", ctx.timeDurations,
 	)
@@ -160,11 +162,12 @@ func (ctx *requestCtx) RoundTrip() {
 	// 	time.AfterFunc(1*time.Second, ctx.saveRequestData)
 
 	if rewriteCode != 200 && rewriteCode != 304 {
-		ctx.badGateway(fmt.Errorf("rewrite failed"))
+		ctx.badGateway(errors.New("rewrite failed"))
 		return
 	}
 	ctx.ser.proxy.RoundTrip(ctx)
 }
+
 func (ctx *requestCtx) badGateway(err error) {
 	ctx.SetLog("errMsg", fmt.Sprintf("%s", err))
 	ctx.Rw.WriteHeader(http.StatusBadGateway)
@@ -193,7 +196,7 @@ func (ctx *requestCtx) saveRequestData() {
 		logdata["form_get"] = ctx.Req.URL.Query()
 		logdata["replay"] = ctx.IsRePlay
 		logdata["msg"] = ctx.Msg
-		logdata["id"] = fmt.Sprintf("%d", ctx.Docid)
+		logdata["id"] = strconv.Itoa(ctx.Docid)
 
 		// 当无普通form post表单数据的时候，比如可能body也有数据
 		// 比如request 的content-type=application/json
@@ -230,7 +233,7 @@ func (ctx *requestCtx) saveResponse(res *http.Response) {
 	data["status"] = res.StatusCode
 	data["content_length"] = res.ContentLength
 	data["msg"] = ctx.Msg
-	data["id"] = fmt.Sprintf("%d", ctx.Docid)
+	data["id"] = strconv.Itoa(ctx.Docid)
 
 	resDump, dumpErr := httputil.DumpResponse(res, false)
 	if dumpErr != nil {
@@ -262,11 +265,12 @@ func (ctx *requestCtx) saveResponse(res *http.Response) {
 	log.Println("save_res", ctx.SessionID, "docid=", ctx.Docid, "body_len=", len(data["body"].(string)), err)
 }
 
-func (ctx *requestCtx) SetLog(k, v interface{}) {
+func (ctx *requestCtx) SetLog(k, v any) {
 	ctx.logData[k] = v
 }
+
 func (ctx *requestCtx) SetTimePoint(key string) {
-	ctx.timeDurations[key] = time.Now().Sub(ctx.startTime)
+	ctx.timeDurations[key] = time.Since(ctx.startTime)
 }
 
 func (ctx *requestCtx) getNewDocid() int {

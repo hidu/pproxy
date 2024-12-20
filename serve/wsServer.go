@@ -2,12 +2,12 @@ package serve
 
 import (
 	"fmt"
-	"github.com/googollee/go-socket.io"
 	"log"
 	"net/http"
 	"net/url"
 	"sync"
 
+	"github.com/googollee/go-socket.io"
 	"github.com/hidu/goutils/time_util"
 )
 
@@ -87,7 +87,7 @@ func (wsSer *wsServer) getResponse(ns *socketio.NameSpace, docidStr string) {
 		fmt.Println("res:\n", res, "\n==========\n")
 	}
 	// 	delete(req,"header")
-	data := make(map[string]interface{})
+	data := make(map[string]any)
 	data["req"] = nil
 	data["res"] = nil
 	if req != nil {
@@ -124,7 +124,7 @@ func (wsSer *wsServer) saveFilter(ns *socketio.NameSpace, formData string) {
 
 var nnnn int
 
-func (wsSer *wsServer) send(ns *socketio.NameSpace, msgName string, data interface{}, encode bool) {
+func (wsSer *wsServer) send(ns *socketio.NameSpace, msgName string, data any, encode bool) {
 	wsSer.mu.Lock()
 
 	defer func(ns *socketio.NameSpace) {
@@ -146,7 +146,7 @@ func (wsSer *wsServer) send(ns *socketio.NameSpace, msgName string, data interfa
 	}
 }
 
-func (wsSer *wsServer) broadcastReq(req *http.Request, reqCtx *requestCtx, data interface{}) bool {
+func (wsSer *wsServer) broadcastReq(req *http.Request, reqCtx *requestCtx, data any) bool {
 	wsSer.mu.RLock()
 	defer wsSer.mu.RUnlock()
 
@@ -168,7 +168,7 @@ func (wsSer *wsServer) broadcastReq(req *http.Request, reqCtx *requestCtx, data 
 	return hasSend
 }
 
-func (wsSer *wsServer) broadcast(name string, data interface{}, encode bool) {
+func (wsSer *wsServer) broadcast(name string, data any, encode bool) {
 	wsSer.mu.RLock()
 	defer wsSer.mu.RUnlock()
 	for _, client := range wsSer.clients {

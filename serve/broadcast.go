@@ -1,14 +1,14 @@
 package serve
 
 import (
-	"fmt"
+	"strconv"
 )
 
 // broadcastReq broadcast request to user's browser
 func (ser *ProxyServe) broadcastReq(reqCtx *requestCtx) bool {
 	req := reqCtx.Req
-	data := make(map[string]interface{})
-	data["docid"] = fmt.Sprintf("%d", reqCtx.Docid)
+	data := make(map[string]any)
+	data["docid"] = strconv.Itoa(reqCtx.Docid)
 	data["sid"] = reqCtx.SessionID % 10000
 	data["host"] = req.Host
 	data["client_ip"] = req.RemoteAddr

@@ -2,7 +2,7 @@ package serve
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/url"
 	"os"
@@ -53,6 +53,7 @@ func newWebFileInfo(rootDir, name string) (*webFileInfo, error) {
 func (f *webFileInfo) String() string {
 	return fmt.Sprintf("Name:%s\nRootDir:%s\nisDir:%v\nSize:%d\nfullPath:%s\n", f.Name, f.RootDir, f.IsDir, f.Size, f.fullPath)
 }
+
 func (f *webFileInfo) link() string {
 	values := make(url.Values)
 	values.Set("name", f.Name)
@@ -61,11 +62,12 @@ func (f *webFileInfo) link() string {
 	}
 	return "/file?" + values.Encode()
 }
+
 func (f *webFileInfo) getContent() string {
 	if f.IsDir {
 		return ""
 	}
-	data, err := ioutil.ReadAll(f.file)
+	data, err := io.ReadAll(f.file)
 	if err != nil {
 		log.Println("read file failed:", err)
 		return ""
@@ -99,7 +101,6 @@ func (f *webFileInfo) subFiles() ([]*webFileInfo, error) {
 	}
 	f.subFileInfos = fileInfos
 	return fileInfos, nil
-
 }
 
 func (ser *ProxyServe) getWebFilePath(name string) (fullPath string, nameNew string, err error) {
@@ -191,9 +192,7 @@ func (ctx *webRequestCtx) handle_file_edit() {
 	ctx.render("file_edit.html", true)
 }
 
-func (ctx *webRequestCtx) handle_file_del() {
-
-}
+func (ctx *webRequestCtx) handle_file_del() {}
 
 func (ctx *webRequestCtx) handle_file_new() {
 	dirFullPath, dirNew, err := ctx.ser.getWebFilePath(ctx.req.FormValue("dir"))
@@ -263,6 +262,7 @@ func (ctx *webRequestCtx) handle_file_new() {
 		ctx.jsAlertJump("save suc", finfo.link())
 	}
 }
+
 func (ctx *webRequestCtx) handle_file_save() {
 	nameOrigin := ctx.req.PostFormValue("nameOrigin")
 	name := ctx.req.PostFormValue("name")

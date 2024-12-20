@@ -1,18 +1,17 @@
 pproxy 0.5.2
 ======
 ## intro
-http抓包代理程序,http协议调试工具。  
-采用golang编写，采用bs模式(s-代理程序，b-会话查看、配置管理等功能)  
+HTTP 协议抓包代理程序, HTTP 协议调试工具。  
+采用 Go 编写，采用 BS 模式(s-代理程序，b-会话查看、配置管理等功能)  
 
 0.4.2版本已经支持websocket代理，以及重定向(和普通http请求一样使用)  
 
 0.5 版本是对底层存储进行了替换，并且尝试支持https抓包
 
 ## install
-下载编译好的可执行文件: <http://pan.baidu.com/s/1i3pAe7V>  
 
-已经安装golang的用户直接安装：  
->go get -u github.com/hidu/pproxy
+已经安装go的用户直接安装：  
+>go install  github.com/hidu/pproxy@master
 
 ## 功能特性
 <pre>

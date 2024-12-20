@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"strconv"
 	"strings"
 	"text/template"
 	"time"
@@ -20,7 +21,7 @@ import (
 )
 
 type webRequestCtx struct {
-	values  map[string]interface{}
+	values  map[string]any
 	user    *User
 	isLogin bool
 	isAdmin bool
@@ -53,12 +54,12 @@ func (ser *ProxyServe) handleLocalReq(w http.ResponseWriter, req *http.Request) 
 		return
 	}
 
-	values := make(map[string]interface{})
+	values := make(map[string]any)
 	values["title"] = ser.conf.Title
 	values["subTitle"] = ""
 	values["version"] = PproxyVersion
 	values["notice"] = ser.conf.Notice
-	values["port"] = fmt.Sprintf("%d", ser.conf.Port)
+	values["port"] = strconv.Itoa(ser.conf.Port)
 	values["userOnlineTotal"] = len(ser.ProxyClients)
 	_host, _, _ := getHostPortFromReq(req)
 	values["pproxy_host"] = _host
@@ -133,8 +134,8 @@ func (ctx *webRequestCtx) handle_useage() {
 	ctx.render("useage.html", true)
 }
 
-func (ctx *webRequestCtx) getRewriteJsInfo(name string, title string) map[string]interface{} {
-	info := make(map[string]interface{})
+func (ctx *webRequestCtx) getRewriteJsInfo(name string, title string) map[string]any {
+	info := make(map[string]any)
 	jsStr, _ := ctx.ser.reqMod.getJsContent(name)
 
 	re := regexp.MustCompile(`use_file\(["'](.+)["']\)`)
@@ -142,14 +143,14 @@ func (ctx *webRequestCtx) getRewriteJsInfo(name string, title string) map[string
 
 	// 	fmt.Println(matches)
 
-	var useFile []map[string]interface{}
+	var useFile []map[string]any
 	tmpNames := make(map[string]int)
 
 	for _, subMatch := range matches {
 		if len(subMatch) != 2 {
 			continue
 		}
-		use := make(map[string]interface{})
+		use := make(map[string]any)
 		fileName := strings.TrimSpace(subMatch[1])
 		use["name"] = subMatch[0]
 		use["file"] = fileName
@@ -184,7 +185,7 @@ func (ctx *webRequestCtx) getRewriteJsInfo(name string, title string) map[string
 
 func (ctx *webRequestCtx) handleConfig() {
 	if ctx.req.Method == "GET" {
-		jsDataArr := make([]interface{}, 0, 2)
+		jsDataArr := make([]any, 0, 2)
 		jsDataArr = append(jsDataArr, ctx.getRewriteJsInfo("", "global config"))
 
 		if ctx.isLogin {
@@ -229,8 +230,8 @@ func (ctx *webRequestCtx) handleConfig() {
 			ctx.w.Write([]byte("<script>alert('save success');top.location.href='/config'</script>"))
 		}
 	}
-
 }
+
 func (ctx *webRequestCtx) handle_response() {
 	docid, uintParseErr := parseDocID(ctx.req.FormValue("id"))
 	if uintParseErr == nil {
@@ -238,7 +239,7 @@ func (ctx *webRequestCtx) handle_response() {
 		if responseData == nil {
 			ctx.showError("response not found")
 		} else {
-			walker := object.NewInterfaceWalker(map[string]interface{}(responseData.Data))
+			walker := object.NewInterfaceWalker(map[string]any(responseData.Data))
 			var contentType string
 			if typeHeader, has := walker.GetStringSlice("/header/Content-Type"); has {
 				contentType = strings.Join(typeHeader, ";")
@@ -279,10 +280,11 @@ func (ctx *webRequestCtx) handle_response() {
 }
 
 func (ctx *webRequestCtx) jsAlert(msg string) {
-	ctx.w.Write([]byte(fmt.Sprintf("<script>alert('%s')</script>", html.EscapeString(msg))))
+	fmt.Fprintf(ctx.w, "<script>alert('%s')</script>", html.EscapeString(msg))
 }
+
 func (ctx *webRequestCtx) jsAlertJump(msg string, urlStr string) {
-	ctx.w.Write([]byte(fmt.Sprintf("<script>alert('%s');top.location.href='%s'</script>", html.EscapeString(msg), urlStr)))
+	fmt.Fprintf(ctx.w, "<script>alert('%s');top.location.href='%s'</script>", html.EscapeString(msg), urlStr)
 }
 
 func (ctx *webRequestCtx) handle_about() {
@@ -361,7 +363,7 @@ func reader_html_include(fileName string) string {
 	return body
 }
 
-func render_html(fileName string, values map[string]interface{}, layout bool) string {
+func render_html(fileName string, values map[string]any, layout bool) string {
 	html := reader_html_include(fileName)
 	funcs := template.FuncMap{
 		"escape": func(str string) string {

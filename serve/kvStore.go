@@ -30,7 +30,7 @@ type StoreType struct {
 	Data KvType `json:"data"`
 }
 
-func newStoreType(data map[string]interface{}) *StoreType {
+func newStoreType(data map[string]any) *StoreType {
 	return &StoreType{Now: time.Now().Unix(), Data: data}
 }
 

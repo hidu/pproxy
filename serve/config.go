@@ -2,6 +2,7 @@ package serve
 
 import (
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -170,7 +171,7 @@ func LoadConfig(confPath string) (*Config, error) {
 	config.ModifyRequest = gconf.MustValue(goconfig.DEFAULT_SECTION, "modifyRequest", "on") == "on"
 
 	if hasError {
-		return config, fmt.Errorf("config error")
+		return config, errors.New("config error")
 	}
 
 	return config, nil
@@ -178,7 +179,7 @@ func LoadConfig(confPath string) (*Config, error) {
 
 type configHosts map[string]string
 
-//  loadHosts 读取host配置文件
+// loadHosts 读取host配置文件
 func loadHosts(confPath string) (hosts configHosts, err error) {
 	hosts = make(configHosts)
 	if !fs.FileExists(confPath) {
@@ -247,7 +248,6 @@ func (config *Config) getTransport() *http.Transport {
 	}
 	tr := &http.Transport{
 		Proxy: func(req *http.Request) (*url.URL, error) {
-
 			if config.ParentProxy.User.Username() == "pass" {
 				user := getAuthorInfo(req)
 				urlTmp, err := url.Parse(config.ParentProxy.String())

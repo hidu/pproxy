@@ -3,8 +3,8 @@ package serve
 import (
 	"crypto/tls"
 	"crypto/x509"
-	"io/ioutil"
 	"log"
+	"os"
 )
 
 func newCaCert(caCert []byte, caKey []byte) (tls.Certificate, error) {
@@ -28,11 +28,11 @@ func getSslCert(caCertPath string, caKeyPath string) (ca tls.Certificate, err er
 		caKey := Assest.GetContent("/res/private/server_key.pem")
 		return newCaCert([]byte(caCert), []byte(caKey))
 	}
-	cert, err := ioutil.ReadFile(caCertPath)
+	cert, err := os.ReadFile(caCertPath)
 	if err != nil {
 		return ca, err
 	}
-	key, err := ioutil.ReadFile(caKeyPath)
+	key, err := os.ReadFile(caKeyPath)
 	if err != nil {
 		return ca, err
 	}

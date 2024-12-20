@@ -41,7 +41,7 @@ type ProxyServe struct {
 	reqMod *requestModifier
 }
 
-type KvType map[string]interface{}
+type KvType map[string]any
 
 func (ser *ProxyServe) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	atomic.AddInt64(&ser.reqNum, 1)
@@ -122,6 +122,7 @@ func (ser *ProxyServe) getResponseByDocid(docid int) (resData *StoreType, err er
 	tb := ser.mydb.GetkvStoreTable(KV_TABLE_RES)
 	return tb.Get(IntToBytes(docid))
 }
+
 func (ser *ProxyServe) getRequestByDocid(docid int) (reqData *StoreType, err error) {
 	tb := ser.mydb.GetkvStoreTable(KV_TABLE_REQ)
 	return tb.Get(IntToBytes(docid))

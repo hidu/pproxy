@@ -1,10 +1,8 @@
 pproxy 0.5.2
 ======
 HTTP protocol analysis tool.  
-write by golang,with BS architecture. 
 
 
-download binary file (linux & windows): <http://pan.baidu.com/s/1i3pAe7V>  
 
 features：
 <pre>

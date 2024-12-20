@@ -6,9 +6,9 @@ import (
 	// "encoding/base64"
 	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
@@ -59,11 +59,11 @@ func IsLocalIP(host string) bool {
 func forgetRead(reader *io.ReadCloser) *bytes.Buffer {
 	buf := bytes.NewBuffer([]byte{})
 	io.Copy(buf, *reader)
-	*reader = ioutil.NopCloser(buf).(io.ReadCloser)
+	*reader = io.NopCloser(buf).(io.ReadCloser)
 	return bytes.NewBuffer(buf.Bytes())
 }
 
-func dataEncode(data interface{}) []byte {
+func dataEncode(data any) []byte {
 	bf, err := json.Marshal(data)
 	if err != nil {
 		log.Println("data_encode_err", err)
@@ -71,9 +71,10 @@ func dataEncode(data interface{}) []byte {
 	}
 	return bf
 }
-func dataDecode(dataInput []byte, out interface{}) error {
+
+func dataDecode(dataInput []byte, out any) error {
 	if len(dataInput) == 0 {
-		return fmt.Errorf("empty dataInput")
+		return errors.New("empty dataInput")
 	}
 	err := json.Unmarshal(dataInput, &out)
 	if err != nil {
@@ -83,7 +84,7 @@ func dataDecode(dataInput []byte, out interface{}) error {
 	return err
 }
 
-func getMapValStr(m map[string]interface{}, k string) string {
+func getMapValStr(m map[string]any, k string) string {
 	if val, has := m[k]; has {
 		return fmt.Sprintf("%s", val)
 	}
@@ -97,12 +98,13 @@ func gzipDocode(buf *bytes.Buffer) string {
 	gr, err := gzip.NewReader(buf)
 	defer gr.Close()
 	if err == nil {
-		bdBt, _ := ioutil.ReadAll(gr)
+		bdBt, _ := io.ReadAll(gr)
 		return string(bdBt)
 	}
 	log.Println("unzip body failed", err)
 	return ""
 }
+
 func gzipEncode(data []byte) *bytes.Buffer {
 	buf := bytes.NewBuffer([]byte{})
 	gw := gzip.NewWriter(buf)
@@ -228,7 +230,6 @@ func getPostData(req *http.Request) (post *url.Values) {
 		if err != nil {
 			log.Println("parse post err", err, "url=", req.URL.String())
 		}
-
 	}
 	return post
 }

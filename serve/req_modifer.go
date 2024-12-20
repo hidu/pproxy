@@ -1,9 +1,10 @@
 package serve
 
 import (
+	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
+	"os"
 	"strings"
 	"sync"
 
@@ -33,13 +34,13 @@ func NewRequestModifier(ser *ProxyServe) *requestModifier {
 	}
 	return reqMod
 }
+
 func (reqMod *requestModifier) getJsPath(name string) string {
 	baseName := fmt.Sprintf("%s/req_rewrite_%d", reqMod.ser.configDir, reqMod.ser.conf.Port)
 	if name == "" {
 		return fmt.Sprintf("%s.js", baseName)
-	} else {
-		return fmt.Sprintf("%s_%s.js", baseName, name)
 	}
+	return fmt.Sprintf("%s_%s.js", baseName, name)
 }
 
 func (reqMod *requestModifier) tryLoadJs(name string) (err error) {
@@ -76,12 +77,11 @@ func (reqMod *requestModifier) loadAllJs() error {
 func (reqMod *requestModifier) getJsContent(name string) (content string, err error) {
 	jsPath := reqMod.getJsPath(name)
 	if fs.FileExists(jsPath) {
-		script, err := ioutil.ReadFile(jsPath)
+		script, err := os.ReadFile(jsPath)
 		if err == nil {
 			return string(script), nil
-		} else {
-			return "", err
 		}
+		return "", err
 	}
 	return "", nil
 }
@@ -124,6 +124,7 @@ func (reqMod *requestModifier) parseJs(jsStr string, name string, save2File bool
 	}
 	return err
 }
+
 func (reqMod *requestModifier) getJsFnByName(name string) (*otto.Value, error) {
 	names := []string{name, ""}
 	for _, name := range names {
@@ -131,11 +132,10 @@ func (reqMod *requestModifier) getJsFnByName(name string) (*otto.Value, error) {
 			return jsFn, nil
 		}
 	}
-	return nil, fmt.Errorf("no rewrite rules")
+	return nil, errors.New("no rewrite rules")
 }
 
-func (reqMod *requestModifier) rewrite(data map[string]interface{}, name string) (map[string]interface{}, error) {
-
+func (reqMod *requestModifier) rewrite(data map[string]any, name string) (map[string]any, error) {
 	reqMod.mu.Lock()
 	defer reqMod.mu.Unlock()
 
@@ -169,6 +169,6 @@ func (reqMod *requestModifier) rewrite(data map[string]interface{}, name string)
 	if export_err != nil {
 		return nil, export_err
 	}
-	reqObjNew := obj.(map[string]interface{})
+	reqObjNew := obj.(map[string]any)
 	return reqObjNew, nil
 }

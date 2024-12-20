@@ -1,19 +1,18 @@
 package serve
 
 import (
-	"fmt"
 	"io"
 	"log"
 	"net"
 	"net/http"
 	"net/http/httputil"
+	"strconv"
 	"sync"
 	"time"
 
 	"github.com/elazarl/goproxy"
 )
 
-//
 type HttpProxy struct {
 	GoProxy            *goproxy.ProxyHttpServer
 	ser                *ProxyServe
@@ -61,7 +60,7 @@ func (proxy *HttpProxy) httpsHandle(host string, ctx *goproxy.ProxyCtx) (*goprox
 }
 
 func (proxy *HttpProxy) RoundTrip(ctx *requestCtx) {
-	sid := fmt.Sprintf("%d", ctx.SessionID)
+	sid := strconv.FormatInt(ctx.SessionID, 10)
 	ctx.Req.Header.Set(PROXY_CTX_NAME, sid)
 	func() {
 		proxy.mu.Lock()

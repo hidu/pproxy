@@ -1,10 +1,11 @@
 package serve
 
 import (
-	"github.com/googollee/go-socket.io"
 	"net/http"
 	"path/filepath"
 	"strings"
+
+	"github.com/googollee/go-socket.io"
 )
 
 type wsClient struct {

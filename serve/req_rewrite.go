@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 )
 
@@ -29,7 +29,7 @@ func (ser *ProxyServe) reqRewriteByjs(reqCtx *requestCtx) int {
 	_host, portInt, _ := getHostPortFromReq(req)
 
 	headerKv["host"] = _host
-	headerKv["port"] = fmt.Sprintf("%d", portInt)
+	headerKv["port"] = strconv.Itoa(portInt)
 
 	username := ""
 	psw := ""
@@ -44,7 +44,7 @@ func (ser *ProxyServe) reqRewriteByjs(reqCtx *requestCtx) int {
 	headerKv["password"] = psw
 
 	// ===================================================================
-	rewriteData := make(map[string]interface{})
+	rewriteData := make(map[string]any)
 	rewriteData["header"] = headerKv
 	rewriteData["get"] = originGetQuery
 	rewriteData["post"] = *reqCtx.FormPost
@@ -193,7 +193,7 @@ func (ser *ProxyServe) reqRewriteByjs(reqCtx *requestCtx) int {
 			buf.WriteString(bodyData)
 		}
 		req.ContentLength = int64(buf.Len())
-		req.Body = ioutil.NopCloser(buf).(io.ReadCloser)
+		req.Body = io.NopCloser(buf).(io.ReadCloser)
 	}
 
 	// //////////////////////////////////////////////////////////////////////////
@@ -208,7 +208,6 @@ func (ser *ProxyServe) reqRewriteByjs(reqCtx *requestCtx) int {
 }
 
 func (ser *ProxyServe) reqRewrite(reqCtx *requestCtx) int {
-
 	if !ser.conf.ModifyRequest {
 		return 304
 	}
@@ -269,20 +268,20 @@ func (ser *ProxyServe) reqRewriteByHosts(req *http.Request) int {
 	return 304
 }
 
-func _reqMapToURLValue(values interface{}) url.Values {
+func _reqMapToURLValue(values any) url.Values {
 	uValues := make(url.Values)
 	if values == nil {
 		return uValues
 	}
-	vs := values.(map[string]interface{})
+	vs := values.(map[string]any)
 
 	for k, arr := range vs {
 		switch value := arr.(type) {
-		case []interface{}:
+		case []any:
 			for _, v := range value {
 				uValues.Add(k, fmt.Sprintf("%v", v))
 			}
-		case interface{}:
+		case any:
 			uValues.Set(k, fmt.Sprintf("%v", value))
 		default:
 			log.Println("unkonw type:", value)

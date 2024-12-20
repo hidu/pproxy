@@ -27,7 +27,7 @@ func (ctx *webRequestCtx) handleReplay() {
 	docid, errInt := parseDocID(docidStr)
 	if errInt != nil {
 		ctx.w.WriteHeader(http.StatusInternalServerError)
-		ctx.w.Write([]byte(fmt.Sprintf("param id[%s] error:\n%s", docidStr, errInt)))
+		fmt.Fprintf(ctx.w, "param id[%s] error:\n%s", docidStr, errInt)
 		return
 	}
 	reqDoc, _ := ctx.ser.getRequestByDocid(docid)
@@ -40,7 +40,7 @@ func (ctx *webRequestCtx) handleReplay() {
 	u, err := url.Parse(_url)
 	if err != nil {
 		ctx.w.WriteHeader(http.StatusInternalServerError)
-		ctx.w.Write([]byte(fmt.Sprintf("parse url[%s] error\n%s", _url, err)))
+		fmt.Fprintf(ctx.w, "parse url[%s] error\n%s", _url, err)
 		return
 	}
 	u.RawQuery = ""
@@ -69,7 +69,7 @@ func (ctx *webRequestCtx) reqReplayPost() {
 	get := getFormValuesWithPrefix(ctx.req.Form, "get_")
 	post := getFormValuesWithPrefix(ctx.req.Form, "post_")
 
-	formData := make(map[string]interface{})
+	formData := make(map[string]any)
 	formData["basic"] = basic
 
 	formData["header"] = header
